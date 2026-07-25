@@ -1,0 +1,6 @@
+python-dotenv
+google-api-python-client
+google-generativeai
+groq
+pandas
+jdatetime

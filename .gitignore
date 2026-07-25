@@ -25,6 +25,10 @@ outputs/*
 !outputs/.gitkeep
 .ipynb_checkpoints/
 
+data_backup/
+
+.claude/settings.local.json
+
 .DS_Store
 .vscode/
 .idea/
