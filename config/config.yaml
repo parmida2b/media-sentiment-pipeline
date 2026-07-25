@@ -21,7 +21,7 @@ platforms: ["youtube"]
 youtube:
   regions:              # [regionCode, relevanceLanguage] pairs applied to the
                          # generic keyword search, for source diversity beyond
-                         # the curated channel list in extraction/channels.py
+                         # the curated channel list below
     - ["IR", "fa"]
     - ["US", "en"]
     - ["GB", "en"]
@@ -32,3 +32,49 @@ youtube:
   max_comments_per_video: 300
   explicit_video_ids: ["bQI8B93CnJg"]
   channel_search_query: "Iran US conflict"
+
+  # Curated, topic-specific outlet list — verified at runtime against each
+  # channel's own customUrl (extraction/youtube_extract.find_channel_id), so
+  # a wrong handle just logs a warning and gets skipped rather than
+  # silently pulling in the wrong channel. Not exhaustive — extend per
+  # category as the team identifies more sources. When the topic changes,
+  # THIS is what needs to change too: either replace with topic-appropriate
+  # outlets or leave categories empty to rely on the generic keyword+region
+  # search above.
+  channels:
+    iran_state:
+      - {name: "Press TV", handle: "presstelevision", country: "IR"}
+      - {name: "IRIB News", handle: "iribn", country: "IR"}
+    iran_diaspora:
+      - {name: "Iran International", handle: "iranintl", country: "GB"}
+      - {name: "BBC Persian", handle: "bbcnewspersian", country: "GB"}
+      - {name: "VOA Persian", handle: "voafarsi", country: "US"}
+    us_western:
+      - {name: "CNN", handle: "cnn", country: "US"}
+      - {name: "The New York Times", handle: "nytimes", country: "US"}
+      - {name: "CBS News", handle: "cbsnews", country: "US"}
+    arab_gulf:
+      - {name: "Al Jazeera English", handle: "aljazeeraenglish", country: "QA"}
+      - {name: "Al Arabiya", handle: "alarabiya", country: "AE"}
+    european_western:
+      - {name: "BBC News", handle: "bbcnews", country: "GB"}
+      - {name: "Sky News", handle: "skynews", country: "GB"}
+      - {name: "DW News", handle: "dwnews", country: "DE"}
+      - {name: "France 24", handle: "france24_en", country: "FR"}
+      - {name: "euronews", handle: "euronews", country: "FR"}
+      - {name: "RFI", handle: "rfi_en", country: "FR"}
+    international_thinktank:
+      - {name: "CSIS", handle: "csis", country: "US"}
+      - {name: "Reuters", handle: "reuters", country: "GB"}
+
+  # Discovery priority order — checkpoint.py resumability means this alone
+  # determines what gets covered first across multiple runs/days, no
+  # separate "day N" bookkeeping needed. Categories not listed here are
+  # still covered, just after these.
+  channel_priority_order:
+    - iran_state
+    - us_western
+    - european_western
+    - arab_gulf
+    - iran_diaspora
+    - international_thinktank

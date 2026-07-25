@@ -5,11 +5,11 @@ config/config.yaml, via the official YouTube Data API v3, and writes them
 out in the shared Record format defined in config/schema.py.
 
 Source diversity comes from two layers: a categorized channel registry
-(config: channels.py) covering Iranian/diaspora/US/Arab/European/
-international-thinktank outlets, and a regionCode x relevanceLanguage
-matrix (config/config.yaml: youtube.regions) applied to generic search
-queries — so coverage isn't solely dependent on which channels we happened
-to hand-pick.
+(config/config.yaml: youtube.channels) covering Iranian/diaspora/US/Arab/
+European/international-thinktank outlets, and a regionCode x
+relevanceLanguage matrix (config/config.yaml: youtube.regions) applied to
+generic search queries — so coverage isn't solely dependent on which
+channels we happened to hand-pick.
 
 Because search.list costs 100x more quota than videos.list/commentThreads.list,
 and the full channel+region matrix easily exceeds the default 10,000/day
@@ -81,6 +81,11 @@ EXPLICIT_VIDEO_IDS = CONFIG.youtube.get("explicit_video_ids", [])
 
 MAX_VIDEOS_PER_QUERY = CONFIG.youtube.get("max_videos_per_query", 5)
 MAX_COMMENTS_PER_VIDEO = CONFIG.youtube.get("max_comments_per_video", 300)
+
+# Curated outlet registry — see config.yaml's youtube.channels for what this
+# actually contains and why it needs manual attention when the topic changes.
+CHANNEL_REGISTRY = CONFIG.youtube.get("channels", {})
+CHANNEL_PRIORITY_ORDER = CONFIG.youtube.get("channel_priority_order", list(CHANNEL_REGISTRY.keys()))
 # Conservative per-video quota reservation for commentThreads.list pagination
 # (up to 3 pages of 100 for MAX_COMMENTS_PER_VIDEO=300) — checked once before
 # starting a video's comment fetch rather than interrupted mid-pagination, to
@@ -158,7 +163,7 @@ def find_channel_id(youtube, name: str, expected_handle: str, state: dict) -> st
 
 def resolve_all_channels(youtube, state: dict) -> dict[str, str]:
     resolved = load_resolved_channels()
-    for category, channel in channels.iter_channels():
+    for category, channel in channels.iter_channels(CHANNEL_REGISTRY, CHANNEL_PRIORITY_ORDER):
         key = f"{category}/{channel['handle']}"
         if key in resolved:
             continue
@@ -218,7 +223,7 @@ def run_discovery(youtube, state: dict) -> None:
             print(f"  discovered {len(video_ids)} videos for {combo_key}")
 
     resolved = resolve_all_channels(youtube, state)
-    for category, channel in channels.iter_channels():
+    for category, channel in channels.iter_channels(CHANNEL_REGISTRY, CHANNEL_PRIORITY_ORDER):
         reg_key = f"{category}/{channel['handle']}"
         channel_id = resolved.get(reg_key)
         if not channel_id:
@@ -242,7 +247,7 @@ def build_video_channel_hints(state: dict) -> dict[str, dict]:
         if not combo_key.startswith("channel:"):
             continue
         category, handle = combo_key[len("channel:"):].split("/", 1)
-        channel = next((c for c in channels.CHANNEL_REGISTRY.get(category, []) if c["handle"] == handle), None)
+        channel = next((c for c in CHANNEL_REGISTRY.get(category, []) if c["handle"] == handle), None)
         if not channel:
             continue
         for vid in video_ids:
@@ -359,7 +364,7 @@ def main():
     state = checkpoint.load_checkpoint(DATA_DIR)
 
     generic_combos = len(SEARCH_QUERIES) * len(REGION_CODES)
-    channel_combos = sum(len(v) for v in channels.CHANNEL_REGISTRY.values())
+    channel_combos = sum(len(v) for v in CHANNEL_REGISTRY.values())
     estimated_quota = (generic_combos + channel_combos) * checkpoint.QUOTA_COSTS["search"]
     runs_needed = -(-estimated_quota // checkpoint.MAX_DAILY_QUOTA)  # ceil div
     print(f"Full discovery needs ~{estimated_quota} quota units "
@@ -374,7 +379,7 @@ def main():
 
     video_ids = checkpoint.all_discovered_video_ids(state)
     if not video_ids:
-        print("No videos discovered yet — check SEARCH_QUERIES/channels.py or quota budget.")
+        print("No videos discovered yet — check config.yaml's keywords/channels or quota budget.")
         return
 
     print(f"\n{len(video_ids)} videos discovered so far. Fetching details + geo/relevance tags...")

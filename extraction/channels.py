@@ -1,69 +1,24 @@
 """
-channels.py — structured, categorized YouTube channel registry (Parmida)
+channels.py — helper for iterating the categorized YouTube channel registry
+(Parmida)
 
-Each entry is verified at runtime against the channel's own `customUrl`
-(via youtube_extract.find_channel_id) rather than trusted by search order,
-so a misnamed handle just logs a warning and gets skipped instead of
-silently pulling in the wrong channel.
-
-This starter list is a first pass, not exhaustive — extend per category
-as the team identifies more sources to cover.
-
-Unlike config/config.yaml, this registry is NOT topic-driven — it's a
-curated outlet list picked for Iran-US conflict coverage specifically. If
-config.yaml's topic changes to something unrelated, either replace this
-list with topic-appropriate outlets or accept that discovery falls back to
-the generic keyword+region search in youtube_extract.py.
+The registry itself lives in config/config.yaml (youtube.channels /
+youtube.channel_priority_order), not here, so switching config.yaml's topic
+is the ONE place that needs editing — this module is just a pure iteration
+helper over whatever registry gets passed in.
 """
 
-CHANNEL_REGISTRY = {
-    "iran_state": [
-        {"name": "Press TV", "handle": "presstelevision", "country": "IR"},
-        {"name": "IRIB News", "handle": "iribn", "country": "IR"},
-    ],
-    "iran_diaspora": [
-        {"name": "Iran International", "handle": "iranintl", "country": "GB"},
-        {"name": "BBC Persian", "handle": "bbcnewspersian", "country": "GB"},
-        {"name": "VOA Persian", "handle": "voafarsi", "country": "US"},
-    ],
-    "us_western": [
-        {"name": "CNN", "handle": "cnn", "country": "US"},
-        {"name": "The New York Times", "handle": "nytimes", "country": "US"},
-        {"name": "CBS News", "handle": "cbsnews", "country": "US"},
-    ],
-    "arab_gulf": [
-        {"name": "Al Jazeera English", "handle": "aljazeeraenglish", "country": "QA"},
-        {"name": "Al Arabiya", "handle": "alarabiya", "country": "AE"},
-    ],
-    "european_western": [
-        {"name": "BBC News", "handle": "bbcnews", "country": "GB"},
-        {"name": "Sky News", "handle": "skynews", "country": "GB"},
-        {"name": "DW News", "handle": "dwnews", "country": "DE"},
-        {"name": "France 24", "handle": "france24_en", "country": "FR"},
-        {"name": "euronews", "handle": "euronews", "country": "FR"},
-        {"name": "RFI", "handle": "rfi_en", "country": "FR"},
-    ],
-    "international_thinktank": [
-        {"name": "CSIS", "handle": "csis", "country": "US"},
-        {"name": "Reuters", "handle": "reuters", "country": "GB"},
-    ],
-}
 
-# Discovery priority order — checkpoint.py resumability means this alone
-# determines what gets covered first across multiple runs/days, no
-# separate "day N" bookkeeping needed.
-PRIORITY_ORDER = [
-    "iran_state",
-    "us_western",
-    "european_western",
-    "arab_gulf",
-    "iran_diaspora",
-    "international_thinktank",
-]
-
-
-def iter_channels():
-    """Yield (category, channel_dict) in PRIORITY_ORDER."""
-    for category in PRIORITY_ORDER:
-        for channel in CHANNEL_REGISTRY.get(category, []):
+def iter_channels(registry: dict, priority_order: list[str]):
+    """Yield (category, channel_dict) in priority_order, then any remaining
+    categories in registry not mentioned in priority_order."""
+    seen = set()
+    for category in priority_order:
+        seen.add(category)
+        for channel in registry.get(category, []):
+            yield category, channel
+    for category, channel_list in registry.items():
+        if category in seen:
+            continue
+        for channel in channel_list:
             yield category, channel
