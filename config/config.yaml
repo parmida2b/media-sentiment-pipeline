@@ -1,0 +1,34 @@
+# config.yaml — single source of truth for "which topic is this pipeline run about"
+# Per roadmap_pipeline.md: nothing topic-specific should be hardcoded in the
+# extraction/classification/analysis code — it should all be read from here.
+# To point the whole pipeline at a new topic, edit this file only.
+
+topic: "جنگ ایران و آمریکا"
+topic_id: "iran_us_war"   # ascii slug — used in output paths; change this when the topic changes
+
+keywords_fa: ["جنگ ایران آمریکا"]
+keywords_en: ["Iran US war", "Iran America conflict news"]
+keywords_ar: ["حرب إيران وأمريكا"]
+
+date_range:
+  start: "2026-02-28"   # 9 Esfand 1404
+  end: "auto"           # "auto" = up to now(); or an explicit ISO date like "2026-08-22"
+
+platforms: ["youtube"]
+
+# Platform-specific knobs. Only youtube_extract.py exists so far; other
+# platforms add their own sub-block here when they're built.
+youtube:
+  regions:              # [regionCode, relevanceLanguage] pairs applied to the
+                         # generic keyword search, for source diversity beyond
+                         # the curated channel list in extraction/channels.py
+    - ["IR", "fa"]
+    - ["US", "en"]
+    - ["GB", "en"]
+    - ["DE", "de"]
+    - ["FR", "fr"]
+    - ["AE", "ar"]
+  max_videos_per_query: 5
+  max_comments_per_video: 300
+  explicit_video_ids: ["bQI8B93CnJg"]
+  channel_search_query: "Iran US conflict"

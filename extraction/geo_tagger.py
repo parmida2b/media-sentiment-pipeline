@@ -4,9 +4,11 @@ geo_tagger.py — per-video geo/perspective LLM tagging + relevance filter (Parm
 Runs once per video (never per comment) via Groq, the same provider
 already wired up in sentiment/compare_llm_sentiment.py (no GEMINI_API_KEY
 is configured for this project, so Groq is the only LLM actually
-available). Output is appended
-to data/raw/video_geo_metadata.jsonl and cached by video_id so a video with
-hundreds of comments only ever costs one LLM call, across process restarts.
+available). Output is appended to {data_dir}/video_geo_metadata.jsonl and
+cached by video_id so a video with hundreds of comments only ever costs one
+LLM call, across process restarts. `data_dir` is topic-scoped (see
+config/config_loader.py) so switching topics doesn't reuse another topic's
+cached relevance tags.
 
 Deliberately does not touch config/schema.py (team convention: only
 Hossein edits that file) — this metadata lives in its own side file and
@@ -21,15 +23,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ROOT = Path(__file__).resolve().parent.parent
-METADATA_PATH = ROOT / "data" / "raw" / "video_geo_metadata.jsonl"
-
 GROQ_MODEL_NAME = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 VALID_PERSPECTIVES = {"state_media", "western", "independent", "diaspora", "other"}
 
 PROMPT_TEMPLATE = """You are tagging a YouTube news video for a research pipeline studying \
-media coverage of the Iran-US conflict.
+media coverage of: {topic}.
 
 Video title: \"\"\"{title}\"\"\"
 Video description (may be truncated): \"\"\"{description}\"\"\"{hint}
@@ -38,7 +37,7 @@ Respond with ONLY a JSON object, no other text:
 {{
   "origin_country": "<ISO 3166-1 alpha-2 country code of the source, or \\"unknown\\">",
   "perspective": "<one of: state_media, western, independent, diaspora, other>",
-  "is_relevant": <true if this video is actually about the Iran-US conflict, else false>,
+  "is_relevant": <true if this video is actually about {topic}, else false>,
   "confidence": <float 0.0-1.0>
 }}
 """
@@ -84,12 +83,17 @@ def _detect_text_language(text: str) -> str:
     return "fa" if has_persian else "ar"
 
 
-def load_tagged_metadata() -> dict[str, dict]:
+def _metadata_path(data_dir: Path) -> Path:
+    return data_dir / "video_geo_metadata.jsonl"
+
+
+def load_tagged_metadata(data_dir: Path) -> dict[str, dict]:
     """video_id -> cached metadata record, loaded from the jsonl file."""
     cache: dict[str, dict] = {}
-    if not METADATA_PATH.exists():
+    metadata_path = _metadata_path(data_dir)
+    if not metadata_path.exists():
         return cache
-    with open(METADATA_PATH, "r", encoding="utf-8") as f:
+    with open(metadata_path, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -104,13 +108,14 @@ def load_tagged_metadata() -> dict[str, dict]:
     return cache
 
 
-def _append_metadata_record(record: dict) -> None:
-    METADATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(METADATA_PATH, "a", encoding="utf-8") as f:
+def _append_metadata_record(record: dict, data_dir: Path) -> None:
+    metadata_path = _metadata_path(data_dir)
+    metadata_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(metadata_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def _call_llm(title: str, description: str, channel_hint: dict | None) -> dict:
+def _call_llm(title: str, description: str, channel_hint: dict | None, topic: str) -> dict:
     client = _get_groq_client()
     if client is None:
         # No GROQ_API_KEY configured — fail open (treat as relevant, low
@@ -131,7 +136,7 @@ def _call_llm(title: str, description: str, channel_hint: dict | None) -> dict:
         )
 
     prompt = PROMPT_TEMPLATE.format(
-        title=title, description=(description or "")[:500], hint=hint,
+        title=title, description=(description or "")[:500], hint=hint, topic=topic,
     )
 
     try:
@@ -162,16 +167,19 @@ def _call_llm(title: str, description: str, channel_hint: dict | None) -> dict:
 
 
 def tag_video_cached(video_id: str, title: str, description: str,
-                      channel_hint: dict | None, cache: dict[str, dict]) -> dict:
+                      channel_hint: dict | None, cache: dict[str, dict],
+                      topic: str, data_dir: Path) -> dict:
     """
     Returns the metadata record for this video_id, using `cache` (as
     produced by load_tagged_metadata) to skip the LLM call entirely for
-    videos already tagged in a prior run.
+    videos already tagged in a prior run. `topic` is what the LLM judges
+    relevance against; `data_dir` is the topic-scoped dir the record is
+    appended to.
     """
     if video_id in cache:
         return cache[video_id]
 
-    llm_result = _call_llm(title, description, channel_hint)
+    llm_result = _call_llm(title, description, channel_hint, topic)
 
     record = {
         "video_id": video_id,
@@ -184,6 +192,6 @@ def tag_video_cached(video_id: str, title: str, description: str,
         "confidence": llm_result["confidence"],
     }
 
-    _append_metadata_record(record)
+    _append_metadata_record(record, data_dir)
     cache[video_id] = record
     return record

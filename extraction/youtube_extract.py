@@ -1,14 +1,15 @@
 """
 youtube_extract.py — Day 1+ extraction (Parmida)
-Pulls comments from news videos about the Iran-US war topic via the
-official YouTube Data API v3, and writes them out in the shared Record
-format defined in config/schema.py.
+Pulls comments from news videos about whatever topic is configured in
+config/config.yaml, via the official YouTube Data API v3, and writes them
+out in the shared Record format defined in config/schema.py.
 
 Source diversity comes from two layers: a categorized channel registry
 (config: channels.py) covering Iranian/diaspora/US/Arab/European/
 international-thinktank outlets, and a regionCode x relevanceLanguage
-matrix applied to generic search queries — so coverage isn't solely
-dependent on which channels we happened to hand-pick.
+matrix (config/config.yaml: youtube.regions) applied to generic search
+queries — so coverage isn't solely dependent on which channels we happened
+to hand-pick.
 
 Because search.list costs 100x more quota than videos.list/commentThreads.list,
 and the full channel+region matrix easily exceeds the default 10,000/day
@@ -16,7 +17,11 @@ quota, the run is resumable across multiple invocations/days via
 checkpoint.py. Each video also gets a one-time LLM geo/perspective tag +
 relevance check (geo_tagger.py, cached by video_id) so irrelevant videos
 don't waste comment-fetching quota, and results land in
-data/raw/video_geo_metadata.jsonl without touching config/schema.py.
+{topic_id}/video_geo_metadata.jsonl without touching config/schema.py.
+
+All output for a given topic lives under data/raw/{CONFIG.topic_id}/ so
+switching topics in config.yaml doesn't mix its checkpoint/cache/comments
+with a previous topic's run.
 
 Usage:
     python extraction/youtube_extract.py
@@ -36,6 +41,7 @@ from googleapiclient.errors import HttpError
 sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config.schema import Record, AuthorMetadata
+from config import config_loader
 
 import channels
 import checkpoint
@@ -45,53 +51,45 @@ load_dotenv()
 
 API_KEY = os.getenv("YOUTUBE_API_KEY")
 
-# Analysis window per the project brief: 9 Esfand 1404 -> whenever this is run.
-START_DATE_JALALI = jdatetime.date(1404, 12, 9)
-START_DATE = START_DATE_JALALI.togregorian()  # -> 2026-02-28
+CONFIG = config_loader.load_config()
+
+# Analysis window, topic, and search parameters all come from config.yaml —
+# see roadmap_pipeline.md's "no topic hardcoded in code" rule.
+START_DATE = CONFIG.date_range.start
+START_DATE_JALALI = jdatetime.date.fromgregorian(date=START_DATE)
 START_DATE_UTC = datetime(START_DATE.year, START_DATE.month, START_DATE.day, tzinfo=timezone.utc)
-END_DATE_UTC = datetime.now(timezone.utc)
+END_DATE_UTC = CONFIG.date_range.end
 PUBLISHED_AFTER_RFC3339 = START_DATE_UTC.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-# Search queries used to discover relevant news videos. Tune these once the
-# team agrees on which channels/keywords best represent the statistical
-# population (see GIT_WORKFLOW.md / project brief on source justification).
-SEARCH_QUERIES = [
-    "Iran US war",
-    "Iran America conflict news",
-    "جنگ ایران آمریکا",
-    "حرب إيران وأمريكا",  # Arabic-language coverage
-]
+# Search queries used to discover relevant news videos, combined across
+# languages. Tune config.yaml's keywords_* lists once the team agrees on
+# which keywords best represent the statistical population (see
+# GIT_WORKFLOW.md / project brief on source justification).
+SEARCH_QUERIES = [*CONFIG.keywords_en, *CONFIG.keywords_fa, *CONFIG.keywords_ar]
 
 # (regionCode, relevanceLanguage) pairs applied to SEARCH_QUERIES above, so
 # result diversity doesn't depend solely on manually curated channels.
-REGION_CODES = [
-    ("IR", "fa"),
-    ("US", "en"),
-    ("GB", "en"),
-    ("DE", "de"),
-    ("FR", "fr"),
-    ("AE", "ar"),
-]
+REGION_CODES = [tuple(pair) for pair in CONFIG.youtube.get("regions", [])]
 
 # Query used when searching within a specific resolved channel (the
 # channelId scope already narrows results, so this stays generic).
-CHANNEL_SEARCH_QUERY = "Iran US conflict"
+CHANNEL_SEARCH_QUERY = CONFIG.youtube.get("channel_search_query", CONFIG.topic)
 
 # Explicit video IDs to always include (e.g. specific news segments the team
 # picked by hand), at zero quota cost.
-EXPLICIT_VIDEO_IDS = [
-    "bQI8B93CnJg",
-]
+EXPLICIT_VIDEO_IDS = CONFIG.youtube.get("explicit_video_ids", [])
 
-MAX_VIDEOS_PER_QUERY = 5
-MAX_COMMENTS_PER_VIDEO = 300
+MAX_VIDEOS_PER_QUERY = CONFIG.youtube.get("max_videos_per_query", 5)
+MAX_COMMENTS_PER_VIDEO = CONFIG.youtube.get("max_comments_per_video", 300)
 # Conservative per-video quota reservation for commentThreads.list pagination
 # (up to 3 pages of 100 for MAX_COMMENTS_PER_VIDEO=300) — checked once before
 # starting a video's comment fetch rather than interrupted mid-pagination, to
 # avoid partial-fetch/duplicate-record complexity across resumed runs.
 COMMENT_FETCH_QUOTA_RESERVE = 3 * checkpoint.QUOTA_COSTS["comment_threads"]
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
+# Topic-scoped so rerunning for a different topic (config.yaml: topic_id)
+# never mixes checkpoint/cache/comments with a previous topic's data.
+DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw" / CONFIG.topic_id
 RESOLVED_CHANNELS_PATH = DATA_DIR / "resolved_channels.json"
 _end_jalali = jdatetime.date.fromgregorian(date=END_DATE_UTC.date())
 OUTPUT_PATH = DATA_DIR / (
@@ -168,7 +166,7 @@ def resolve_all_channels(youtube, state: dict) -> dict[str, str]:
         if not checkpoint.has_budget(state, checkpoint.QUOTA_COSTS["search"] + 5 * checkpoint.QUOTA_COSTS["channels_list"]):
             continue
         channel_id = find_channel_id(youtube, channel["name"], channel["handle"], state)
-        checkpoint.save_checkpoint(state)
+        checkpoint.save_checkpoint(state, DATA_DIR)
         if channel_id:
             resolved[key] = channel_id
             save_resolved_channels(resolved)
@@ -201,7 +199,7 @@ def search_video_ids(youtube, query: str, max_results: int, state: dict,
 def run_discovery(youtube, state: dict) -> None:
     if EXPLICIT_VIDEO_IDS and "explicit" not in state["discovered"]:
         checkpoint.mark_discovered(state, "explicit", list(EXPLICIT_VIDEO_IDS))
-        checkpoint.save_checkpoint(state)
+        checkpoint.save_checkpoint(state, DATA_DIR)
 
     for query in SEARCH_QUERIES:
         for region_code, relevance_language in REGION_CODES:
@@ -216,7 +214,7 @@ def run_discovery(youtube, state: dict) -> None:
                 region_code=region_code, relevance_language=relevance_language,
             )
             checkpoint.mark_discovered(state, combo_key, video_ids)
-            checkpoint.save_checkpoint(state)
+            checkpoint.save_checkpoint(state, DATA_DIR)
             print(f"  discovered {len(video_ids)} videos for {combo_key}")
 
     resolved = resolve_all_channels(youtube, state)
@@ -233,7 +231,7 @@ def run_discovery(youtube, state: dict) -> None:
             return
         video_ids = search_video_ids(youtube, CHANNEL_SEARCH_QUERY, MAX_VIDEOS_PER_QUERY, state, channel_id=channel_id)
         checkpoint.mark_discovered(state, combo_key, video_ids)
-        checkpoint.save_checkpoint(state)
+        checkpoint.save_checkpoint(state, DATA_DIR)
         print(f"  discovered {len(video_ids)} videos for {combo_key}")
 
 
@@ -358,7 +356,7 @@ def main():
           f"-> {_end_jalali.strftime('%Y-%m-%d')} (Jalali) / {END_DATE_UTC.date().isoformat()}")
     print(f"Output file: {OUTPUT_PATH.name}\n")
 
-    state = checkpoint.load_checkpoint()
+    state = checkpoint.load_checkpoint(DATA_DIR)
 
     generic_combos = len(SEARCH_QUERIES) * len(REGION_CODES)
     channel_combos = sum(len(v) for v in channels.CHANNEL_REGISTRY.values())
@@ -382,7 +380,7 @@ def main():
     print(f"\n{len(video_ids)} videos discovered so far. Fetching details + geo/relevance tags...")
     details = get_video_details(youtube, video_ids, state)
     channel_hints = build_video_channel_hints(state)
-    tagged_cache = geo_tagger.load_tagged_metadata()
+    tagged_cache = geo_tagger.load_tagged_metadata(DATA_DIR)
 
     all_records: list[Record] = []
     skipped_irrelevant = 0
@@ -397,13 +395,14 @@ def main():
         tag = geo_tagger.tag_video_cached(
             video_id, detail["title"], detail["description"],
             channel_hints.get(video_id), tagged_cache,
+            CONFIG.topic, DATA_DIR,
         )
 
         if not tag["is_relevant"]:
             print(f"  [skip] {video_id} — {detail['title'][:60]!r} not relevant "
                   f"(perspective={tag['perspective']}, confidence={tag['confidence']:.2f})")
             checkpoint.mark_comments_fetched(state, video_id)
-            checkpoint.save_checkpoint(state)
+            checkpoint.save_checkpoint(state, DATA_DIR)
             skipped_irrelevant += 1
             continue
 
@@ -413,7 +412,7 @@ def main():
         print(f"  -> {len(records)} records")
         all_records.extend(records)
         checkpoint.mark_comments_fetched(state, video_id)
-        checkpoint.save_checkpoint(state)
+        checkpoint.save_checkpoint(state, DATA_DIR)
         time.sleep(0.2)  # be polite to the API
 
     # Append rather than overwrite: all_records only holds comments fetched in

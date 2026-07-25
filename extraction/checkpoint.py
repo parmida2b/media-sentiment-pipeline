@@ -21,8 +21,6 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-CHECKPOINT_PATH = Path(__file__).resolve().parent.parent / "data" / "raw" / "checkpoint.json"
-
 QUOTA_COSTS = {
     "search": 100,
     "videos_list": 1,
@@ -49,11 +47,12 @@ def _empty_state() -> dict:
     }
 
 
-def load_checkpoint() -> dict:
-    if not CHECKPOINT_PATH.exists():
+def load_checkpoint(data_dir: Path) -> dict:
+    checkpoint_path = data_dir / "checkpoint.json"
+    if not checkpoint_path.exists():
         return _empty_state()
 
-    with open(CHECKPOINT_PATH, "r", encoding="utf-8") as f:
+    with open(checkpoint_path, "r", encoding="utf-8") as f:
         state = json.load(f)
 
     if state.get("quota_date_pt") != _today_pt():
@@ -65,14 +64,15 @@ def load_checkpoint() -> dict:
     return state
 
 
-def save_checkpoint(state: dict) -> None:
-    CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = CHECKPOINT_PATH.with_suffix(".json.tmp")
+def save_checkpoint(state: dict, data_dir: Path) -> None:
+    data_dir.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = data_dir / "checkpoint.json"
+    tmp_path = checkpoint_path.with_suffix(".json.tmp")
     with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
     # On Windows, cloud-sync clients (OneDrive) or antivirus real-time
-    # scanning can briefly hold a lock on CHECKPOINT_PATH, making
+    # scanning can briefly hold a lock on checkpoint_path, making
     # os.replace fail with a transient PermissionError (WinError 5)
     # even though nothing is actually wrong. Retry a few times before
     # giving up, since this is a resumable job and losing a checkpoint
@@ -80,7 +80,7 @@ def save_checkpoint(state: dict) -> None:
     last_error = None
     for attempt in range(5):
         try:
-            os.replace(tmp_path, CHECKPOINT_PATH)
+            os.replace(tmp_path, checkpoint_path)
             return
         except PermissionError as e:
             last_error = e

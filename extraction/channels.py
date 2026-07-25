@@ -8,6 +8,12 @@ silently pulling in the wrong channel.
 
 This starter list is a first pass, not exhaustive — extend per category
 as the team identifies more sources to cover.
+
+Unlike config/config.yaml, this registry is NOT topic-driven — it's a
+curated outlet list picked for Iran-US conflict coverage specifically. If
+config.yaml's topic changes to something unrelated, either replace this
+list with topic-appropriate outlets or accept that discovery falls back to
+the generic keyword+region search in youtube_extract.py.
 """
 
 CHANNEL_REGISTRY = {
