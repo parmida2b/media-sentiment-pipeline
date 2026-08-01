@@ -41,7 +41,9 @@ media-sentiment-pipeline/
 │   ├── figures/، tables/، audits/، model_evaluation/
 ├── notebooks/
 ├── reports/
-├── decision_log.md
+├── docs/
+│   ├── overview.md، architecture.md، setup.md، decision_log.md
+│   └── images/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
