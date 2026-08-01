@@ -28,7 +28,7 @@ youtube:
     - ["DE", "de"]
     - ["FR", "fr"]
     - ["AE", "ar"]
-  max_videos_per_query: 5
+  max_videos_per_query: 25
   max_comments_per_video: 300
   explicit_video_ids: ["bQI8B93CnJg"]
   channel_search_query: "Iran US conflict"

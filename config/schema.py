@@ -27,7 +27,7 @@ class Record:
     """A standard record - the output of every extraction module must match this shape."""
     text: str
     date: str                      # ISO 8601, e.g. "2026-03-05T12:00:00Z"
-    source: str                    # "youtube" | "reddit" | "telegram" | ...
+    source: str                    # "youtube" | "reddit" | "twitter" | ...
     platform: str                  # usually the same as source, kept separate for flexibility
     author_metadata: AuthorMetadata
 

@@ -22,6 +22,7 @@ DEFAULT_CONFIG_PATH = ROOT / "config" / "config.yaml"
 class DateRange:
     start: date
     end: datetime  # always resolved to a concrete, tz-aware UTC datetime
+    end_is_auto: bool = False  # True when config.yaml set end: "auto" (open-ended "up to now")
 
 
 @dataclass
@@ -63,7 +64,8 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> PipelineConfig:
     start = date.fromisoformat(str(start_raw))
 
     end_raw = date_range_raw.get("end", "auto")
-    if end_raw in (None, "auto"):
+    end_is_auto = end_raw in (None, "auto")
+    if end_is_auto:
         end = datetime.now(timezone.utc)
     else:
         end_date = date.fromisoformat(str(end_raw))
@@ -82,7 +84,7 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> PipelineConfig:
         keywords_fa=raw.get("keywords_fa") or [],
         keywords_en=raw.get("keywords_en") or [],
         keywords_ar=raw.get("keywords_ar") or [],
-        date_range=DateRange(start=start, end=end),
+        date_range=DateRange(start=start, end=end, end_is_auto=end_is_auto),
         platforms=raw.get("platforms") or [],
         youtube=raw.get("youtube") or {},
     )

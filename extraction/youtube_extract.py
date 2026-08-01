@@ -96,10 +96,20 @@ COMMENT_FETCH_QUOTA_RESERVE = 3 * checkpoint.QUOTA_COSTS["comment_threads"]
 # never mixes checkpoint/cache/comments with a previous topic's data.
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw" / CONFIG.topic_id
 RESOLVED_CHANNELS_PATH = DATA_DIR / "resolved_channels.json"
+# When end="auto" (open-ended, "up to now"), END_DATE_UTC re-resolves to a
+# new "now" on every process run, which would otherwise shift this filename
+# every calendar day and silently fragment output across many near-empty
+# files even though checkpoint.py is designed for one logical job to span
+# many runs/days. Use a stable "ongoing" suffix for that case; only bake in
+# a literal end date once config.yaml pins one down explicitly.
 _end_jalali = jdatetime.date.fromgregorian(date=END_DATE_UTC.date())
+if CONFIG.date_range.end_is_auto:
+    _end_suffix = "ongoing"
+else:
+    _end_suffix = _end_jalali.strftime("%Y-%m-%d")
 OUTPUT_PATH = DATA_DIR / (
     f"youtube_comments_{START_DATE_JALALI.strftime('%Y-%m-%d')}"
-    f"_to_{_end_jalali.strftime('%Y-%m-%d')}.jsonl"
+    f"_to_{_end_suffix}.jsonl"
 )
 
 
@@ -134,29 +144,25 @@ def save_resolved_channels(resolved: dict[str, str]) -> None:
 
 
 def find_channel_id(youtube, name: str, expected_handle: str, state: dict) -> str | None:
+    # channels.list's forHandle param resolves a handle directly to its
+    # channel (1 unit, exact match) instead of the old search.list + fuzzy
+    # customUrl-matching approach (up to 105 units, and prone to missing the
+    # channel if it wasn't in the top 5 name-search results).
     try:
-        response = youtube.search().list(
-            q=name, part="snippet", type="channel", maxResults=5,
-        ).execute()
+        response = youtube.channels().list(part="snippet", forHandle=expected_handle).execute()
     except HttpError as e:
-        print(f"[warn] channel lookup failed for {name!r}: {e}")
+        print(f"[warn] channel lookup failed for {name!r} (@{expected_handle}): {e}")
+        if _is_quota_error(e):
+            raise  # don't cache a permanent miss for a transient/quota failure
         return None
-    checkpoint.spend(state, checkpoint.QUOTA_COSTS["search"])
+    checkpoint.spend(state, checkpoint.QUOTA_COSTS["channels_list"])
 
-    for item in response.get("items", []):
-        channel_id = item["id"]["channelId"]
-        title = item["snippet"]["title"]
-        # confirm via the channel's own customUrl rather than trusting search order
-        try:
-            details = youtube.channels().list(part="snippet", id=channel_id).execute()
-        except HttpError:
-            continue
-        checkpoint.spend(state, checkpoint.QUOTA_COSTS["channels_list"])
-        for d in details.get("items", []):
-            custom_url = (d["snippet"].get("customUrl") or "").lower().lstrip("@")
-            if custom_url == expected_handle.lower():
-                print(f"  resolved channel {name!r} -> {title!r} ({channel_id})")
-                return channel_id
+    items = response.get("items", [])
+    if items:
+        channel_id = items[0]["id"]
+        title = items[0]["snippet"]["title"]
+        print(f"  resolved channel {name!r} -> {title!r} ({channel_id})")
+        return channel_id
     print(f"[warn] could not confirm official channel for {name!r} (expected handle @{expected_handle})")
     return None
 
@@ -167,20 +173,35 @@ def resolve_all_channels(youtube, state: dict) -> dict[str, str]:
         key = f"{category}/{channel['handle']}"
         if key in resolved:
             continue
-        # a resolve attempt costs 1 search.list + up to 5 channels.list calls
-        if not checkpoint.has_budget(state, checkpoint.QUOTA_COSTS["search"] + 5 * checkpoint.QUOTA_COSTS["channels_list"]):
+        if not checkpoint.has_budget(state, checkpoint.QUOTA_COSTS["channels_list"]):
             continue
-        channel_id = find_channel_id(youtube, channel["name"], channel["handle"], state)
+        try:
+            channel_id = find_channel_id(youtube, channel["name"], channel["handle"], state)
+        except HttpError:
+            print("[quota] real API quota appears exhausted — stopping channel resolution early "
+                  "(nothing marked as checked, safe to resume later).")
+            break
         checkpoint.save_checkpoint(state, DATA_DIR)
-        if channel_id:
-            resolved[key] = channel_id
-            save_resolved_channels(resolved)
+        # Cache the miss too (as None), not just successes — otherwise a
+        # channel whose handle never resolves gets retried on every future
+        # run forever, burning quota for a lookup that will never succeed.
+        resolved[key] = channel_id
+        save_resolved_channels(resolved)
     return resolved
+
+
+def _is_quota_error(e: HttpError) -> bool:
+    status = getattr(getattr(e, "resp", None), "status", None)
+    return status == 403 and "quota" in str(e).lower()
 
 
 def search_video_ids(youtube, query: str, max_results: int, state: dict,
                       channel_id: str | None = None, region_code: str | None = None,
-                      relevance_language: str | None = None) -> list[str]:
+                      relevance_language: str | None = None) -> list[str] | None:
+    """Returns None (not []) on a failed call, so callers don't permanently
+    mark_discovered a combo as "checked, zero results" when we never actually
+    got a real answer from the API (e.g. real quota exhausted before our
+    local checkpoint's budget tracker caught up)."""
     kwargs = dict(
         q=query, part="id", type="video", order="relevance",
         maxResults=max_results, publishedAfter=PUBLISHED_AFTER_RFC3339,
@@ -196,7 +217,9 @@ def search_video_ids(youtube, query: str, max_results: int, state: dict,
         response = youtube.search().list(**kwargs).execute()
     except HttpError as e:
         print(f"[warn] search failed for query {query!r}: {e}")
-        return []
+        if _is_quota_error(e):
+            raise
+        return None
     checkpoint.spend(state, checkpoint.QUOTA_COSTS["search"])
     return [item["id"]["videoId"] for item in response.get("items", [])]
 
@@ -214,10 +237,17 @@ def run_discovery(youtube, state: dict) -> None:
             if not checkpoint.has_budget(state, checkpoint.QUOTA_COSTS["search"]):
                 print("[quota] search budget exhausted — skipping remaining query x region combos this run.")
                 return
-            video_ids = search_video_ids(
-                youtube, query, MAX_VIDEOS_PER_QUERY, state,
-                region_code=region_code, relevance_language=relevance_language,
-            )
+            try:
+                video_ids = search_video_ids(
+                    youtube, query, MAX_VIDEOS_PER_QUERY, state,
+                    region_code=region_code, relevance_language=relevance_language,
+                )
+            except HttpError:
+                print("[quota] real API quota appears exhausted — stopping discovery early "
+                      "(nothing marked as checked, safe to resume later).")
+                return
+            if video_ids is None:
+                continue  # transient failure — leave uncached so a later run retries it
             checkpoint.mark_discovered(state, combo_key, video_ids)
             checkpoint.save_checkpoint(state, DATA_DIR)
             print(f"  discovered {len(video_ids)} videos for {combo_key}")
@@ -234,7 +264,14 @@ def run_discovery(youtube, state: dict) -> None:
         if not checkpoint.has_budget(state, checkpoint.QUOTA_COSTS["search"]):
             print("[quota] search budget exhausted — skipping remaining channels this run.")
             return
-        video_ids = search_video_ids(youtube, CHANNEL_SEARCH_QUERY, MAX_VIDEOS_PER_QUERY, state, channel_id=channel_id)
+        try:
+            video_ids = search_video_ids(youtube, CHANNEL_SEARCH_QUERY, MAX_VIDEOS_PER_QUERY, state, channel_id=channel_id)
+        except HttpError:
+            print("[quota] real API quota appears exhausted — stopping discovery early "
+                  "(nothing marked as checked, safe to resume later).")
+            return
+        if video_ids is None:
+            continue  # transient failure — leave uncached so a later run retries it
         checkpoint.mark_discovered(state, combo_key, video_ids)
         checkpoint.save_checkpoint(state, DATA_DIR)
         print(f"  discovered {len(video_ids)} videos for {combo_key}")
@@ -305,10 +342,13 @@ def _in_date_range(published_at: str) -> bool:
 
 def fetch_comments_for_video(youtube, video_id: str, video_title: str,
                               max_comments: int, state: dict) -> list[Record]:
+    """Raises HttpError on a real-quota failure instead of swallowing it, so
+    the caller can avoid mark_comments_fetched-ing a video we never actually
+    got comments for (that would permanently skip it on future runs)."""
     records: list[Record] = []
     page_token = None
-    try:
-        while len(records) < max_comments:
+    while len(records) < max_comments:
+        try:
             response = youtube.commentThreads().list(
                 part="snippet,replies",
                 videoId=video_id,
@@ -317,37 +357,41 @@ def fetch_comments_for_video(youtube, video_id: str, video_title: str,
                 order="time",  # newest first, so we can stop once we age out of the window
                 pageToken=page_token,
             ).execute()
-            checkpoint.spend(state, checkpoint.QUOTA_COSTS["comment_threads"])
+        except HttpError as e:
+            if _is_quota_error(e):
+                raise
+            # comments disabled on the video, video not found, etc. — this
+            # video genuinely has nothing more to give, safe to mark done.
+            print(f"[warn] could not fetch comments for video {video_id}: {e}")
+            break
+        checkpoint.spend(state, checkpoint.QUOTA_COSTS["comment_threads"])
 
-            hit_older_comment = False
-            for item in response.get("items", []):
-                top_snippet = item["snippet"]["topLevelComment"]["snippet"]
-                if not _in_date_range(top_snippet.get("publishedAt", "")):
-                    hit_older_comment = True
-                    continue
+        hit_older_comment = False
+        for item in response.get("items", []):
+            top_snippet = item["snippet"]["topLevelComment"]["snippet"]
+            if not _in_date_range(top_snippet.get("publishedAt", "")):
+                hit_older_comment = True
+                continue
 
-                total_replies = item["snippet"].get("totalReplyCount", 0)
-                records.append(comment_to_record(
-                    top_snippet, video_id, video_title,
-                    is_reply=False, reply_count=total_replies,
-                ))
+            total_replies = item["snippet"].get("totalReplyCount", 0)
+            records.append(comment_to_record(
+                top_snippet, video_id, video_title,
+                is_reply=False, reply_count=total_replies,
+            ))
 
-                for reply in item.get("replies", {}).get("comments", []):
-                    if _in_date_range(reply["snippet"].get("publishedAt", "")):
-                        records.append(comment_to_record(
-                            reply["snippet"], video_id, video_title,
-                            is_reply=True,
-                        ))
+            for reply in item.get("replies", {}).get("comments", []):
+                if _in_date_range(reply["snippet"].get("publishedAt", "")):
+                    records.append(comment_to_record(
+                        reply["snippet"], video_id, video_title,
+                        is_reply=True,
+                    ))
 
-            if hit_older_comment:
-                break  # sorted by time desc — everything after this is even older
+        if hit_older_comment:
+            break  # sorted by time desc — everything after this is even older
 
-            page_token = response.get("nextPageToken")
-            if not page_token:
-                break
-    except HttpError as e:
-        # comments disabled on the video, quota hit, etc. — skip and move on
-        print(f"[warn] could not fetch comments for video {video_id}: {e}")
+        page_token = response.get("nextPageToken")
+        if not page_token:
+            break
 
     return records[:max_comments]
 
@@ -413,7 +457,12 @@ def main():
 
         print(f"Fetching comments for {video_id} — {detail['title'][:60]!r} "
               f"(perspective={tag['perspective']}, country={tag['source_country']})")
-        records = fetch_comments_for_video(youtube, video_id, detail["title"], MAX_COMMENTS_PER_VIDEO, state)
+        try:
+            records = fetch_comments_for_video(youtube, video_id, detail["title"], MAX_COMMENTS_PER_VIDEO, state)
+        except HttpError:
+            print("\n[quota] real API quota appears exhausted — stopping comment fetch early "
+                  "(this video not marked done, safe to resume later).")
+            break
         print(f"  -> {len(records)} records")
         all_records.extend(records)
         checkpoint.mark_comments_fetched(state, video_id)
