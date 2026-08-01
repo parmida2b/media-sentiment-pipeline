@@ -34,7 +34,7 @@ youtube:
   channel_search_query: "Iran US conflict"
 
   # Curated, topic-specific outlet list — verified at runtime against each
-  # channel's own customUrl (extraction/youtube_extract.find_channel_id), so
+  # channel's own customUrl (src/ingestion/youtube_extract.find_channel_id), so
   # a wrong handle just logs a warning and gets skipped rather than
   # silently pulling in the wrong channel. Not exhaustive — extend per
   # category as the team identifies more sources. When the topic changes,
