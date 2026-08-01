@@ -24,7 +24,7 @@ switching topics in config.yaml doesn't mix its checkpoint/cache/comments
 with a previous topic's run.
 
 Usage:
-    python extraction/youtube_extract.py
+    python src/ingestion/youtube_extract.py
 """
 
 import os
@@ -39,7 +39,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 sys.stdout.reconfigure(encoding="utf-8")
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from config.schema import Record, AuthorMetadata
 from config import config_loader
 
@@ -94,7 +94,7 @@ COMMENT_FETCH_QUOTA_RESERVE = 3 * checkpoint.QUOTA_COSTS["comment_threads"]
 
 # Topic-scoped so rerunning for a different topic (config.yaml: topic_id)
 # never mixes checkpoint/cache/comments with a previous topic's data.
-DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw" / CONFIG.topic_id
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "raw" / CONFIG.topic_id
 RESOLVED_CHANNELS_PATH = DATA_DIR / "resolved_channels.json"
 # When end="auto" (open-ended, "up to now"), END_DATE_UTC re-resolves to a
 # new "now" on every process run, which would otherwise shift this filename

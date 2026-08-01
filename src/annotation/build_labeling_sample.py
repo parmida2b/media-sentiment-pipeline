@@ -5,7 +5,7 @@ empty human_label column, so a human can hand-label ~50-100 of them. That
 labeled file is later scored against the LLM in evaluate_sentiment_accuracy.py.
 
 Usage:
-    python sentiment/build_labeling_sample.py
+    python src/annotation/build_labeling_sample.py
 """
 
 import csv
@@ -19,8 +19,8 @@ RANDOM_SEED = 42
 MIN_TEXT_LEN = 3
 LANGUAGES = ["en", "fa", "ar"]
 
-ROOT = Path(__file__).resolve().parent.parent
-OUTPUT_PATH = ROOT / "data" / "labeled" / "sample_sentiment_labels.csv"
+ROOT = Path(__file__).resolve().parent.parent.parent
+OUTPUT_PATH = ROOT / "data" / "annotated" / "sample_sentiment_labels.csv"
 
 
 def load_records() -> list[dict]:
@@ -93,7 +93,7 @@ def main():
     print(
         "\nNext step: open the CSV in Excel and fill the 'human_label' column for each row "
         "with exactly one of: positive / negative / neutral (Persian ok too: مثبت / منفی / خنثی). "
-        "Leave a row blank to skip it. Then run sentiment/evaluate_sentiment_accuracy.py."
+        "Leave a row blank to skip it. Then run src/validation/evaluate_sentiment_accuracy.py."
     )
 
 

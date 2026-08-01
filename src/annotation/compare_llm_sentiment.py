@@ -9,7 +9,7 @@ This is NOT the Day 2 accuracy benchmark (that needs a hand-labeled sample);
 it's a quick qualitative scouting pass.
 
 Usage:
-    python sentiment/compare_llm_sentiment.py
+    python src/annotation/compare_llm_sentiment.py
 """
 
 import json
@@ -24,9 +24,9 @@ from dotenv import load_dotenv
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 INPUT_PATH = ROOT / "data" / "raw" / "youtube_comments.jsonl"
-OUTPUT_PATH = ROOT / "outputs" / "sentiment_model_comparison.jsonl"
+OUTPUT_PATH = ROOT / "outputs" / "model_evaluation" / "sentiment_model_comparison.jsonl"
 
 SAMPLE_SIZE = 20
 RANDOM_SEED = 42
@@ -97,7 +97,7 @@ def call_groq(client, text: str) -> dict:
 
 def main():
     if not INPUT_PATH.exists():
-        print(f"{INPUT_PATH} not found — run extraction/youtube_extract.py first.")
+        print(f"{INPUT_PATH} not found — run src/ingestion/youtube_extract.py first.")
         return
 
     gemini_key = os.getenv("GEMINI_API_KEY")

@@ -5,7 +5,7 @@ LLM sentiment classifier(s) against those human labels: accuracy, confusion
 matrix, and a per-language breakdown.
 
 Usage:
-    python sentiment/evaluate_sentiment_accuracy.py
+    python src/validation/evaluate_sentiment_accuracy.py
 """
 
 import csv
@@ -21,10 +21,10 @@ from dotenv import load_dotenv
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
-ROOT = Path(__file__).resolve().parent.parent
-INPUT_PATH = ROOT / "data" / "labeled" / "sample_sentiment_labels.csv"
-RESULTS_PATH = ROOT / "outputs" / "sentiment_accuracy_results.jsonl"
-SUMMARY_PATH = ROOT / "outputs" / "sentiment_accuracy_summary.json"
+ROOT = Path(__file__).resolve().parent.parent.parent
+INPUT_PATH = ROOT / "data" / "annotated" / "sample_sentiment_labels.csv"
+RESULTS_PATH = ROOT / "outputs" / "model_evaluation" / "sentiment_accuracy_results.jsonl"
+SUMMARY_PATH = ROOT / "outputs" / "model_evaluation" / "sentiment_accuracy_summary.json"
 
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
@@ -127,7 +127,7 @@ def score(rows: list[dict], model_key: str) -> dict:
 
 def main():
     if not INPUT_PATH.exists():
-        print(f"{INPUT_PATH} not found — run sentiment/build_labeling_sample.py first.")
+        print(f"{INPUT_PATH} not found — run src/annotation/build_labeling_sample.py first.")
         return
 
     rows = load_labeled_rows()

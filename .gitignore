@@ -7,10 +7,12 @@ client_secret*.json
 
 data/raw/*
 data/processed/*
+data/interim/*
 *.jsonl
 *.csv
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/interim/.gitkeep
 !**/sample_*.csv
 !**/sample_*.jsonl
 
@@ -23,6 +25,14 @@ env/
 
 outputs/*
 !outputs/.gitkeep
+!outputs/figures/
+!outputs/figures/.gitkeep
+!outputs/tables/
+!outputs/tables/.gitkeep
+!outputs/audits/
+!outputs/audits/.gitkeep
+!outputs/model_evaluation/
+!outputs/model_evaluation/.gitkeep
 .ipynb_checkpoints/
 
 data_backup/
