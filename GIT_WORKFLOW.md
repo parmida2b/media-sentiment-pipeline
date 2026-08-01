@@ -10,35 +10,44 @@ git clone https://github.com/parmida2b/media-sentiment-pipeline.git
 cd media-sentiment-pipeline
 ```
 
-## ۲. ساختار پوشه‌ها (پیشنهادی)
+## ۲. ساختار پوشه‌ها
 
 ```
 media-sentiment-pipeline/
-├── src/
-│   ├── extraction/
-│   │   ├── youtube.py          <- پارمیدا
-│   │   ├── reddit.py           <- حسین
-│   │   └── telegram.py         <- حسین/پارمیدا (اگه لازم شد)
-│   ├── financial/
-│   │   └── yahoo.py            <- علی
-│   ├── sentiment/
-│   │   └── llm_sentiment.py    <- پارمیدا
-│   ├── analysis/
-│   │   └── correlation.py      <- علی
-│   └── pipeline/
-│       └── run_pipeline.py     <- بخش امتیازی (Pipeline قابل‌تعمیم)
 ├── config/
-│   └── schema.py                <- تعریف مشترک فرمت داده (فقط حسین ویرایش کنه)
+│   ├── config.yaml               <- موضوع/کلمات‌کلیدی/بازه‌زمانی/تنظیمات هر پلتفرم
+│   ├── config_loader.py
+│   └── schema.py                 <- تعریف مشترک فرمت داده (فقط حسین ویرایش کنه)
+├── src/
+│   ├── ingestion/                 <- استخراج خام از هر پلتفرم
+│   │   ├── youtube_extract.py، channels.py، checkpoint.py، geo_tagger.py   <- پارمیدا
+│   │   └── reddit_extract.py (وقتی ساخته شد)                              <- حسین
+│   ├── preprocessing/             <- پاکسازی/نرمال‌سازی قبل از annotation (خالی، هنوز ساخته نشده)
+│   ├── annotation/                <- تولید لیبل sentiment (دستی/LLM)
+│   │   └── build_labeling_sample.py، compare_llm_sentiment.py  <- پارمیدا
+│   ├── validation/                <- سنجش دقت annotation در برابر لیبل انسانی
+│   │   └── evaluate_sentiment_accuracy.py  <- پارمیدا
+│   ├── temporal_analysis/         <- تحلیل روند زمانی (خالی، علی)
+│   ├── event_analysis/            <- تحلیل هم‌زمانی با رویدادها (خالی، علی)
+│   ├── cost_tracking/             <- ردیابی هزینه API/LLM (خالی، هنوز assign نشده)
+│   └── reporting/                 <- داشبورد/گزارش نهایی (خالی، ریحانه)
 ├── data/
-│   ├── raw/          (gitignore شده - فقط لوکاله)
-│   └── processed/    (gitignore شده - فقط لوکاله)
-├── docs/
-│   └── methodology.md           <- ریحانه
-├── outputs/           (gitignore شده)
+│   ├── raw/          (gitignore شده - فقط لوکاله)      <- خروجی خام هر پلتفرم، زیر {topic_id}/
+│   ├── interim/      (gitignore شده - فقط لوکاله)      <- خروجی preprocessing
+│   ├── annotated/                                       <- نمونه‌های لیبل‌خورده (sample_*.csv مستثنا از gitignore)
+│   ├── processed/    (gitignore شده - فقط لوکاله)
+│   └── reference/                                        <- دیتای مرجع غیرحجیم (مثلاً رویدادها.xlsx)
+├── outputs/           (gitignore شده جز .gitkeep)
+│   ├── figures/، tables/، audits/، model_evaluation/
+├── notebooks/
+├── reports/
+├── decision_log.md
 ├── requirements.txt
 ├── .gitignore
 └── README.md
 ```
+
+فایل‌های داخل `src/preprocessing/`, `temporal_analysis/`, `event_analysis/`, `cost_tracking/`, `reporting/` هنوز نوشته نشدن — پوشه‌ها از قبل ساخته شدن که وقتی هرکس به مرحله‌ش رسید، مستقیم همون‌جا کد بزنه، نه این‌که ساختار رو وسط کار دوباره جابه‌جا کنیم.
 
 **نکته کلیدی:** فایل‌های داده (`.csv`, `.jsonl`) وارد گیت نمی‌شن (توی
 `.gitignore` هست). برای رد و بدل کردن دیتای واقعی بین اعضا از یه Google
@@ -71,7 +80,7 @@ git checkout -b <name>/dayN-...
 
 **در طول روز:** کامیت‌های کوچیک و مکرر (نه یه کامیت غول‌پیکر آخر روز):
 ```bash
-git add src/extraction/youtube.py
+git add src/ingestion/youtube_extract.py
 git commit -m "youtube: افزودن استخراج کامنت با pagination"
 ```
 
@@ -94,8 +103,8 @@ git push origin main
 ## ۵. جلوگیری از Merge Conflict
 
 - **هر کس فقط توی فایل‌های پوشه خودش کار کنه.** مثلاً پارمیدا فقط توی
-  `src/extraction/youtube.py` و `src/sentiment/`، علی فقط توی
-  `src/financial/` و `src/analysis/`.
+  `src/ingestion/` (بخش یوتیوب) و `src/annotation/` + `src/validation/`،
+  علی فقط توی `src/temporal_analysis/` و `src/event_analysis/`.
 - **`config/schema.py` فقط حسینه که تغییرش می‌ده.** اگه کسی نیاز به تغییر
   فرمت داره، اول توی گروه بگه، حسین اعمال کنه، بقیه `pull` کنن.
 - قبل از هر `push`، حتماً یه `git pull origin main` بزنید تا اگه تغییری
@@ -128,6 +137,8 @@ git push
 ## ۷. یه نکته برای بخش امتیازی (Pipeline)
 چون اسم ریپو `media-sentiment-pipeline`‌ـه (نه `iran-us-war-analysis`)،
 بهتره از همین الان `src/pipeline/run_pipeline.py` رو طوری بنویسید که
-موضوع تحلیل (topic/keywords) از یه فایل کانفیگ (`config/topic.yaml` یا
-مشابه) خونده بشه، نه هاردکد. این دقیقاً همون چیزیه که سند برای بخش
+موضوع تحلیل (topic/keywords) از یه فایل کانفیگ خونده بشه، نه هاردکد —
+همون کاری که `config/config.yaml` + `config/config_loader.py` الان
+برای `src/ingestion/youtube_extract.py` انجام می‌دن، همون الگو رو برای
+بقیه مراحل هم ادامه بدید. این دقیقاً همون چیزیه که سند برای بخش
 امتیازی می‌خواد و با اسم ریپو هم هم‌خونی داره.
