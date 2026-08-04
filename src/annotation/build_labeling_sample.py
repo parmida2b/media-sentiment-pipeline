@@ -6,8 +6,10 @@ labeled file is later scored against the LLM in evaluate_sentiment_accuracy.py.
 
 Usage:
     python src/annotation/build_labeling_sample.py
+    python src/annotation/build_labeling_sample.py --force   # overwrite even if already hand-labeled
 """
 
+import argparse
 import csv
 import glob
 import json
@@ -71,7 +73,37 @@ def stratified_sample(records: list[dict], n: int) -> list[dict]:
     return sample
 
 
+GENERATED_COLUMNS = {"sample_id", "post_id", "language", "text"}
+
+
+def has_existing_annotations(path: Path) -> bool:
+    """True if `path` already exists and has any non-blank value outside the
+    columns this script itself generates — covers human_label/notes, but also
+    columns added later by someone else (e.g. a translation_fa column), since
+    we can't assume we know every column a teammate might have added by hand."""
+    if not path.exists():
+        return False
+    with open(path, "r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        annotation_columns = [c for c in (reader.fieldnames or []) if c not in GENERATED_COLUMNS]
+        return any(row.get(col, "").strip() for row in reader for col in annotation_columns)
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--force", action="store_true",
+        help="overwrite the output CSV even if it already has hand-filled annotation values",
+    )
+    args = parser.parse_args()
+
+    if not args.force and has_existing_annotations(OUTPUT_PATH):
+        print(
+            f"{OUTPUT_PATH} already has hand-filled annotation values — refusing to "
+            "overwrite and lose them. Re-run with --force if you really want a fresh sample."
+        )
+        return
+
     records = load_records()
     if not records:
         print("No records found under data/raw/*/youtube_comments*.jsonl — run extraction first.")

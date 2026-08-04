@@ -21,6 +21,13 @@ class AuthorMetadata:
     follower_count: Optional[int] = None      # if the platform provides it (e.g. Reddit/Telegram)
     account_age_days: Optional[int] = None    # for bot filtering later (Ali/Reyhaneh)
 
+    # v2 (Day 3+, Parmida) - see docs/decision_log.md. Salted hash of a stable
+    # author identifier, for collectors that must not store raw usernames
+    # (project brief section 10/43: no unnecessary PII). Prefer this over
+    # author_display_name in new collectors; the latter stays for backward
+    # compatibility with data already collected under v1.
+    author_hash: Optional[str] = None
+
 
 @dataclass
 class Record:
@@ -37,6 +44,32 @@ class Record:
     post_title: Optional[str] = None
     reply_count: int = 0
     is_reply: bool = False
+
+    # v2 (Day 3+, Parmida) - additive fields to close gaps against the project
+    # brief's raw-data contract (section 10), Collection Manifest (11),
+    # automation risk (16), and geo (17). All optional with defaults so
+    # existing v1 producers/consumers of Record are unaffected. See
+    # docs/decision_log.md for why these were added and coordinate with
+    # Hossein before renaming/removing anything above this line.
+    content_id: Optional[str] = None       # platform's own id for this exact piece of content (e.g. comment id) - required for dedup/uniqueness checks
+    parent_id: Optional[str] = None        # content_id of the parent, when is_reply is True
+    collected_at_utc: Optional[str] = None # when THIS pipeline fetched the record, distinct from `date` (when it was posted)
+    collection_run_id: Optional[str] = None
+    query_id: Optional[str] = None         # which query/channel/region combo discovered this record
+
+    # Per-commenter geo tag from author_geo.py, using the project brief's
+    # controlled vocabulary: geo_method is one of
+    # geotag/profile/timezone/text_place/source_community/language_weak,
+    # geo_confidence is categorical (high/medium/low, not a score), and
+    # geo_granularity is one of country/region/city/unknown.
+    geo_method: Optional[str] = None
+    geo_confidence: Optional[str] = None
+    geo_granularity: Optional[str] = None
+    country_or_region: Optional[str] = None
+    geo_limitations: Optional[str] = None
+
+    # Heuristic risk score in [0, 1], not a bot verdict - see automation_risk.py.
+    automation_risk_score: Optional[float] = None
 
     def to_json_line(self) -> str:
         d = asdict(self)
