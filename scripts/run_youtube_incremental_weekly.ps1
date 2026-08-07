@@ -1,5 +1,10 @@
 # run_youtube_incremental_weekly.ps1 — weekly-run wrapper for
-# src/ingestion/youtube_extract_incremental.py (Parmida)
+# src/ingestion/youtube_extract.py (Parmida)
+#
+# youtube_extract.py used to be split into a v1 (youtube_extract.py) and a
+# v2 (youtube_extract_incremental.py) script; they were consolidated into
+# one file (see docs/decision_log.md) — this wrapper now points at that
+# single script instead of the retired _incremental one.
 #
 # Meant to be registered as a Windows Task Scheduler action (see
 # docs/setup.md, "اجرای خودکار هفتگی"). The Python script itself is
@@ -23,7 +28,7 @@ $LogFile = Join-Path $LogDir "youtube_incremental_$Timestamp.log"
 # Override by setting $env:PYTHON_EXE before calling this script if you use
 # a virtualenv/conda env instead of the system python on PATH.
 $PythonExe = if ($env:PYTHON_EXE) { $env:PYTHON_EXE } else { "python" }
-$ScriptPath = Join-Path $ProjectRoot "src\ingestion\youtube_extract_incremental.py"
+$ScriptPath = Join-Path $ProjectRoot "src\ingestion\youtube_extract.py"
 
 Write-Output "[$Timestamp] Starting incremental YouTube collection..." | Tee-Object -FilePath $LogFile
 Write-Output "Project root: $ProjectRoot" | Tee-Object -FilePath $LogFile -Append

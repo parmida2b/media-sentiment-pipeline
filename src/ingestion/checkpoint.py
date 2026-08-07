@@ -1,17 +1,16 @@
 """
-checkpoint.py — resumable state + quota-budget tracking for youtube_extract.py (Parmida)
+checkpoint.py — quota-budget tracking for youtube_extract.py (Parmida)
 
 YouTube Data API v3 quota resets at midnight Pacific Time, not local
 midnight, and search.list (100 units) is ~100x the cost of videos.list or
-commentThreads.list (1 unit each). This module lets a single logical
-extraction job span multiple process runs / calendar days by persisting:
-  - which (channel/query, regionCode) combos have already been searched
-    (the expensive part), separately from
-  - which discovered video_ids have had comments fetched / geo-tagged
-    (the cheap part) —
-so if the search budget runs out mid-run, a rerun can still spend the
-remaining budget fetching comments for already-discovered videos instead
-of stopping dead.
+commentThreads.list (1 unit each). This module tracks how much of the daily
+budget has been spent so a run can stop cleanly and a later run can pick up
+where it left off, without ever overspending the real API's daily quota.
+
+The v1 collector (retired - see docs/decision_log.md) used to also track
+per-combo discovery state and per-video comments_fetched/geo_tagged flags
+here; youtube_extract.py's incremental/watermark design (incremental_state.py)
+replaced that, so this module is quota-tracking only now.
 """
 
 import json
@@ -41,9 +40,6 @@ def _empty_state() -> dict:
     return {
         "quota_date_pt": _today_pt(),
         "quota_used_today": 0,
-        "discovered": {},       # combo_key -> list[video_id]
-        "comments_fetched": [], # list[video_id]
-        "geo_tagged": [],       # list[video_id]
     }
 
 
@@ -94,28 +90,3 @@ def has_budget(state: dict, cost: int) -> bool:
 
 def spend(state: dict, cost: int) -> None:
     state["quota_used_today"] += cost
-
-
-def mark_discovered(state: dict, combo_key: str, video_ids: list[str]) -> None:
-    state["discovered"][combo_key] = video_ids
-
-
-def all_discovered_video_ids(state: dict) -> list[str]:
-    seen = []
-    seen_set = set()
-    for video_ids in state["discovered"].values():
-        for vid in video_ids:
-            if vid not in seen_set:
-                seen_set.add(vid)
-                seen.append(vid)
-    return seen
-
-
-def mark_comments_fetched(state: dict, video_id: str) -> None:
-    if video_id not in state["comments_fetched"]:
-        state["comments_fetched"].append(video_id)
-
-
-def mark_geo_tagged(state: dict, video_id: str) -> None:
-    if video_id not in state["geo_tagged"]:
-        state["geo_tagged"].append(video_id)

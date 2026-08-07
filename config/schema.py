@@ -5,7 +5,7 @@ This file is the single source of truth for the data format.
 Only Hossein edits this file; everyone else just imports from it.
 If a field needs to change, coordinate with the team first.
 
-Version: v1 - Day 1
+Version: v3 - Day 4 (see docs/decision_log.md for the v2/v3 additive changes)
 """
 
 from dataclasses import dataclass, field, asdict
@@ -70,6 +70,30 @@ class Record:
 
     # Heuristic risk score in [0, 1], not a bot verdict - see automation_risk.py.
     automation_risk_score: Optional[float] = None
+
+    # v3 (Day 4+, Parmida) - additive fields to match docs/raw_schema_v03.md
+    # (the team's raw-data export contract) and docs/source_registry_v3.md
+    # (the allowed-sources list). See docs/decision_log.md for the full
+    # rationale. All optional with defaults so existing producers/consumers
+    # of Record are unaffected. Coordinate with Hossein before renaming/
+    # removing anything above this line, same as the v2 block.
+    content_type: Optional[str] = None        # "comment" | "reply" | ... - raw_schema_v03 §8
+    matched_query_ids: Optional[str] = None    # ";"-joined query_ids that discovered this content's video (raw_schema_v03 §3)
+    query_version: Optional[str] = None        # query_registry.yaml's registry_version at collection time
+    discovery_route: Optional[str] = None      # "query_search" | "source_scope" | "hashtag"
+    source_id: Optional[str] = None            # Source Registry ID (e.g. "YT-001"); empty if source isn't in the registry
+    source_container: Optional[str] = None     # human-readable container, e.g. channel title
+    source_container_id: Optional[str] = None  # platform ID of the container, e.g. channel_id
+    permalink_hash: Optional[str] = None       # sha256 of the content's permalink - never store the raw URL
+    source_total_available: Optional[int] = None  # platform-reported total items available before any cap, if given
+    sampling_method: Optional[str] = None      # "none" | "random" | ... - raw_schema_v03 §3/§12.8
+    sampling_applied: Optional[bool] = None
+    items_kept: Optional[int] = None
+    random_seed: Optional[str] = None          # only set when sampling_method == "random"
+    language_confidence: Optional[float] = None
+    project_week: Optional[str] = None         # "W01".."W21" or "OUT" - raw_schema_v03 §10
+    in_window: Optional[bool] = None
+    is_partial_week: Optional[bool] = None
 
     def to_json_line(self) -> str:
         d = asdict(self)

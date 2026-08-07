@@ -8,11 +8,22 @@ topic_id: "iran_us_war"   # ascii slug — used in output paths; change this whe
 
 keywords_fa: ["جنگ ایران آمریکا"]
 keywords_en: ["Iran US war", "Iran America conflict news"]
-keywords_ar: ["حرب إيران وأمريكا"]
+# keywords_ar removed per docs/source_registry_v3.md SR-006: the project's
+# language domain is EN + FA only, Arabic is explicitly "Archived - out of
+# scope" (§4-2). query_registry.yaml's ar_* entries are left in place
+# (untouched, per that file's own "don't silently edit" rule) but filtered
+# out at load time in youtube_extract.py.
 
 date_range:
   start: "2026-02-28"   # 9 Esfand 1404
   end: "auto"           # "auto" = up to now(); or an explicit ISO date like "2026-08-22"
+  # NOTE: this only bounds live collection ("how far do we keep fetching new
+  # comments"). The project's analytical window end used for
+  # project_week/in_window (fixed at 2026-07-22T23:59:59Z per
+  # docs/raw_schema_v03.md §10 and docs/source_registry_v3.md §4-1) lives in
+  # src/ingestion/project_calendar.py, independent of this "auto" setting -
+  # see raw_schema_v03.md §10-1 "Window Lock". search.list calls also pass
+  # this fixed END as publishedBefore directly (source_registry_v3.md §4-1).
 
 platforms: ["youtube"]
 
@@ -27,7 +38,8 @@ youtube:
     - ["GB", "en"]
     - ["DE", "de"]
     - ["FR", "fr"]
-    - ["AE", "ar"]
+    # ["AE", "ar"] removed per docs/source_registry_v3.md SR-006 (Arabic is
+    # out of scope for this project's language domain, EN + FA only).
   max_videos_per_query: 25
   max_comments_per_video: 300
   explicit_video_ids: ["bQI8B93CnJg"]
@@ -36,45 +48,56 @@ youtube:
   # Curated, topic-specific outlet list — verified at runtime against each
   # channel's own customUrl (src/ingestion/youtube_extract.find_channel_id), so
   # a wrong handle just logs a warning and gets skipped rather than
-  # silently pulling in the wrong channel. Not exhaustive — extend per
-  # category as the team identifies more sources. When the topic changes,
-  # THIS is what needs to change too: either replace with topic-appropriate
-  # outlets or leave categories empty to rely on the generic keyword+region
-  # search above.
+  # silently pulling in the wrong channel.
+  #
+  # This list is the 15 "Active" channels from docs/source_registry_v3.md §4
+  # (replaces the earlier hand-picked 18-channel list — see
+  # docs/decision_log.md). Each entry carries the Source Registry's
+  # source_id so it can be written straight onto Record.source_id. Handles
+  # for the 7 channels new to this list (source_registry_v3.md's own §9
+  # checklist item 2 flags these as still needing manual verification) are
+  # best-effort guesses — a wrong handle just logs a warning and is skipped
+  # (find_channel_id), it doesn't break the run.
+  #
+  # Deliberately DROPPED vs the previous list: Press TV / IRIB News (Iran
+  # state media - not in source_registry_v3's active set), NYT, CBS News,
+  # Sky News, France 24, euronews, RFI, CSIS, DW News (the English DW
+  # channel - source_registry_v3 lists DW **Persian** instead).
   channels:
-    iran_state:
-      - {name: "Press TV", handle: "presstelevision", country: "IR"}
-      - {name: "IRIB News", handle: "iribn", country: "IR"}
-    iran_diaspora:
-      - {name: "Iran International", handle: "iranintl", country: "GB"}
-      - {name: "BBC Persian", handle: "bbcnewspersian", country: "GB"}
-      - {name: "VOA Persian", handle: "voafarsi", country: "US"}
-    us_western:
-      - {name: "CNN", handle: "cnn", country: "US"}
-      - {name: "The New York Times", handle: "nytimes", country: "US"}
-      - {name: "CBS News", handle: "cbsnews", country: "US"}
-    arab_gulf:
-      - {name: "Al Jazeera English", handle: "aljazeeraenglish", country: "QA"}
-      - {name: "Al Arabiya", handle: "alarabiya", country: "AE"}
-    european_western:
-      - {name: "BBC News", handle: "bbcnews", country: "GB"}
-      - {name: "Sky News", handle: "skynews", country: "GB"}
-      - {name: "DW News", handle: "dwnews", country: "DE"}
-      - {name: "France 24", handle: "france24_en", country: "FR"}
-      - {name: "euronews", handle: "euronews", country: "FR"}
-      - {name: "RFI", handle: "rfi_en", country: "FR"}
-    international_thinktank:
-      - {name: "CSIS", handle: "csis", country: "US"}
-      - {name: "Reuters", handle: "reuters", country: "GB"}
+    wire:
+      - {name: "Reuters", handle: "reuters", country: "GB", source_id: "YT-001"}
+      - {name: "Associated Press", handle: "AP", country: "US", source_id: "YT-002"}
+    us_partisan:
+      - {name: "CNN", handle: "cnn", country: "US", source_id: "YT-009"}
+      - {name: "Fox News", handle: "FoxNews", country: "US", source_id: "YT-013"}
+    international:
+      - {name: "BBC News", handle: "bbcnews", country: "GB", source_id: "YT-003"}
+      - {name: "Al Jazeera English", handle: "aljazeeraenglish", country: "QA", source_id: "YT-004"}
+      - {name: "Middle East Eye", handle: "middleeasteye", country: "GB", source_id: "YT-024"}
+    non_western:
+      - {name: "TRT World", handle: "trtworld", country: "TR", source_id: "YT-018"}
+      - {name: "WION", handle: "WIONews", country: "IN", source_id: "YT-022"}
+    financial:
+      - {name: "Bloomberg Television", handle: "BloombergTelevision", country: "US", source_id: "YT-015"}
+    regional_gulf:
+      - {name: "Al Arabiya English", handle: "alarabiya", country: "AE", source_id: "YT-026"}
+    persian:
+      - {name: "BBC Persian", handle: "bbcnewspersian", country: "GB", source_id: "YT-029"}
+      - {name: "Iran International", handle: "iranintl", country: "GB", source_id: "YT-030"}
+      - {name: "VOA Farsi", handle: "voafarsi", country: "US", source_id: "YT-031"}
+      - {name: "DW Persian", handle: "dwpersian", country: "DE", source_id: "YT-034"}
 
   # Discovery priority order — checkpoint.py resumability means this alone
   # determines what gets covered first across multiple runs/days, no
   # separate "day N" bookkeeping needed. Categories not listed here are
-  # still covered, just after these.
+  # still covered, just after these. Persian + wire prioritized first per
+  # source_registry_v3.md's "priority to Persian channels, then by volume"
+  # note on its reserve/archive ordering (§4-2).
   channel_priority_order:
-    - iran_state
-    - us_western
-    - european_western
-    - arab_gulf
-    - iran_diaspora
-    - international_thinktank
+    - persian
+    - wire
+    - us_partisan
+    - international
+    - non_western
+    - financial
+    - regional_gulf
