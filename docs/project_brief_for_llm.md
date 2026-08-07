@@ -33,18 +33,17 @@ config.yaml → [1] data_collection → [2] preprocessing → [3] classification
 فیلدهای موجود.
 
 ## چه کاری تا الان انجام شده (بخش من — YouTube)
-- **استخراج v1** (`src/ingestion/youtube_extract.py`) — کالکتور اولیه، ۱۸ کانال
-  در ۶ دسته دیدگاهی (`iran_state, iran_diaspora, us_western, arab_gulf,
-  european_western, international_thinktank`)، تنوع منطقه‌ای از طریق
-  regionCode، geo-tagging هر ویدیو با LLM (Groq llama-3.3-70b) شامل
-  `origin_country/perspective/is_relevant/confidence`، checkpoint/resume برای
-  مدیریت quota روزانه YouTube API.
-- **استخراج v2 incremental** (`src/ingestion/youtube_extract_incremental.py`,
-  `incremental_state.py`) — کالکتور جدید و جدا (نه ویرایش v1) که فیلدهای
-  `content_id/parent_id/collected_at_utc/collection_run_id/query_id/geo_*/
-  automation_risk_score` رو پر می‌کنه که سند پروژه لازم داشت؛ idempotent، هر
-  اجرا فقط داده جدید رو می‌گیره (watermark در `checkpoint.json`).
-- **حریم خصوصی:** از v2 به بعد، به‌جای ذخیره `author_display_name` خام،
+- **استخراج** (`src/ingestion/youtube_extract.py`) — کالکتور یکپارچه (v1 و v2
+  incremental که قبلاً دو فایل جدا بودن، از ۲۰۲۶-۰۸-۰۷ در همین یک فایل ادغام
+  شدن؛ جزئیات در `docs/decision_log.md`). idempotent و incremental است — هر
+  اجرا فقط داده‌ی جدید رو می‌گیره (watermark در `checkpoint.json`،
+  `incremental_state.py`)، ۱۸ کانال در ۶ دسته دیدگاهی، تنوع منطقه‌ای از طریق
+  regionCode، فیلتر ربط + geo-tagging هر ویدیو با LLM (Groq
+  llama-3.3-70b)، و همه‌ی فیلدهای `content_id/parent_id/collected_at_utc/
+  collection_run_id/query_id/geo_*/automation_risk_score` که سند پروژه لازم
+  داشت. توضیح فنی کامل و به‌روز مسیر داده (استخراج تا اعتبارسنجی):
+  `docs/youtube_data_pipeline_fa.md`.
+- **حریم خصوصی:** به‌جای ذخیره `author_display_name` خام،
   `author_hash` (sha256 نمکی روی `author_channel_id`) ذخیره می‌شه
   (`author_hash.py`). **توجه: دیتای v1 قبلی (~۷۵هزار رکورد) هنوز نام خام
   داره — remediation‌ش هنوز انجام نشده.**
@@ -69,9 +68,8 @@ config.yaml → [1] data_collection → [2] preprocessing → [3] classification
    `compare_llm_sentiment.py` که روی کل داده (بعد از preprocessing) اجرا بشه و
    `sentiment_label/confidence/model_used` رو برای هر رکورد ذخیره کنه، نه فقط
    ۲۰ نمونه.
-۳. **`comment_language_stats.py`** (فاز بعدی طبق
-   `YOUTUBE_EXTRACTION_CHANGES.md`) — درصد کامنت فارسی/عربی/انگلیسی/... به‌عنوان
-   proxy جغرافیایی.
+۳. **`comment_language_stats.py`** (فاز بعدی، هنوز پیاده نشده) — درصد کامنت
+   فارسی/عربی/انگلیسی/... به‌عنوان proxy جغرافیایی.
 ۴. **remediation دیتای v1** — حذف/هش کردن `author_display_name` خام در
    ~۷۵هزار رکورد قدیمی.
 ۵. **هماهنگی merge** با خروجی Reddit (حسین)، مالی (علی)، داشبورد (ریحانه).
@@ -83,8 +81,9 @@ config.yaml → [1] data_collection → [2] preprocessing → [3] classification
   بخورن (وقتی هیچ کلید LLM ست نبود) — چک‌شده و ریست شد، ولی نشون‌دهنده‌ی این
   ریسکه که باید قبل از اجراهای بعدی کلیدها verify بشن.
 - `.env.example` هنوز کلید واقعی API داره (باید placeholder بشه).
-- quota YouTube API بین v1/v2 و بین اعضای تیم مشترکه — هماهنگی زمان اجرا
-  لازمه.
+- quota YouTube API بین این اسکریپت و هر اسکریپت دیگری که از همون
+  `YOUTUBE_API_KEY` استفاده کنه (از جمله اجراهای بقیه‌ی تیم) مشترکه —
+  هماهنگی زمان اجرا لازمه.
 
 ## پیشنهاد فایل‌های جدید برای ادامه اجرا
 
