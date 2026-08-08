@@ -13,50 +13,64 @@
 # Used by youtube_extract_incremental.py via config/query_registry_loader.py.
 # The original flat keywords_fa/en/ar in config.yaml are untouched and still
 # used by youtube_extract.py (v1) — this registry does not replace that.
+#
+# 2026-08-08 (Parmida): quota math forced a cut. All 29 non-ar queries × 5
+# regions = 145 search.list combos/run = 14,500 units — almost double the
+# 8000/day budget, so a real run spent the ENTIRE day's quota on discovery
+# alone and fetched 0 comments (see docs/decision_log.md for the incident).
+# Trimmed active set to 8 (4 fa + 4 en: topic_1, actor_2, support_1,
+# support_2 per language) = 40 combos = 4000 units, leaving headroom for
+# video-details + comment fetch. Paused entries below keep active_to instead
+# of being deleted, per this file's own convention, so they can be
+# reactivated later (e.g. once a week's worth of budget history shows real
+# headroom, or the daily budget/quota is raised).
 
-registry_version: "0.1-draft"
+registry_version: "0.2-draft"
 
 queries:
   # --- fa: topic / event phrasing ---
   - {query_id: q_fa_topic_1, query_text: "جنگ ایران آمریکا", language: fa, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_fa_topic_2, query_text: "تنش نظامی ایران و آمریکا", language: fa, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_fa_topic_3, query_text: "حمله آمریکا به ایران", language: fa, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_fa_topic_4, query_text: "حمله ایران به آمریکا", language: fa, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_fa_topic_2, query_text: "تنش نظامی ایران و آمریکا", language: fa, purpose: topic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_fa_topic_3, query_text: "حمله آمریکا به ایران", language: fa, purpose: topic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_fa_topic_4, query_text: "حمله ایران به آمریکا", language: fa, purpose: topic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- fa: actors ---
-  - {query_id: q_fa_actor_1, query_text: "سپاه پاسداران آمریکا", language: fa, purpose: actor, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_fa_actor_1, query_text: "سپاه پاسداران آمریکا", language: fa, purpose: actor, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   - {query_id: q_fa_actor_2, query_text: "ترامپ ایران", language: fa, purpose: actor, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_fa_actor_3, query_text: "خامنه‌ای آمریکا", language: fa, purpose: actor, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_fa_actor_3, query_text: "خامنه‌ای آمریکا", language: fa, purpose: actor, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- fa: economic / diplomacy ---
-  - {query_id: q_fa_econ_1, query_text: "تحریم ایران آمریکا", language: fa, purpose: economic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_fa_dipl_1, query_text: "مذاکرات هسته‌ای ایران آمریکا", language: fa, purpose: diplomacy, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_fa_econ_1, query_text: "تحریم ایران آمریکا", language: fa, purpose: economic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_fa_dipl_1, query_text: "مذاکرات هسته‌ای ایران آمریکا", language: fa, purpose: diplomacy, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- fa: hashtag ---
-  - {query_id: q_fa_hashtag_1, query_text: "#ایران_آمریکا", language: fa, purpose: hashtag, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_fa_hashtag_1, query_text: "#ایران_آمریکا", language: fa, purpose: hashtag, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- fa: support/oppose framing (both directions, to avoid one-sided Query bias) ---
+  # support_1 + support_2 alone already cover both directions (pro-US-action
+  # vs pro-Iran), so the separate oppose_1/oppose_2 pair was paused too —
+  # not a bias reduction, just avoiding redundant coverage of the same split.
   - {query_id: q_fa_support_1, query_text: "حمایت از اقدام آمریکا علیه ایران", language: fa, purpose: support, active_from: "2026-02-28", active_to: null, version: "0.1"}
   - {query_id: q_fa_support_2, query_text: "حمایت از ایران در برابر آمریکا", language: fa, purpose: support, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_fa_oppose_1, query_text: "محکومیت حمله آمریکا به ایران", language: fa, purpose: oppose, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_fa_oppose_2, query_text: "محکومیت اقدام ایران علیه آمریکا", language: fa, purpose: oppose, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_fa_oppose_1, query_text: "محکومیت حمله آمریکا به ایران", language: fa, purpose: oppose, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_fa_oppose_2, query_text: "محکومیت اقدام ایران علیه آمریکا", language: fa, purpose: oppose, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
 
   # --- en: topic / event phrasing ---
   - {query_id: q_en_topic_1, query_text: "Iran US war", language: en, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_topic_2, query_text: "Iran America conflict news", language: en, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_topic_3, query_text: "US strikes Iran", language: en, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_topic_4, query_text: "Iran strikes US forces", language: en, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_en_topic_2, query_text: "Iran America conflict news", language: en, purpose: topic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_en_topic_3, query_text: "US strikes Iran", language: en, purpose: topic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_en_topic_4, query_text: "Iran strikes US forces", language: en, purpose: topic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- en: actors ---
-  - {query_id: q_en_actor_1, query_text: "IRGC United States", language: en, purpose: actor, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_en_actor_1, query_text: "IRGC United States", language: en, purpose: actor, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   - {query_id: q_en_actor_2, query_text: "Trump Iran", language: en, purpose: actor, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_actor_3, query_text: "Khamenei United States", language: en, purpose: actor, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_en_actor_3, query_text: "Khamenei United States", language: en, purpose: actor, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- en: economic / diplomacy ---
-  - {query_id: q_en_econ_1, query_text: "Iran sanctions United States", language: en, purpose: economic, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_dipl_1, query_text: "Iran nuclear talks negotiations", language: en, purpose: diplomacy, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_en_econ_1, query_text: "Iran sanctions United States", language: en, purpose: economic, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_en_dipl_1, query_text: "Iran nuclear talks negotiations", language: en, purpose: diplomacy, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- en: hashtag ---
-  - {query_id: q_en_hashtag_1, query_text: "#IranUSConflict", language: en, purpose: hashtag, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_hashtag_2, query_text: "#IranWar", language: en, purpose: hashtag, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_en_hashtag_1, query_text: "#IranUSConflict", language: en, purpose: hashtag, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_en_hashtag_2, query_text: "#IranWar", language: en, purpose: hashtag, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
   # --- en: support/oppose framing (both directions) ---
   - {query_id: q_en_support_1, query_text: "support US strike on Iran", language: en, purpose: support, active_from: "2026-02-28", active_to: null, version: "0.1"}
   - {query_id: q_en_support_2, query_text: "support Iran against US", language: en, purpose: support, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_oppose_1, query_text: "condemn US strike on Iran", language: en, purpose: oppose, active_from: "2026-02-28", active_to: null, version: "0.1"}
-  - {query_id: q_en_oppose_2, query_text: "condemn Iran aggression", language: en, purpose: oppose, active_from: "2026-02-28", active_to: null, version: "0.1"}
+  - {query_id: q_en_oppose_1, query_text: "condemn US strike on Iran", language: en, purpose: oppose, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
+  - {query_id: q_en_oppose_2, query_text: "condemn Iran aggression", language: en, purpose: oppose, active_from: "2026-02-28", active_to: "2026-08-07", version: "0.1"}
 
   # --- ar: topic / economic / diplomacy ---
   - {query_id: q_ar_topic_1, query_text: "حرب إيران وأمريكا", language: ar, purpose: topic, active_from: "2026-02-28", active_to: null, version: "0.1"}
