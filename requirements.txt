@@ -2,6 +2,7 @@ python-dotenv
 google-api-python-client
 google-generativeai
 groq
+requests
 pandas
 jdatetime
 pyyaml

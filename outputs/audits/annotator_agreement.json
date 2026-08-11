@@ -1,0 +1,26 @@
+{
+  "sentiment_label": {
+    "n_compared": 0,
+    "n_skipped_incomplete": 18,
+    "cohens_kappa": NaN,
+    "percent_agreement": NaN
+  },
+  "stance_label": {
+    "n_compared": 0,
+    "n_skipped_incomplete": 18,
+    "cohens_kappa": NaN,
+    "percent_agreement": NaN
+  },
+  "emotion_label": {
+    "n_compared": 0,
+    "n_skipped_incomplete": 18,
+    "cohens_kappa": NaN,
+    "percent_agreement": NaN
+  },
+  "content_type_label": {
+    "n_compared": 0,
+    "n_skipped_incomplete": 18,
+    "cohens_kappa": NaN,
+    "percent_agreement": NaN
+  }
+}

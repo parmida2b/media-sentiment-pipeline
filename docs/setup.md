@@ -2,17 +2,20 @@
 
 راه‌اندازی محیط و اجرای پایپ‌لاین — تکمیل شود. راهنمای کار با گیت جدا توی [`GIT_WORKFLOW.md`](../GIT_WORKFLOW.md) هست.
 
-## اجرای دستی استخراج YouTube (نسخه ۲، incremental)
+## اجرای دستی استخراج YouTube
 
 ```bash
-python src/ingestion/youtube_extract_incremental.py
+python src/ingestion/youtube_extract.py
 ```
 
 این اسکریپت idempotent و incremental هست — هر بار اجرا فقط ویدیوی/کامنت **جدید**
 (بر اساس watermark تاریخ ذخیره‌شده در `checkpoint.json`) رو می‌گیره، نه از اول. پس
-اجرای دستی مکرر یا اجرای خودکار هفتگی (پایین) هر دو امن‌ان. خروجی‌ها:
-- `data/raw/{topic_id}/youtube_comments_v2.jsonl`
-- `data/raw/{topic_id}/collection_manifest_v2.jsonl`
+اجرای دستی مکرر یا اجرای خودکار هفتگی (پایین) هر دو امن‌ان. خروجی‌ها (زیر
+`data/raw/{topic_id}/`):
+- `youtube_comments_v2.jsonl` — کامنت‌ها (فرمت `config/schema.py`)
+- `youtube_raw_export.csv` — همون داده، فرمت export مطابق `docs/raw_schema_v03.md`
+- `youtube_runs.csv` — manifest هر اجرا (به‌ازای هر query×هفته یک ردیف)
+- `youtube_skipped_videos.csv` — لاگ ویدیوهایی که رد شدن (فیلتر ربط/quota)
 
 قبل از اجرا مطمئن شو `.env` مقدار `YOUTUBE_API_KEY` و `AUTHOR_HASH_SALT` رو داره
 (نمونه در `.env.example`).

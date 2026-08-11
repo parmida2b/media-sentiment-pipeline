@@ -2,9 +2,7 @@
 geo_tagger.py — per-video geo/perspective LLM tagging + relevance filter (Parmida)
 
 Runs once per video (never per comment) via Groq, the same provider
-already wired up in src/annotation/compare_llm_sentiment.py (no GEMINI_API_KEY
-is configured for this project, so Groq is the only LLM actually
-available). Output is appended to {data_dir}/video_geo_metadata.jsonl and
+already wired up in src/annotation/compare_llm_sentiment.py. Output is appended to {data_dir}/video_geo_metadata.jsonl and
 cached by video_id so a video with hundreds of comments only ever costs one
 LLM call, across process restarts. `data_dir` is topic-scoped (see
 config/config_loader.py) so switching topics doesn't reuse another topic's
