@@ -779,10 +779,18 @@ def main():
             "country": channel_source.get("country", ""),
         } if (detail["channel_title"] or channel_source) else None
 
-        tag = geo_tagger.tag_video_cached(
-            video_id, detail["title"], detail["description"], channel_hint,
-            tagged_cache, CONFIG.topic, DATA_DIR,
-        )
+        try:
+            tag = geo_tagger.tag_video_cached(
+                video_id, detail["title"], detail["description"], channel_hint,
+                tagged_cache, CONFIG.topic, DATA_DIR,
+            )
+        except geo_tagger.GroqQuotaExceeded as e:
+            known_gaps.append(
+                f"Groq daily quota exhausted while geo-tagging videos "
+                f"({i - 1}/{len(known_video_ids)} known videos processed) — stopped early, "
+                f"safe to resume next run (already-tagged videos are cached). ({e})"
+            )
+            break
         if not tag["is_relevant"]:
             skipped_irrelevant += 1
             append_skipped_video(video_id, tag)

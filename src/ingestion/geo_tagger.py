@@ -15,15 +15,34 @@ gets joined by video_id/post_id at analysis time.
 
 import json
 import os
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-GROQ_MODEL_NAME = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+# llama-3.1-8b-instant instead of llama-3.3-70b-versatile: same provider/key,
+# but Groq's free tier grants the small/fast model a much higher daily
+# request quota than the 70b model, which is what was running out mid-run.
+# Structured 4-field classification (country/perspective/relevance) doesn't
+# need the bigger model's reasoning headroom.
+GROQ_MODEL_NAME = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+
+MAX_RETRIES = 3
+BACKOFF_BASE_SECONDS = 2.0
 
 VALID_PERSPECTIVES = {"state_media", "western", "independent", "diaspora", "other"}
+
+
+class GroqQuotaExceeded(RuntimeError):
+    """Raised when Groq reports the *daily* quota (RPD/TPD) is exhausted —
+    as opposed to a transient per-minute rate limit. Retrying won't help
+    until the provider's daily reset, so the caller should stop the run
+    cleanly (geo_tagger's cache lets a later run pick up where this one
+    left off) instead of grinding through every remaining video with
+    failed calls."""
+
 
 PROMPT_TEMPLATE = """You are tagging a YouTube news video for a research pipeline studying \
 media coverage of: {topic}.
@@ -57,6 +76,62 @@ def _get_groq_client():
     from groq import Groq
     _groq_client = Groq(api_key=api_key)
     return _groq_client
+
+
+def _is_daily_quota_message(message: str) -> bool:
+    # Groq's 429 body text says e.g. "...on requests per day (RPD): Limit
+    # 14400, Used 14400..." for a daily cap, vs "...on tokens per minute
+    # (TPM)..." for a transient one. No day/date is ever coming back sooner
+    # by retrying, so treat "per day"/RPD/TPD mentions as non-retryable.
+    text = (message or "").lower()
+    return "per day" in text or "rpd" in text or "tpd" in text
+
+
+def _retry_after_seconds(exc) -> float | None:
+    response = getattr(exc, "response", None)
+    header = response.headers.get("retry-after") if response is not None else None
+    if header is None:
+        return None
+    try:
+        return float(header)
+    except (TypeError, ValueError):
+        return None
+
+
+def _call_groq_with_retry(client, prompt: str):
+    """Calls the Groq chat completion endpoint, retrying transient errors
+    (per-minute rate limits, connection hiccups, 5xx) with backoff. Raises
+    GroqQuotaExceeded immediately -- no retry -- when Groq reports the
+    *daily* quota is exhausted, since waiting a few seconds won't fix that."""
+    from groq import APIConnectionError, InternalServerError, RateLimitError
+
+    last_error: Exception | None = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            return client.chat.completions.create(
+                model=GROQ_MODEL_NAME,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0,
+            )
+        except RateLimitError as e:
+            message = str(getattr(e, "message", None) or e)
+            if _is_daily_quota_message(message):
+                raise GroqQuotaExceeded(message) from e
+            last_error = e
+            if attempt < MAX_RETRIES - 1:
+                wait_s = _retry_after_seconds(e) or (BACKOFF_BASE_SECONDS * (2 ** attempt))
+                print(f"[warn] geo_tagger: Groq rate limit (attempt {attempt + 1}/{MAX_RETRIES}), "
+                      f"retrying in {wait_s:.1f}s: {message}")
+                time.sleep(wait_s)
+        except (APIConnectionError, InternalServerError) as e:
+            last_error = e
+            if attempt < MAX_RETRIES - 1:
+                wait_s = BACKOFF_BASE_SECONDS * (2 ** attempt)
+                print(f"[warn] geo_tagger: transient Groq error (attempt {attempt + 1}/{MAX_RETRIES}), "
+                      f"retrying in {wait_s:.1f}s: {e}")
+                time.sleep(wait_s)
+
+    raise last_error
 
 
 def _parse_llm_json(raw_text: str) -> dict:
@@ -138,14 +213,18 @@ def _call_llm(title: str, description: str, channel_hint: dict | None, topic: st
     )
 
     try:
-        response = client.chat.completions.create(
-            model=GROQ_MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-        )
+        response = _call_groq_with_retry(client, prompt)
         result = _parse_llm_json(response.choices[0].message.content)
+    except GroqQuotaExceeded:
+        # Not retryable within this run — let it propagate so the caller
+        # (youtube_extract.py) stops the run cleanly instead of every
+        # remaining video silently getting a fabricated low-confidence tag.
+        raise
     except Exception as e:
-        print(f"[warn] geo_tagger LLM call failed: {e}")
+        # Anything else (bad request for this one video, retries exhausted
+        # on a transient error, ...) — fail open for just this video rather
+        # than aborting the whole run over it.
+        print(f"[warn] geo_tagger LLM call failed after retries: {e}")
         result = {}
 
     perspective = result.get("perspective")
