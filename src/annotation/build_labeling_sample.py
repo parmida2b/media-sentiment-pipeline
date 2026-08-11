@@ -1,5 +1,5 @@
 """
-build_labeling_sample.py — Gold Sample builder (Parmida)
+build_labeling_sample.py
 
 Implements §19 of the assignment doc: samples real comments into a CSV with
 the full 4-layer annotation schema (schema.GOLD_SAMPLE_COLUMNS) left blank

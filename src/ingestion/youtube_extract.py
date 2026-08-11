@@ -105,6 +105,31 @@ SEARCH_QUERIES_FALLBACK = [*CONFIG.keywords_en, *CONFIG.keywords_fa]
 
 REGION_CODES = [tuple(pair) for pair in CONFIG.youtube.get("regions", [])]
 
+# Region rotation (see docs/decision_log.md 2026-08-08 incident +
+# config/query_registry.yaml 2026-08-11 note): all active queries x all of
+# REGION_CODES in one run is too much search.list quota (29 queries x 5
+# regions x 100 units = 14,500, against an 8,000/day budget). Rather than
+# permanently pausing queries to fit, only REGIONS_PER_DAY regions run per
+# day, rotating through REGION_CODES over a ceil(len/REGIONS_PER_DAY)-day
+# cycle - full region coverage still happens, just spread across days.
+REGIONS_PER_DAY = int(os.getenv("YOUTUBE_REGIONS_PER_DAY", "2"))
+
+
+def regions_for_today(all_regions: list[tuple[str, str]], regions_per_day: int, today) -> list[tuple[str, str]]:
+    """Picks today's slice of all_regions for the discovery loop.
+
+    Deterministic by calendar date (proleptic Gregorian ordinal), not by run
+    count or weekday - so running twice on the same day picks the same
+    regions (idempotent), and a day with no run at all doesn't shift which
+    regions later days cover.
+    """
+    if not all_regions or regions_per_day <= 0:
+        return all_regions
+    group_count = -(-len(all_regions) // regions_per_day)  # ceil division
+    group_index = today.toordinal() % group_count
+    start = group_index * regions_per_day
+    return all_regions[start:start + regions_per_day]
+
 CHANNEL_SEARCH_QUERY = CONFIG.youtube.get("channel_search_query", CONFIG.topic)
 EXPLICIT_VIDEO_IDS = CONFIG.youtube.get("explicit_video_ids", [])
 MAX_VIDEOS_PER_QUERY = CONFIG.youtube.get("max_videos_per_query", 5)
@@ -615,6 +640,14 @@ def main():
               "falling back to config.yaml's flat keyword lists.\n")
     registry_version = query_registry_loader.get_registry_version() if active_queries else "config.yaml-fallback"
 
+    today_pt = datetime.now(checkpoint.PT).date()
+    todays_regions = regions_for_today(REGION_CODES, REGIONS_PER_DAY, today_pt)
+    region_cycle_length = -(-len(REGION_CODES) // REGIONS_PER_DAY) if REGIONS_PER_DAY else 1
+    cycle_day = today_pt.toordinal() % region_cycle_length + 1
+    print(f"Region rotation: day {cycle_day}/{region_cycle_length} of cycle — "
+          f"today's regions: {[code for code, _ in todays_regions]} "
+          f"(all: {[code for code, _ in REGION_CODES]})\n")
+
     youtube = build("youtube", "v3", developerKey=API_KEY)
 
     rate_limit_events = 0
@@ -633,7 +666,7 @@ def main():
     for query_id, query_text in query_pairs:
         if quota_exhausted:
             break
-        for region_code, relevance_language in REGION_CODES:
+        for region_code, relevance_language in todays_regions:
             if not checkpoint.has_budget(state, checkpoint.QUOTA_COSTS["search"]):
                 known_gaps.append("Search budget exhausted before all query x region combos were checked this run.")
                 quota_exhausted = True
