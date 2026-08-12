@@ -1,3 +1,16 @@
+> ⚠️ **وضعیت (۲۰۲۶-۰۸-۱۲):** بخش‌های ۱، ۲، ۵ و ۶ این سند (قرارداد schema
+> مشترک، نگاشت `raw_schema_v03.md`، وضعیت هر پلتفرم) با مجموعه سند جدید
+> جایگزین شدن — برای اون‌ها به‌جاش نگاه کن به:
+> [`raw_schema_v05.md`](raw_schema_v05.md)، [`eligibility_rules_v03.md`](eligibility_rules_v03.md)،
+> [`source_registry_v4.md`](source_registry_v4.md) و
+> [`legacy_data_intake_and_harmonization_plan_v1.md`](legacy_data_intake_and_harmonization_plan_v1.md).
+> جدول بخش ۶ («وضعیت فعلی هر پلتفرم») هم دیگه درست نیست — الان `x_scraper.py`
+> (حسین) و کالکتورهای Reddit (علی) هر دو موجودن، فقط export مطابق schema
+> استاندارد هنوز روشون پیاده نشده.
+>
+> بخش‌های ۳ و ۴ (پروفایل رفتاری کاربر و فرمول تشخیص بات/`automation_risk.py`)
+> هنوز **معتبر و زنده**‌ان — این منطق جای دیگه‌ای بازنویسی نشده، همچنان مرجعه.
+
 # راهنمای هماهنگی بین پلتفرم‌ها (YouTube / Reddit / X)
 
 > **هدف این سند:** جمع‌آوری داده‌ی هر پلتفرم توسط یک نفر جداگانه انجام می‌شود
