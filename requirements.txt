@@ -4,6 +4,7 @@ google-generativeai
 groq
 requests
 pandas
+pyarrow
 jdatetime
 pyyaml
 selenium

@@ -11,6 +11,13 @@ cached relevance tags.
 Deliberately does not touch config/schema.py (team convention: Parmida
 maintains that file) — this metadata lives in its own side file and
 gets joined by video_id/post_id at analysis time.
+
+Multi-key support (2026-08-12): set GROQ_API_KEYS (comma-separated) instead
+of a single GROQ_API_KEY to pool several accounts' free-tier daily quota -
+each teammate's own Groq key, not throwaway/duplicate accounts (see that
+constraint in Groq's ToS). A key that hits its daily RPD/TPD cap is skipped
+for the rest of the process; GroqQuotaExceeded only propagates once every
+configured key is exhausted. See _load_groq_keys()/_available_groq_clients().
 """
 
 import json
@@ -59,23 +66,46 @@ Respond with ONLY a JSON object, no other text:
 }}
 """
 
-_groq_client = None
-_groq_unavailable = False
+_groq_keys: list[str] | None = None  # lazy-loaded (None = not loaded yet), see _load_groq_keys
+_groq_clients: dict[str, "Groq"] = {}  # one cached client per key, built lazily on first use
+_exhausted_keys: set[str] = set()  # keys that hit their *daily* quota this run - see GroqQuotaExceeded
 
 
-def _get_groq_client():
-    global _groq_client, _groq_unavailable
-    if _groq_client is not None or _groq_unavailable:
-        return _groq_client
+def _load_groq_keys() -> list[str]:
+    """Multi-key support (2026-08-12): GROQ_API_KEYS (comma-separated) lets
+    several Groq accounts' free-tier daily quotas be pooled, since a single
+    key's RPD/TPD cap was the thing stopping full runs (see decision_log.md
+    2026-08-08). Falls back to the single GROQ_API_KEY for anyone who hasn't
+    switched over - existing .env files keep working unchanged."""
+    multi = os.getenv("GROQ_API_KEYS")
+    if multi:
+        keys = [k.strip() for k in multi.split(",") if k.strip()]
+        if keys:
+            return keys
+    single = os.getenv("GROQ_API_KEY")
+    return [single] if single else []
 
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        _groq_unavailable = True
-        return None
+
+def _available_groq_clients():
+    """Yields (key, client) for every configured key not yet marked
+    exhausted *this run* (_exhausted_keys resets only on process restart -
+    a key that hit its daily cap won't un-exhaust itself until Groq's own
+    daily reset anyway, so there's no point retrying it mid-run). Each
+    client is built once and cached, however many videos/posts get tagged."""
+    global _groq_keys
+    if _groq_keys is None:
+        _groq_keys = _load_groq_keys()
+
+    if not _groq_keys:
+        return
 
     from groq import Groq
-    _groq_client = Groq(api_key=api_key)
-    return _groq_client
+    for key in _groq_keys:
+        if key in _exhausted_keys:
+            continue
+        if key not in _groq_clients:
+            _groq_clients[key] = Groq(api_key=key)
+        yield key, _groq_clients[key]
 
 
 def _is_daily_quota_message(message: str) -> bool:
@@ -189,10 +219,11 @@ def _append_metadata_record(record: dict, data_dir: Path) -> None:
 
 
 def _call_llm(title: str, description: str, channel_hint: dict | None, topic: str) -> dict:
-    client = _get_groq_client()
-    if client is None:
-        # No GROQ_API_KEY configured — fail open (treat as relevant, low
-        # confidence) rather than silently dropping videos.
+    clients = list(_available_groq_clients())
+    if not clients:
+        # No key configured at all, or every configured key already hit its
+        # daily quota this run — fail open (treat as relevant, low
+        # confidence) rather than silently dropping videos/posts.
         return {
             "origin_country": (channel_hint or {}).get("country", "unknown"),
             "perspective": "other",
@@ -212,20 +243,47 @@ def _call_llm(title: str, description: str, channel_hint: dict | None, topic: st
         title=title, description=(description or "")[:500], hint=hint, topic=topic,
     )
 
-    try:
-        response = _call_groq_with_retry(client, prompt)
-        result = _parse_llm_json(response.choices[0].message.content)
-    except GroqQuotaExceeded:
-        # Not retryable within this run — let it propagate so the caller
-        # (youtube_extract.py) stops the run cleanly instead of every
-        # remaining video silently getting a fabricated low-confidence tag.
-        raise
-    except Exception as e:
-        # Anything else (bad request for this one video, retries exhausted
-        # on a transient error, ...) — fail open for just this video rather
-        # than aborting the whole run over it.
-        print(f"[warn] geo_tagger LLM call failed after retries: {e}")
-        result = {}
+    # Multi-key rotation (2026-08-12): try each configured key in turn;
+    # a key hitting its *daily* quota just gets skipped for the rest of
+    # this process, not treated as a hard stop, as long as another
+    # configured key still has headroom. Only once every key is exhausted
+    # does this propagate GroqQuotaExceeded - same external contract as
+    # before, so callers (youtube_extract.py, reddit_to_record.py) don't
+    # need to change: they already stop cleanly on that exception.
+    result: dict = {}
+    quota_error: GroqQuotaExceeded | None = None
+    for key, client in clients:
+        try:
+            response = _call_groq_with_retry(client, prompt)
+            result = _parse_llm_json(response.choices[0].message.content)
+            quota_error = None
+            break
+        except GroqQuotaExceeded as e:
+            _exhausted_keys.add(key)
+            remaining = len(_groq_keys) - len(_exhausted_keys)
+            print(
+                f"[warn] geo_tagger: Groq key ...{key[-4:]} hit its daily quota - "
+                f"rotating to next key ({remaining} key(s) with headroom left)."
+            )
+            quota_error = e
+            continue
+        except Exception as e:
+            # Anything else (bad request for this one video, retries exhausted
+            # on a transient error, ...) — fail open for just this video
+            # rather than burning through every remaining key over it.
+            print(f"[warn] geo_tagger LLM call failed after retries: {e}")
+            result = {}
+            quota_error = None
+            break
+
+    if quota_error is not None:
+        # Every configured key is exhausted - not retryable within this run,
+        # let it propagate so the caller stops cleanly (cache already has
+        # everything tagged so far; safe to resume after Groq's daily reset,
+        # or once a fresh key is added to GROQ_API_KEYS).
+        raise GroqQuotaExceeded(
+            f"All {len(_groq_keys)} configured Groq key(s) exhausted their daily quota."
+        ) from quota_error
 
     perspective = result.get("perspective")
     if perspective not in VALID_PERSPECTIVES:

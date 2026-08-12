@@ -50,6 +50,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -59,6 +60,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from config.schema import Record, AuthorMetadata
 from config import config_loader, query_registry_loader
 from config.raw_schema_columns import RAW_SCHEMA_COLUMNS
+from config.raw_schema_columns_v05 import RAW_SCHEMA_V05_COLUMNS
 
 import author_geo
 import author_hash
@@ -144,13 +146,23 @@ COMMENT_FETCH_QUOTA_RESERVE = -(-COMMENT_POOL_CAP // 100) * checkpoint.QUOTA_COS
 CHANNEL_REGISTRY = CONFIG.youtube.get("channels", {})
 CHANNEL_PRIORITY_ORDER = CONFIG.youtube.get("channel_priority_order", list(CHANNEL_REGISTRY.keys()))
 
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "raw" / CONFIG.topic_id
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+DATA_DIR = PROJECT_ROOT / "data" / "raw" / CONFIG.topic_id
 RESOLVED_CHANNELS_PATH = DATA_DIR / "resolved_channels.json"
 
 OUTPUT_JSONL_PATH = DATA_DIR / "youtube_comments_v2.jsonl"
 OUTPUT_CSV_PATH = DATA_DIR / "youtube_raw_export.csv"
 MANIFEST_PATH = DATA_DIR / "youtube_runs.csv"
 SKIPPED_VIDEOS_PATH = DATA_DIR / "youtube_skipped_videos.csv"
+
+# raw_schema_v05.md §14: harmonized output lives in its own top-level
+# folder, NOT under DATA_DIR (data/raw/{topic_id}/...) - that folder keeps
+# playing the untouched-raw-original role (§1: "Raw data پس از ذخیره تغییر
+# نمی‌کند") and is never written to by export_to_raw_harmonized() below.
+# Not topic_id-scoped either: raw_schema_v05.md's proposed layout is
+# data/raw_harmonized/{platform}/..., and "youtube" (the platform) is what
+# the user asked to key this on, not this project's topic_id.
+RAW_HARMONIZED_DIR = PROJECT_ROOT / "data" / "raw_harmonized" / "youtube"
 
 DEFAULT_WATERMARK_ISO = PUBLISHED_AFTER_RFC3339
 
@@ -561,6 +573,229 @@ def append_csv_rows(records: list[Record]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# raw_harmonized export (raw_schema_v05.md §3-§7 contract, Parquet)
+#
+# This is a SEPARATE output from everything above: OUTPUT_JSONL_PATH/
+# OUTPUT_CSV_PATH (data/raw/{topic_id}/...) keep being written exactly as
+# before, untouched, playing the raw_schema_v05.md §1 "raw_original"
+# role ("Raw data پس از ذخیره تغییر نمی‌کند"). export_to_raw_harmonized()
+# below reads already-built Record objects and produces the *mapped*
+# layer (raw_harmonized) alongside them, per §14's proposed path
+# data/raw_harmonized/{platform}/... - never the other way around, and
+# never mutating the Record objects or the raw/ files themselves.
+#
+# Column-by-column mapping decisions below follow docs/schema_mapping_
+# template.csv's youtube rows (already filled in and reviewed - see that
+# file for the full rationale/example values). A handful of columns are
+# left as genuinely open team questions in that template (enum crosswalks,
+# a §4 vs §9 naming conflict); those are called out inline rather than
+# guessed at here.
+# ---------------------------------------------------------------------------
+
+def _empty_to_none(value):
+    """raw_schema_v05.md §1.1 point 5: a missing field stays `null`, not
+    "" - unlike record_to_csv_row() above, which writes "" for CSV. Record's
+    producers (this module) use both None and "" to mean "no value" in
+    different places, so both collapse to None here."""
+    if value in (None, ""):
+        return None
+    return value
+
+
+def record_to_raw_harmonized_row(r: Record) -> dict:
+    """One row of the raw_harmonized export, keyed exactly to
+    RAW_SCHEMA_V05_COLUMNS (config/raw_schema_columns_v05.py). Mirrors
+    record_to_csv_row()'s v03 mapping but retyped/renulled for v05 - see
+    docs/schema_mapping_template.csv rows for "youtube" for the source of
+    each decision below (row numbers refer to that file)."""
+    am = r.author_metadata
+    return {
+        # --- §3 Core ------------------------------------------------------
+        "platform": r.platform,
+        "platform_content_id": _empty_to_none(r.content_id),
+        "content_type": _empty_to_none(r.content_type),
+        "created_at_utc": _parse_rfc3339(r.date) if r.date else None,
+        "collected_at_utc": _parse_rfc3339(r.collected_at_utc) if r.collected_at_utc else None,
+        "text_raw": r.text,
+        "collection_run_id": _empty_to_none(r.collection_run_id),
+        # mapping row 11: current value still names raw_schema_v03 -
+        # updating the string itself is explicitly out of scope for this
+        # mapping (a separate collector-version decision).
+        "collector_version": COLLECTOR_VERSION,
+        # mapping row 12: constant, stamped at harmonization time - NOT
+        # what the collector actually ran (that's source_schema_version
+        # below, which is not_applicable for a live collector).
+        "schema_version": "5.0",
+        "project_week": _empty_to_none(r.project_week),
+        "in_window": r.in_window,
+        "is_partial_week": r.is_partial_week,
+
+        # --- §4 Provenance and parent structure ----------------------------
+        "query_id": _empty_to_none(r.query_id),
+        # mapping row 17: kept as the existing ";"-joined string rather than
+        # split into a real list - v05's column type is "list/string", and
+        # whether it must become an actual List is an open decision, not
+        # made here.
+        "matched_query_ids": _empty_to_none(r.matched_query_ids),
+        "query_version": _empty_to_none(r.query_version),
+        "source_id": _empty_to_none(r.source_id),
+        # mapping row 20: no versioning exists for the Source Registry
+        # (channels.py / config/query_registry.yaml's channel entries) in
+        # the current code - genuinely not producible yet.
+        "source_registry_version": None,
+        # mapping row 21: current "source_scope" value passed through
+        # unchanged - whether it should rename to v05's "channel_scope" is
+        # an open team decision (neither doc gives an explicit crosswalk).
+        "discovery_route": _empty_to_none(r.discovery_route),
+        # mapping row 22: raw_schema_v05.md §4 vs §9 disagree on whether
+        # this should be the channel's readable title or its channel_id;
+        # current code (and this mapping) keeps producing channel_title
+        # unchanged rather than guessing which the document intended.
+        "source_container": _empty_to_none(r.source_container),
+        "source_container_id": _empty_to_none(r.source_container_id),
+        "source_parent_id": _empty_to_none(r.post_id),
+        "source_parent_title": _empty_to_none(r.post_title),
+        "parent_id": _empty_to_none(r.parent_id),
+        "permalink_hash": _empty_to_none(r.permalink_hash),
+
+        # --- §4.1 Historical-data audit fields ------------------------------
+        # mapping rows 28-33: all not_applicable - this is a live API
+        # collector, not a legacy-file intake (no delivered file to hash/
+        # index), and the record_uid fallback path never triggers because
+        # the YouTube API always returns a real comment id for
+        # platform_content_id.
+        "original_file_name": None,
+        "original_file_sha256": None,
+        "original_row_number": None,
+        "source_schema_version": None,
+        "source_query_registry_version": None,
+        "record_uid": None,
+        # mapping row 34: platform_content_id always comes from a real API
+        # response for this collector, never a derived row key.
+        "id_origin": "observed",
+        # mapping row 35: created_at_utc always comes straight from the
+        # API's publishedAt field, never parsed from a nonstandard format.
+        "timestamp_origin": "observed",
+        # mapping rows 36-38: grading criteria (provenance_quality) and the
+        # per-record aggregation logic (field_origin/missing_reason) aren't
+        # implemented yet - see those rows' notes for why.
+        "provenance_quality": None,
+        "field_origin": None,
+        "missing_reason": None,
+
+        # --- §5 Author and privacy ---------------------------------------
+        "author_hash": _empty_to_none(am.author_hash),
+        # mapping row 40: AuthorMetadata carries this field (config/schema.py
+        # v4), but youtube_extract.py never sets it when building Record -
+        # always None today, referenced directly (not hardcoded) so it
+        # starts flowing automatically if that ever changes.
+        "author_id_status": _empty_to_none(am.author_id_status),
+        # mapping row 41: no author-type classification logic exists.
+        "author_type": None,
+        # mapping row 42: never returned by the YouTube Comment API.
+        "author_is_verified": None,
+        # mapping row 43: AuthorMetadata.account_age_days is never
+        # populated by this collector - not available from the API.
+        "author_account_age_days": am.account_age_days,
+
+        # --- §6 Engagement snapshot ----------------------------------------
+        "engagement_score": float(am.like_count) if am.like_count is not None else None,
+        "engagement_replies": r.reply_count,
+        # mapping rows 46-47: no Share/Repost or Quote concept exists for
+        # YouTube comments.
+        "engagement_shares": None,
+        "engagement_quotes": None,
+        # mapping row 48: get_video_details() only requests part=snippet,
+        # never part=statistics, so viewCount is never fetched.
+        "engagement_views": None,
+        "engagement_collected_at_utc": _parse_rfc3339(r.collected_at_utc) if r.collected_at_utc else None,
+
+        # --- §7 Language, status and location --------------------------------
+        # mapping row 50: the platform doesn't report a language field;
+        # language_detected below is a local heuristic, not platform-reported.
+        "language_reported": None,
+        "language_detected": _empty_to_none(r.language),
+        "language_confidence": r.language_confidence,
+        # mapping row 53: Record carries content_status (config/schema.py
+        # v4), but youtube_extract.py never sets it - always None today,
+        # referenced directly for the same forward-compat reason as
+        # author_id_status above.
+        "content_status": _empty_to_none(r.content_status),
+        # mapping row 54: current 6-value geo_method vocabulary
+        # (geotag/profile/timezone/text_place/source_community/
+        # language_weak) passed through unchanged - collapsing it to v05's
+        # 4-value enum (geotag/profile/self_reported/other) needs an
+        # explicit team crosswalk that neither doc provides, not a guess
+        # made here.
+        "geo_method": _empty_to_none(r.geo_method),
+        "country_or_region": _empty_to_none(r.country_or_region),
+        "geo_confidence": _empty_to_none(r.geo_confidence),
+    }
+
+
+# Columns that need an explicit nullable dtype so a missing value round-
+# trips as a real Parquet null instead of pandas silently upcasting
+# (e.g. an int column with any None becoming float64 NaN, or a bool column
+# becoming object dtype).
+_V05_BOOL_COLUMNS = ["in_window", "is_partial_week", "author_is_verified"]
+_V05_INT_COLUMNS = [
+    "engagement_replies", "engagement_shares", "engagement_quotes",
+    "engagement_views", "author_account_age_days", "original_row_number",
+]
+_V05_FLOAT_COLUMNS = ["engagement_score", "language_confidence"]
+_V05_DATETIME_COLUMNS = ["created_at_utc", "collected_at_utc", "engagement_collected_at_utc"]
+
+
+def export_to_raw_harmonized(records: list[Record]) -> pd.DataFrame:
+    """Builds the raw_harmonized/youtube output: exactly the column set of
+    docs/raw_schema_v05.md §3-§7 (RAW_SCHEMA_V05_COLUMNS), written as
+    Parquet to data/raw_harmonized/youtube/{collection_run_id}.parquet.
+
+    Does not read or write OUTPUT_JSONL_PATH/OUTPUT_CSV_PATH (data/raw/...)
+    at all - that raw-original output is untouched by this function, per
+    raw_schema_v05.md §1's "Raw data پس از ذخیره تغییر نمی‌کند" and this
+    project's own data/raw_original vs data/raw_harmonized separation
+    (§14). Call this with the same `records` list already passed to
+    append_csv_rows(), after append_csv_rows() has run - never instead of it.
+
+    All `records` must share one collection_run_id (this collector's
+    convention: one run, one id), since that id names the output file.
+    """
+    if not records:
+        raise ValueError("export_to_raw_harmonized: no records given - nothing to export.")
+
+    run_ids = {r.collection_run_id for r in records}
+    if len(run_ids) != 1:
+        raise ValueError(
+            f"export_to_raw_harmonized: records span {len(run_ids)} distinct "
+            f"collection_run_id values ({sorted(filter(None, run_ids))}); "
+            "call this once per run with records from a single run."
+        )
+    collection_run_id = run_ids.pop()
+    if not collection_run_id:
+        raise ValueError("export_to_raw_harmonized: records have no collection_run_id set.")
+
+    rows = [record_to_raw_harmonized_row(r) for r in records]
+    df = pd.DataFrame(rows, columns=RAW_SCHEMA_V05_COLUMNS)
+
+    for col in _V05_BOOL_COLUMNS:
+        df[col] = df[col].astype("boolean")
+    for col in _V05_INT_COLUMNS:
+        df[col] = df[col].astype("Int64")
+    for col in _V05_FLOAT_COLUMNS:
+        df[col] = df[col].astype("float64")
+    for col in _V05_DATETIME_COLUMNS:
+        df[col] = pd.to_datetime(df[col], utc=True)
+
+    output_path = RAW_HARMONIZED_DIR / f"{collection_run_id}.parquet"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(output_path, index=False)
+    print(f"raw_harmonized: wrote {len(df)} row(s) to {output_path}")
+
+    return df
+
+
+# ---------------------------------------------------------------------------
 # manifest (raw_schema_v03 §13 — one row per query x project_week)
 # ---------------------------------------------------------------------------
 
@@ -897,6 +1132,8 @@ def main():
         for record in new_records:
             f.write(record.to_json_line() + "\n")
     append_csv_rows(new_records)
+    if new_records:
+        export_to_raw_harmonized(new_records)
 
     if newest_seen_overall:
         incremental_state.update_global_search_watermark(state, newest_seen_overall, OVERLAP_BUFFER_SECONDS)
