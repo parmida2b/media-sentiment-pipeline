@@ -88,3 +88,319 @@ queries:
   - {query_id: q_ar_actor_1, query_text: "الحرس الثوري أمريكا", language: ar, purpose: actor, active_from: "2026-02-28", active_to: null, version: "0.1"}
   - {query_id: q_ar_econ_1, query_text: "العقوبات الأمريكية على إيران", language: ar, purpose: economic, active_from: "2026-02-28", active_to: null, version: "0.1"}
   - {query_id: q_ar_dipl_1, query_text: "المفاوضات النووية الإيرانية", language: ar, purpose: diplomacy, active_from: "2026-02-28", active_to: null, version: "0.1"}
+
+
+x_registry_version: "v3.0"
+
+x_queries:
+  - query_id: "XQ-001"
+    platform: "x"
+    query_text: '("Iran-US war" OR "US-Iran tensions" OR "Iran war" OR "US Iran war")'
+    language: "en"
+    family: "Core conflict"
+    risk: "low"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-002"
+    platform: "x"
+    query_text: '("Iran" AND ("airstrike" OR "missile strike" OR "drone attack"))'
+    language: "en"
+    family: "Actor-event"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-003"
+    platform: "x"
+    query_text: '(("Iran" OR "IRGC") AND ("US military" OR "United States") AND ("airstrike" OR "missile strike"))'
+    language: "en"
+    family: "Bilateral military"
+    risk: "low"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-004"
+    platform: "x"
+    query_text: '(("Iran" OR "United States") AND ("ceasefire" OR "negotiations" OR "peace talks"))'
+    language: "en"
+    family: "Diplomacy"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-005"
+    platform: "x"
+    query_text: '(("Iran" OR "United States") AND ("sanctions" OR "nuclear programme" OR "nuclear program"))'
+    language: "en"
+    family: "Sanctions and nuclear"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-006"
+    platform: "x"
+    query_text: '(("Iran" OR "Iran-US war") AND ("civilian casualties" OR "humanitarian crisis"))'
+    language: "en"
+    family: "Humanitarian"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-007"
+    platform: "x"
+    query_text: '(("Iran" OR "Iran-US war") AND ("misinformation" OR "propaganda"))'
+    language: "en"
+    family: "Information environment"
+    risk: "high"
+    entity_anchor: 'Iran OR "Iran-US" OR "Iran war"'
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-008"
+    platform: "x"
+    query_text: '(("Iran" OR "Iran-US war") AND ("oil price" OR "exchange rate" OR "gold price" OR "market volatility"))'
+    language: "en"
+    family: "Economic impact"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-009"
+    platform: "x"
+    query_text: '(("Iran" OR "Iran-US war") AND ("Strait of Hormuz" OR Hormuz OR "oil price"))'
+    language: "en"
+    family: "Hormuz and energy"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-019"
+    platform: "x"
+    query_text: '("Epic Fury" OR "Operation Epic Fury" OR "Roaring Lion")'
+    language: "en"
+    family: "Operation-specific"
+    risk: "low"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-020"
+    platform: "x"
+    query_text: '(Hormuz OR "Strait of Hormuz") AND (blockade OR closed OR reopened OR shipping OR transit)'
+    language: "en"
+    family: "Hormuz blockade"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-021"
+    platform: "x"
+    query_text: '(("Islamabad" OR MOU OR "memorandum of understanding") AND (Iran OR "United States" OR Trump))'
+    language: "en"
+    family: "MOU / Islamabad"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-010"
+    platform: "x"
+    query_text: '("جنگ ایران و آمریکا" OR "تنش ایران و آمریکا" OR "جنگ ایران آمریکا")'
+    language: "fa"
+    family: "Core conflict"
+    risk: "low"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-011"
+    platform: "x"
+    query_text: '("ایران" AND ("حمله هوایی" OR "حمله موشکی" OR "حمله پهپادی"))'
+    language: "fa"
+    family: "Actor-event"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-012"
+    platform: "x"
+    query_text: '(("ایران" OR "سپاه") AND ("ارتش آمریکا" OR "ایالات متحده") AND ("حمله هوایی" OR "حمله موشکی"))'
+    language: "fa"
+    family: "Bilateral military"
+    risk: "low"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-013"
+    platform: "x"
+    query_text: '(("ایران" OR "ایالات متحده" OR "آمریکا") AND ("آتش‌بس" OR "مذاکرات" OR "صلح"))'
+    language: "fa"
+    family: "Diplomacy"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-014"
+    platform: "x"
+    query_text: '(("ایران" OR "ایالات متحده") AND ("تحریم‌ها" OR "برنامه هسته‌ای"))'
+    language: "fa"
+    family: "Sanctions and nuclear"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-015"
+    platform: "x"
+    query_text: '(("ایران" OR "جنگ ایران و آمریکا") AND ("تلفات غیرنظامیان" OR "بحران انسانی"))'
+    language: "fa"
+    family: "Humanitarian"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-016"
+    platform: "x"
+    query_text: '(("ایران" OR "جنگ ایران و آمریکا") AND ("اطلاعات نادرست" OR "تبلیغات سیاسی"))'
+    language: "fa"
+    family: "Information environment"
+    risk: "high"
+    entity_anchor: 'ایران OR "جنگ ایران"'
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-017"
+    platform: "x"
+    query_text: '(("ایران" OR "جنگ ایران و آمریکا") AND ("قیمت نفت" OR "نرخ ارز" OR "قیمت طلا" OR "نوسان بازار"))'
+    language: "fa"
+    family: "Economic impact"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-018"
+    platform: "x"
+    query_text: '(("ایران" OR "جنگ ایران و آمریکا") AND ("تنگه هرمز" OR "قیمت نفت"))'
+    language: "fa"
+    family: "Hormuz and energy"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-022"
+    platform: "x"
+    query_text: '("اپیک فیوری" OR "عملیات حماسه" OR "حماسه خشم" OR "روآرینگ لاین")'
+    language: "fa"
+    family: "Operation-specific"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-023"
+    platform: "x"
+    query_text: '("تنگه هرمز") AND ("بسته" OR "مسدود" OR "محاصره" OR "بازگشایی" OR "کشتیرانی")'
+    language: "fa"
+    family: "Hormuz blockade"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-024"
+    platform: "x"
+    query_text: '("اسلام‌آباد" OR "تفاهم‌نامه" OR "تفاهم نامه") AND ("ایران" OR "آمریکا")'
+    language: "fa"
+    family: "MOU / Islamabad"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "query_search"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-H01"
+    platform: "x"
+    query_text: '#IranWar OR #IranWar2026 OR #USIranWar OR #IranIsraelWar OR #EpicFury'
+    language: "en"
+    family: "Hashtag — conflict"
+    risk: "low"
+    entity_anchor: null
+    discovery_route: "hashtag"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"
+
+  - query_id: "XQ-H02"
+    platform: "x"
+    query_text: '#StraitOfHormuz OR #MiddleEastWar OR #MiddleEastConflict OR #Hormuz'
+    language: "en"
+    family: "Hashtag — regional/energy"
+    risk: "medium"
+    entity_anchor: null
+    discovery_route: "hashtag"
+    active_from: "2026-02-28"
+    active_to: "2026-07-22"
+    version: "v3.0"

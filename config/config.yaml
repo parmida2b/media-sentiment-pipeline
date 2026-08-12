@@ -16,7 +16,7 @@ keywords_en: ["Iran US war", "Iran America conflict news"]
 
 date_range:
   start: "2026-02-28"   # 9 Esfand 1404
-  end: "auto"           # "auto" = up to now(); or an explicit ISO date like "2026-08-22"
+  end: "2026-07-22"     # 31 Tir 1405; fixed analytical window
   # NOTE: this only bounds live collection ("how far do we keep fetching new
   # comments"). The project's analytical window end used for
   # project_week/in_window (fixed at 2026-07-22T23:59:59Z per
@@ -25,10 +25,12 @@ date_range:
   # see raw_schema_v03.md §10-1 "Window Lock". search.list calls also pass
   # this fixed END as publishedBefore directly (source_registry_v3.md §4-1).
 
-platforms: ["youtube"]
+platforms:
+  - youtube
+  - reddit
+  - x
 
-# Platform-specific knobs. Only youtube_extract.py exists so far; other
-# platforms add their own sub-block here when they're built.
+# 31 Tir 1405; fixed analytical window
 youtube:
   regions:              # [regionCode, relevanceLanguage] pairs applied to the
                          # generic keyword search, for source diversity beyond
@@ -101,3 +103,48 @@ youtube:
     - non_western
     - financial
     - regional_gulf
+
+  x:
+    collector_version: "x-selenium-v4.5"
+    query_version: "v3.0"
+    sort_mode: "live"
+
+    max_workers: 3
+    max_scrolls_per_slice: 4
+    max_scrolls_min_day: 9
+    no_new_scroll_limit: 2
+
+    slice_split:
+      last_scroll_new_threshold: 4
+      total_seen_threshold: 45
+      minimum_slice_days: 1
+
+    navigation:
+      page_load_timeout_seconds: 45
+      ready_timeout_seconds: 28
+      startup_stagger_seconds: 8
+      startup_max_attempts: 3
+      startup_retry_seconds: 12
+      scroll_min_delay_seconds: 1.8
+      scroll_max_delay_seconds: 3.8
+      job_backoff_seconds: 30
+      max_job_attempts: 3
+
+    backfill:
+      min_delay_seconds: 3.0
+      max_delay_seconds: 6.0
+      ready_timeout_seconds: 20
+
+    persistence:
+      operational_target: 30000
+      dashboard_refresh_seconds: 2.0
+      backup_interval_seconds: 600
+      recovery_fsync_every: 1
+
+    runtime:
+      accounts_env_var: "X_ACCOUNTS_JSON"
+      author_salt_env_var: "PROJECT_AUTHOR_SALT"
+      output_root_env_var: "X_OUTPUT_ROOT"
+      default_local_output_root: "./Twitter_Scraper_Data_v4"
+      default_colab_output_root: "/content/drive/MyDrive/Twitter_Scraper_Data_v4"
+      salt_filename: "project_author_salt.txt"

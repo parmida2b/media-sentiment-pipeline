@@ -8,7 +8,7 @@ Version: v1 - Day 2
 
 import re
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timezone
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +35,7 @@ class PipelineConfig:
     date_range: DateRange
     platforms: list[str]
     youtube: dict[str, Any] = field(default_factory=dict)
+    x: dict[str, Any] = field(default_factory=dict)
 
 
 def _slugify(text: str) -> str:
@@ -69,7 +70,7 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> PipelineConfig:
         end = datetime.now(timezone.utc)
     else:
         end_date = date.fromisoformat(str(end_raw))
-        end = datetime(end_date.year, end_date.month, end_date.day, tzinfo=timezone.utc)
+        end = datetime.combine(end_date, time.max, tzinfo=timezone.utc)
 
     start_dt = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
     if end <= start_dt:
@@ -87,6 +88,7 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> PipelineConfig:
         date_range=DateRange(start=start, end=end, end_is_auto=end_is_auto),
         platforms=raw.get("platforms") or [],
         youtube=raw.get("youtube") or {},
+        x=raw.get("x") or {},
     )
 
 
@@ -97,3 +99,4 @@ if __name__ == "__main__":
     print(f"keywords: fa={cfg.keywords_fa} en={cfg.keywords_en} ar={cfg.keywords_ar}")
     print(f"platforms: {cfg.platforms}")
     print(f"youtube: {cfg.youtube}")
+    print(f"x: {cfg.x}")

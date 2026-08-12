@@ -8,6 +8,7 @@ Credentials are loaded from environment variables and are never stored in source
 # Notebook cell 2
 # -----------------------------------------------------------------------------
 import os
+import sys
 import re
 import csv
 import json
@@ -24,6 +25,13 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from config import config_loader, query_registry_loader
+
 import pandas as pd
 from colorama import init
 from selenium import webdriver
@@ -35,51 +43,127 @@ from dotenv import load_dotenv
 load_dotenv()
 init(autoreset=True)
 
+PIPELINE_CONFIG = config_loader.load_config()
+X_CONFIG = PIPELINE_CONFIG.x
+
+if "x" not in PIPELINE_CONFIG.platforms:
+    raise ValueError(
+        "X collection is disabled: add 'x' to config.yaml platforms."
+    )
+
+if not X_CONFIG:
+    raise ValueError(
+        "X configuration is missing from config.yaml."
+    )
+
 PROJECT_CONFIG = {
-    "project_start": "2026-02-28",
-    "project_end": "2026-07-22",
-    "query_version": "v3.0",
-    "collector_version": "x-selenium-v4.5",
+    "project_start": PIPELINE_CONFIG.date_range.start.isoformat(),
+    "project_end": PIPELINE_CONFIG.date_range.end.date().isoformat(),
+    "query_version": X_CONFIG["query_version"],
+    "collector_version": X_CONFIG["collector_version"],
     "platform": "x",
-    "sort_mode": "live",
+    "sort_mode": X_CONFIG["sort_mode"],
 }
 
 # Collection tuning: favor many shallow date slices over deep scrolling.
-MAX_WORKERS = 3
-MAX_SCROLLS_PER_SLICE = 4
-MAX_SCROLLS_MIN_DAY = 9
-NO_NEW_SCROLL_LIMIT = 2
-SPLIT_LAST_SCROLL_NEW = 4
-SPLIT_TOTAL_SEEN = 45
-MIN_SLICE_DAYS = 1
-PAGE_LOAD_TIMEOUT = 45
-SAFE_GET_READY_TIMEOUT = 28
-STARTUP_STAGGER_SECONDS = 8
-STARTUP_MAX_ATTEMPTS = 3
-STARTUP_RETRY_SECONDS = 12
-SCROLL_MIN_DELAY = 1.8
-SCROLL_MAX_DELAY = 3.8
-JOB_BACKOFF_SECONDS = 30
-MAX_JOB_ATTEMPTS = 3
+SLICE_SPLIT_CONFIG = X_CONFIG["slice_split"]
+NAVIGATION_CONFIG = X_CONFIG["navigation"]
+
+MAX_WORKERS = int(X_CONFIG["max_workers"])
+MAX_SCROLLS_PER_SLICE = int(X_CONFIG["max_scrolls_per_slice"])
+MAX_SCROLLS_MIN_DAY = int(X_CONFIG["max_scrolls_min_day"])
+NO_NEW_SCROLL_LIMIT = int(X_CONFIG["no_new_scroll_limit"])
+
+SPLIT_LAST_SCROLL_NEW = int(
+    SLICE_SPLIT_CONFIG["last_scroll_new_threshold"]
+)
+SPLIT_TOTAL_SEEN = int(
+    SLICE_SPLIT_CONFIG["total_seen_threshold"]
+)
+MIN_SLICE_DAYS = int(
+    SLICE_SPLIT_CONFIG["minimum_slice_days"]
+)
+
+PAGE_LOAD_TIMEOUT = int(
+    NAVIGATION_CONFIG["page_load_timeout_seconds"]
+)
+SAFE_GET_READY_TIMEOUT = int(
+    NAVIGATION_CONFIG["ready_timeout_seconds"]
+)
+STARTUP_STAGGER_SECONDS = float(
+    NAVIGATION_CONFIG["startup_stagger_seconds"]
+)
+STARTUP_MAX_ATTEMPTS = int(
+    NAVIGATION_CONFIG["startup_max_attempts"]
+)
+STARTUP_RETRY_SECONDS = int(
+    NAVIGATION_CONFIG["startup_retry_seconds"]
+)
+SCROLL_MIN_DELAY = float(
+    NAVIGATION_CONFIG["scroll_min_delay_seconds"]
+)
+SCROLL_MAX_DELAY = float(
+    NAVIGATION_CONFIG["scroll_max_delay_seconds"]
+)
+JOB_BACKOFF_SECONDS = int(
+    NAVIGATION_CONFIG["job_backoff_seconds"]
+)
+MAX_JOB_ATTEMPTS = int(
+    NAVIGATION_CONFIG["max_job_attempts"]
+)
 
 # Optional legacy author-identity backfill. This is NOT run automatically.
-BACKFILL_MIN_DELAY = 3.0
-BACKFILL_MAX_DELAY = 6.0
-BACKFILL_READY_TIMEOUT = 20
+BACKFILL_CONFIG = X_CONFIG["backfill"]
+
+BACKFILL_MIN_DELAY = float(
+    BACKFILL_CONFIG["min_delay_seconds"]
+)
+BACKFILL_MAX_DELAY = float(
+    BACKFILL_CONFIG["max_delay_seconds"]
+)
+BACKFILL_READY_TIMEOUT = int(
+    BACKFILL_CONFIG["ready_timeout_seconds"]
+)
 
 # Progress / durability tuning.
-RAW_OPERATIONAL_TARGET = 30_000      # operational collection target only; NOT a statistical sample-size rule
-DASHBOARD_REFRESH_SECONDS = 2.0
-BACKUP_INTERVAL_SECONDS = 10 * 60
-RECOVERY_FSYNC_EVERY = 1             # 1 = flush/fsync each recovered tweet line for maximum durability
+PERSISTENCE_CONFIG = X_CONFIG["persistence"]
+
+RAW_OPERATIONAL_TARGET = int(
+    PERSISTENCE_CONFIG["operational_target"]
+)
+DASHBOARD_REFRESH_SECONDS = float(
+    PERSISTENCE_CONFIG["dashboard_refresh_seconds"]
+)
+BACKUP_INTERVAL_SECONDS = int(
+    PERSISTENCE_CONFIG["backup_interval_seconds"]
+)
+RECOVERY_FSYNC_EVERY = int(
+    PERSISTENCE_CONFIG["recovery_fsync_every"]
+)
+
+
+RUNTIME_CONFIG = X_CONFIG["runtime"]
+OUTPUT_ROOT_ENV_VAR = RUNTIME_CONFIG["output_root_env_var"]
 
 try:
     from google.colab import drive
-    drive.mount('/content/drive', force_remount=False)
-    DRIVE_DIR = Path('/content/drive/MyDrive/Twitter_Scraper_Data_v4')
-except ImportError:
-    DRIVE_DIR = Path('./Twitter_Scraper_Data_v4')
 
+    drive.mount("/content/drive", force_remount=False)
+    default_output_root = RUNTIME_CONFIG["default_colab_output_root"]
+except ImportError:
+    default_output_root = RUNTIME_CONFIG["default_local_output_root"]
+
+configured_output_root = os.environ.get(
+    OUTPUT_ROOT_ENV_VAR,
+    default_output_root,
+).strip()
+
+if not configured_output_root:
+    raise ValueError(
+        f"{OUTPUT_ROOT_ENV_VAR} must not be empty."
+    )
+
+DRIVE_DIR = Path(configured_output_root).expanduser()
 DRIVE_DIR.mkdir(parents=True, exist_ok=True)
 DB_FILE = DRIVE_DIR / 'twitter_data_v4.db'
 EXPORT_DIR = DRIVE_DIR / 'exports'
@@ -100,21 +184,43 @@ logging.basicConfig(
 
 # Required by Raw Schema. Keep one fixed secret salt for the entire project.
 # If no environment variable is supplied, create/reuse a private salt file in the project folder.
-SALT_FILE = DRIVE_DIR / 'project_author_salt.txt'
-if os.environ.get('PROJECT_AUTHOR_SALT'):
-    AUTHOR_SALT = os.environ['PROJECT_AUTHOR_SALT']
+AUTHOR_SALT_ENV_VAR = RUNTIME_CONFIG["author_salt_env_var"]
+SALT_FILENAME = RUNTIME_CONFIG["salt_filename"]
+SALT_FILE = DRIVE_DIR / SALT_FILENAME
+
+configured_author_salt = os.environ.get(
+    AUTHOR_SALT_ENV_VAR,
+    "",
+).strip()
+
+if configured_author_salt:
+    AUTHOR_SALT = configured_author_salt
 elif SALT_FILE.exists():
-    AUTHOR_SALT = SALT_FILE.read_text(encoding='utf-8').strip()
+    AUTHOR_SALT = SALT_FILE.read_text(
+        encoding="utf-8"
+    ).strip()
 else:
     import secrets
+
     AUTHOR_SALT = secrets.token_hex(32)
-    SALT_FILE.write_text(AUTHOR_SALT, encoding='utf-8')
+    SALT_FILE.write_text(
+        AUTHOR_SALT,
+        encoding="utf-8",
+    )
     try:
         os.chmod(SALT_FILE, 0o600)
-    except Exception:
+    except OSError:
         pass
+
     print(f"Created persistent project salt at: {SALT_FILE}")
-os.environ['PROJECT_AUTHOR_SALT'] = AUTHOR_SALT
+
+if not AUTHOR_SALT:
+    raise ValueError(
+        "Author salt is empty. Provide a non-empty "
+        f"{AUTHOR_SALT_ENV_VAR} or a valid {SALT_FILE}."
+    )
+
+os.environ[AUTHOR_SALT_ENV_VAR] = AUTHOR_SALT
 
 STOP_EVENT = threading.Event()
 DB_LOCK = threading.RLock()
@@ -135,29 +241,32 @@ print("Persistence mode: Google Drive write-through + recovery journals + period
 # GITHUB-SAFE ACCOUNT CONFIGURATION
 #
 # No X/Twitter cookies, auth tokens, proxy addresses, usernames, or passwords are
-# stored in this notebook. Supply them at runtime through X_ACCOUNTS_JSON.
+# stored in source code. Supply them through the environment variable configured
+# by x.runtime.accounts_env_var in config.yaml.
 # Local developers may keep the variable in a private .env file; `.env` is ignored
 # by Git. In Colab, set the variable in the runtime environment before this cell.
 
+ACCOUNTS_ENV_VAR = RUNTIME_CONFIG["accounts_env_var"]
 
-def load_accounts_from_env(env_var='X_ACCOUNTS_JSON'):
+
+def load_accounts_from_env(env_var=ACCOUNTS_ENV_VAR):
     """Load X account configuration from a private environment variable.
-    
+
     Parameters
     ----------
     env_var : str
         Environment-variable name containing the account JSON payload.
-    
+
     Returns
     -------
     list of dict
         Validated runtime account configurations, or an empty list when unset.
-    
+
     Raises
     ------
     ValueError
         If the environment variable contains invalid account JSON.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -207,36 +316,61 @@ print(f'Runtime account configurations loaded: {len(ACCOUNTS)}')
 # -----------------------------------------------------------------------------
 # Notebook cell 4
 # -----------------------------------------------------------------------------
-# Query Registry v3 — X only
-# XQ-H03 remains inactive because the registry says to populate it after Persian discovery.
+# Query Registry v3 — X only. The YAML registry is the single source of truth.
+# XQ-H03 remains inactive because no executed Persian hashtag query was recorded.
+X_QUERY_ENTRIES = query_registry_loader.load_all_x_queries()
+X_REGISTRY_VERSION = query_registry_loader.get_x_registry_version()
+
+if X_REGISTRY_VERSION != PROJECT_CONFIG["query_version"]:
+    raise ValueError(
+        "X query-version mismatch: "
+        f"config.yaml={PROJECT_CONFIG['query_version']!r}, "
+        f"query_registry.yaml={X_REGISTRY_VERSION!r}."
+    )
+
 X_QUERIES = [
-    {'query_id': 'XQ-001', 'family': 'Core conflict', 'lang': 'en', 'logical_query': '("Iran-US war" OR "US-Iran tensions" OR "Iran war" OR "US Iran war")', 'risk': 'low', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-002', 'family': 'Actor-event', 'lang': 'en', 'logical_query': '("Iran" AND ("airstrike" OR "missile strike" OR "drone attack"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-003', 'family': 'Bilateral military', 'lang': 'en', 'logical_query': '(("Iran" OR "IRGC") AND ("US military" OR "United States") AND ("airstrike" OR "missile strike"))', 'risk': 'low', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-004', 'family': 'Diplomacy', 'lang': 'en', 'logical_query': '(("Iran" OR "United States") AND ("ceasefire" OR "negotiations" OR "peace talks"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-005', 'family': 'Sanctions and nuclear', 'lang': 'en', 'logical_query': '(("Iran" OR "United States") AND ("sanctions" OR "nuclear programme" OR "nuclear program"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-006', 'family': 'Humanitarian', 'lang': 'en', 'logical_query': '(("Iran" OR "Iran-US war") AND ("civilian casualties" OR "humanitarian crisis"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-007', 'family': 'Information environment', 'lang': 'en', 'logical_query': '(("Iran" OR "Iran-US war") AND ("misinformation" OR "propaganda"))', 'risk': 'high', 'entity_anchor': 'Iran OR "Iran-US" OR "Iran war"', 'route': 'query_search'},
-    {'query_id': 'XQ-008', 'family': 'Economic impact', 'lang': 'en', 'logical_query': '(("Iran" OR "Iran-US war") AND ("oil price" OR "exchange rate" OR "gold price" OR "market volatility"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-009', 'family': 'Hormuz and energy', 'lang': 'en', 'logical_query': '(("Iran" OR "Iran-US war") AND ("Strait of Hormuz" OR Hormuz OR "oil price"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-019', 'family': 'Operation-specific', 'lang': 'en', 'logical_query': '("Epic Fury" OR "Operation Epic Fury" OR "Roaring Lion")', 'risk': 'low', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-020', 'family': 'Hormuz blockade', 'lang': 'en', 'logical_query': '(Hormuz OR "Strait of Hormuz") AND (blockade OR closed OR reopened OR shipping OR transit)', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-021', 'family': 'MOU / Islamabad', 'lang': 'en', 'logical_query': '(("Islamabad" OR MOU OR "memorandum of understanding") AND (Iran OR "United States" OR Trump))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-010', 'family': 'Core conflict', 'lang': 'fa', 'logical_query': '("جنگ ایران و آمریکا" OR "تنش ایران و آمریکا" OR "جنگ ایران آمریکا")', 'risk': 'low', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-011', 'family': 'Actor-event', 'lang': 'fa', 'logical_query': '("ایران" AND ("حمله هوایی" OR "حمله موشکی" OR "حمله پهپادی"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-012', 'family': 'Bilateral military', 'lang': 'fa', 'logical_query': '(("ایران" OR "سپاه") AND ("ارتش آمریکا" OR "ایالات متحده") AND ("حمله هوایی" OR "حمله موشکی"))', 'risk': 'low', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-013', 'family': 'Diplomacy', 'lang': 'fa', 'logical_query': '(("ایران" OR "ایالات متحده" OR "آمریکا") AND ("آتش\u200cبس" OR "مذاکرات" OR "صلح"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-014', 'family': 'Sanctions and nuclear', 'lang': 'fa', 'logical_query': '(("ایران" OR "ایالات متحده") AND ("تحریم\u200cها" OR "برنامه هسته\u200cای"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-015', 'family': 'Humanitarian', 'lang': 'fa', 'logical_query': '(("ایران" OR "جنگ ایران و آمریکا") AND ("تلفات غیرنظامیان" OR "بحران انسانی"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-016', 'family': 'Information environment', 'lang': 'fa', 'logical_query': '(("ایران" OR "جنگ ایران و آمریکا") AND ("اطلاعات نادرست" OR "تبلیغات سیاسی"))', 'risk': 'high', 'entity_anchor': 'ایران OR "جنگ ایران"', 'route': 'query_search'},
-    {'query_id': 'XQ-017', 'family': 'Economic impact', 'lang': 'fa', 'logical_query': '(("ایران" OR "جنگ ایران و آمریکا") AND ("قیمت نفت" OR "نرخ ارز" OR "قیمت طلا" OR "نوسان بازار"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-018', 'family': 'Hormuz and energy', 'lang': 'fa', 'logical_query': '(("ایران" OR "جنگ ایران و آمریکا") AND ("تنگه هرمز" OR "قیمت نفت"))', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-022', 'family': 'Operation-specific', 'lang': 'fa', 'logical_query': '("اپیک فیوری" OR "عملیات حماسه" OR "حماسه خشم" OR "روآرینگ لاین")', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-023', 'family': 'Hormuz blockade', 'lang': 'fa', 'logical_query': '("تنگه هرمز") AND ("بسته" OR "مسدود" OR "محاصره" OR "بازگشایی" OR "کشتیرانی")', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-024', 'family': 'MOU / Islamabad', 'lang': 'fa', 'logical_query': '("اسلام\u200cآباد" OR "تفاهم\u200cنامه" OR "تفاهم نامه") AND ("ایران" OR "آمریکا")', 'risk': 'medium', 'entity_anchor': None, 'route': 'query_search'},
-    {'query_id': 'XQ-H01', 'family': 'Hashtag — conflict', 'lang': 'en', 'logical_query': '#IranWar OR #IranWar2026 OR #USIranWar OR #IranIsraelWar OR #EpicFury', 'risk': 'low', 'entity_anchor': None, 'route': 'hashtag'},
-    {'query_id': 'XQ-H02', 'family': 'Hashtag — regional/energy', 'lang': 'en', 'logical_query': '#StraitOfHormuz OR #MiddleEastWar OR #MiddleEastConflict OR #Hormuz', 'risk': 'medium', 'entity_anchor': None, 'route': 'hashtag'},
+    {
+        "query_id": entry.query_id,
+        "family": entry.family,
+        "lang": entry.language,
+        "logical_query": entry.query_text,
+        "risk": entry.risk,
+        "entity_anchor": entry.entity_anchor,
+        "route": entry.discovery_route,
+    }
+    for entry in X_QUERY_ENTRIES
 ]
+
+loaded_query_ids = [entry.query_id for entry in X_QUERY_ENTRIES]
+duplicate_query_ids = sorted({
+    query_id
+    for query_id in loaded_query_ids
+    if loaded_query_ids.count(query_id) > 1
+})
+
+if not X_QUERY_ENTRIES:
+    raise ValueError("No X queries were loaded from query_registry.yaml.")
+if duplicate_query_ids:
+    raise ValueError(f"Duplicate X query IDs: {duplicate_query_ids}")
+if any(entry.platform != "x" for entry in X_QUERY_ENTRIES):
+    raise ValueError("Every x_queries entry must have platform='x'.")
+if any(entry.language not in {"en", "fa"} for entry in X_QUERY_ENTRIES):
+    raise ValueError("Every X query language must be 'en' or 'fa'.")
+if any(
+    entry.discovery_route not in {"query_search", "hashtag"}
+    for entry in X_QUERY_ENTRIES
+):
+    raise ValueError(
+        "Every X discovery_route must be 'query_search' or 'hashtag'."
+    )
+if any(
+    entry.active_from != PIPELINE_CONFIG.date_range.start
+    or entry.active_to != PIPELINE_CONFIG.date_range.end.date()
+    for entry in X_QUERY_ENTRIES
+):
+    raise ValueError(
+        "Every active X query must use the configured project date range."
+    )
 
 QUERY_BY_ID = {q['query_id']: q for q in X_QUERIES}
 
@@ -249,12 +383,12 @@ PROJECT_END_EXCLUSIVE = (datetime.fromisoformat(PROJECT_CONFIG['project_end']) +
 
 def build_project_weeks():
     """Build the ordered project-week calendar for the configured study window.
-    
+
     Returns
     -------
     list of dict
         Ordered project-week definitions.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -287,12 +421,12 @@ print(f"Loaded {len(X_QUERIES)} X queries × {len(PROJECT_WEEKS)} weeks = {len(X
 # -----------------------------------------------------------------------------
 def utc_now():
     """Return the current UTC timestamp in project string format.
-    
+
     Returns
     -------
     str
         Current UTC timestamp formatted for storage.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -303,12 +437,12 @@ def utc_now():
 def connect_db():
     # DB lives on Google Drive. Serialize writers with DB_LOCK and favor durability over raw write speed.
     """Open a configured SQLite connection to the persistent project database.
-    
+
     Returns
     -------
     sqlite3.Connection
         Configured SQLite connection.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -327,7 +461,7 @@ def connect_db():
 
 def init_database():
     """Create the scraper database tables and indexes when they do not yet exist.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -489,17 +623,17 @@ def init_database():
 
 def migrate_database_v45(conn):
     """Apply the idempotent v4.5 schema migration to an existing database.
-    
+
     Parameters
     ----------
     conn : sqlite3.Connection
         Open SQLite connection used for the operation.
-    
+
     Raises
     ------
     sqlite3.Error
         If the schema migration cannot be committed.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -533,7 +667,7 @@ def migrate_database_v45(conn):
 
 def job_id(query_id, project_week, start_dt, end_dt, depth):
     """Build a deterministic identifier for a query-week slice job.
-    
+
     Parameters
     ----------
     query_id : str
@@ -546,12 +680,12 @@ def job_id(query_id, project_week, start_dt, end_dt, depth):
         Exclusive end of the job slice.
     depth : int
         Adaptive-splitting depth of the job.
-    
+
     Returns
     -------
     str
         Deterministic job identifier.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -561,12 +695,12 @@ def job_id(query_id, project_week, start_dt, end_dt, depth):
 
 def reset_stale_running_jobs():
     """Return stale running jobs to pending state after an interrupted session.
-    
+
     Returns
     -------
     object
         Result produced by the helper operation.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -586,12 +720,12 @@ def reset_stale_running_jobs():
 
 def seed_initial_jobs(reset_stale_running=True):
     """Seed the initial Query × Project-Week jobs without duplicating existing jobs.
-    
+
     Parameters
     ----------
     reset_stale_running : bool
         Whether stale running jobs are reset before seeding.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -619,24 +753,24 @@ def seed_initial_jobs(reset_stale_running=True):
 
 def claim_next_job(conn, worker_name):
     """Atomically claim the next pending collection job for a worker.
-    
+
     Parameters
     ----------
     conn : sqlite3.Connection
         Open SQLite connection used for the operation.
     worker_name : str
         Internal worker identifier.
-    
+
     Returns
     -------
     sqlite3.Row or None
         Claimed job row, or ``None`` when no pending job remains.
-    
+
     Raises
     ------
     sqlite3.Error
         If the atomic claim transaction fails.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -660,7 +794,7 @@ def claim_next_job(conn, worker_name):
 
 def set_job_status(conn, jid, status, error=None):
     """Update the persisted status and optional error message for a job.
-    
+
     Parameters
     ----------
     conn : sqlite3.Connection
@@ -671,7 +805,7 @@ def set_job_status(conn, jid, status, error=None):
         New persisted job status.
     error : str or None
         Optional error text associated with the status change.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -689,19 +823,19 @@ def set_job_status(conn, jid, status, error=None):
 
 def enqueue_split_children(conn, row):
     """Split a dense job into child date ranges and enqueue them transactionally.
-    
+
     Parameters
     ----------
     conn : sqlite3.Connection
         Open SQLite connection used for the operation.
     row : sqlite3.Row or Mapping
         Persisted job row to process.
-    
+
     Returns
     -------
     bool
         ``True`` when child jobs are created; otherwise ``False``.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -731,7 +865,7 @@ def enqueue_split_children(conn, row):
 
 def update_worker_status(conn, worker_name, account_name, state, **kw):
     """Persist the latest state, counters, and heartbeat for a worker.
-    
+
     Parameters
     ----------
     conn : sqlite3.Connection
@@ -744,7 +878,7 @@ def update_worker_status(conn, worker_name, account_name, state, **kw):
         Worker state to persist.
     **kw : object
         Additional worker-status fields such as counters, job identifiers, and notes.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -785,17 +919,17 @@ def update_worker_status(conn, worker_name, account_name, state, **kw):
 def create_db_backup(verbose=False):
     # SQLite online backup while writes are serialized. Rotating one-file backup to limit Drive usage.
     """Create or refresh the rotating SQLite backup file.
-    
+
     Parameters
     ----------
     verbose : bool
         Whether to print backup status information.
-    
+
     Returns
     -------
     Path or None
         Backup path when a backup is created, otherwise ``None``.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -828,17 +962,17 @@ seed_initial_jobs()
 # -----------------------------------------------------------------------------
 def iso_z(dt):
     """Convert a datetime value to an ISO 8601 UTC string ending in ``Z``.
-    
+
     Parameters
     ----------
     dt : datetime
         Timezone-aware datetime value.
-    
+
     Returns
     -------
     str
         UTC timestamp in ISO 8601 ``Z`` form.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -852,17 +986,17 @@ def iso_z(dt):
 
 def project_week_for_timestamp(dt):
     """Map a timestamp to its configured project-week label.
-    
+
     Parameters
     ----------
     dt : datetime
         Timezone-aware datetime value.
-    
+
     Returns
     -------
     str
         Project-week label or ``OUT`` when outside the study window.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -876,21 +1010,26 @@ def project_week_for_timestamp(dt):
 
 def author_hash_from_handle(handle):
     # Web UI often exposes handle but not stable numeric user ID.
-    # v4.5 keeps the raw username for source traceability AND retains this stable project hash.
-    """Create the project-stable salted SHA-256 hash for an X handle.
-    
+    # The resulting pseudonym is stable only while the observed handle is unchanged.
+    """Create a salted SHA-256 pseudonym from the available X identity input.
+
     Parameters
     ----------
     handle : str
         X username or handle.
-    
+
     Returns
     -------
     str or None
         Salted author hash, or ``None`` when no handle is available.
-    
+
     Notes
     -----
+    X's web UI did not consistently expose a stable numeric author ID during
+    historical collection. Most records therefore use a normalized handle;
+    records without a handle use the caller's documented content-ID fallback.
+    These hashes are for within-X grouping only, not cross-platform linkage.
+
     This function is part of the resumable X collection pipeline and preserves
     project provenance and recovery behavior unless stated otherwise.
     """
@@ -900,17 +1039,17 @@ def author_hash_from_handle(handle):
 
 def permalink_hash(url):
     """Create a SHA-256 digest for a canonical post URL.
-    
+
     Parameters
     ----------
     url : str
         URL to inspect or normalize.
-    
+
     Returns
     -------
     str or None
         SHA-256 URL hash, or ``None`` for an empty URL.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -920,17 +1059,17 @@ def permalink_hash(url):
 
 def extract_status_id(url):
     """Extract the numeric X post identifier from a status URL.
-    
+
     Parameters
     ----------
     url : str
         URL to inspect or normalize.
-    
+
     Returns
     -------
     str or None
         Numeric platform post ID, or ``None`` when no status ID is present.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -942,17 +1081,17 @@ def extract_status_id(url):
 
 def _clean_profile_handle_from_url(url):
     """Extract and validate an X profile handle from a profile URL.
-    
+
     Parameters
     ----------
     url : str
         URL to inspect or normalize.
-    
+
     Returns
     -------
     str or None
         Validated profile handle, or ``None``.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -975,7 +1114,7 @@ def _clean_profile_handle_from_url(url):
 
 def canonical_tweet_url(handle, content_id, observed_url=None):
     """Build the preferred canonical X post URL from available identity fields.
-    
+
     Parameters
     ----------
     handle : str
@@ -984,12 +1123,12 @@ def canonical_tweet_url(handle, content_id, observed_url=None):
         Platform post identifier.
     observed_url : str or None
         Observed post URL, when available.
-    
+
     Returns
     -------
     str or None
         Canonical post URL, or ``None`` when no post ID exists.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1009,7 +1148,7 @@ def canonical_tweet_url(handle, content_id, observed_url=None):
 
 def extract_author_identity(article, status_link, content_id):
     """Extract the best available author username and display name from a post card.
-    
+
     Parameters
     ----------
     article : selenium.webdriver.remote.webelement.WebElement
@@ -1018,12 +1157,12 @@ def extract_author_identity(article, status_link, content_id):
         Observed X status link.
     content_id : str
         Platform post identifier.
-    
+
     Returns
     -------
     tuple[str | None, str | None]
         Author username and display name.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1083,17 +1222,17 @@ def extract_author_identity(article, status_link, content_id):
 
 def detect_language_unicode(text):
     """Estimate whether text is Persian, English, or another language using Unicode ranges.
-    
+
     Parameters
     ----------
     text : str
         Text to inspect.
-    
+
     Returns
     -------
     tuple[str, float]
         Detected language label and heuristic confidence.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1113,17 +1252,17 @@ def detect_language_unicode(text):
 
 def compact_number(value):
     """Parse a compact social metric such as ``1.2K`` into an integer.
-    
+
     Parameters
     ----------
     value : str or int or float or None
         Compact metric value to parse.
-    
+
     Returns
     -------
     int or None
         Parsed integer metric, or ``None`` when parsing fails.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1154,19 +1293,19 @@ def compact_number(value):
 
 def metric_from_element(article, testid):
     """Read and normalize an engagement metric from a tweet-card element.
-    
+
     Parameters
     ----------
     article : selenium.webdriver.remote.webelement.WebElement
         Rendered X post-card element.
     testid : str
         X ``data-testid`` value for the target metric.
-    
+
     Returns
     -------
     int or None
         Normalized engagement metric when available.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1184,17 +1323,17 @@ def metric_from_element(article, testid):
 
 def infer_content_type(article):
     """Infer the project content type for a rendered X post card.
-    
+
     Parameters
     ----------
     article : selenium.webdriver.remote.webelement.WebElement
         Rendered X post-card element.
-    
+
     Returns
     -------
     str
         Project content-type label.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1221,7 +1360,7 @@ def infer_content_type(article):
 
 def create_proxy_extension(host, port, user, pwd, worker_name):
     """Create a temporary Chrome extension for an authenticated HTTP proxy.
-    
+
     Parameters
     ----------
     host : str
@@ -1234,12 +1373,12 @@ def create_proxy_extension(host, port, user, pwd, worker_name):
         Proxy password supplied at runtime.
     worker_name : str
         Internal worker identifier.
-    
+
     Returns
     -------
     Path
         Path to the temporary proxy-extension ZIP file.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1271,24 +1410,24 @@ def create_proxy_extension(host, port, user, pwd, worker_name):
 
 def setup_driver(account, worker_name):
     """Create and configure a Selenium Chrome driver for one worker account.
-    
+
     Parameters
     ----------
     account : Mapping
         Runtime account configuration loaded from the environment.
     worker_name : str
         Internal worker identifier.
-    
+
     Returns
     -------
     selenium.webdriver.Chrome
         Configured Chrome driver.
-    
+
     Raises
     ------
     WebDriverException
         If Chrome cannot be created with the supplied runtime configuration.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1327,7 +1466,7 @@ def setup_driver(account, worker_name):
 
 def safe_get(driver, url, ready_timeout=SAFE_GET_READY_TIMEOUT):
     """Navigate to a URL while tolerating slow single-page-application rendering.
-    
+
     Parameters
     ----------
     driver : selenium.webdriver.Chrome
@@ -1336,17 +1475,17 @@ def safe_get(driver, url, ready_timeout=SAFE_GET_READY_TIMEOUT):
         URL to inspect or normalize.
     ready_timeout : float
         Maximum seconds to wait for a usable page body.
-    
+
     Returns
     -------
     bool
         ``True`` when a usable page body becomes available.
-    
+
     Raises
     ------
     WebDriverException
         If the browser session is no longer usable.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1387,19 +1526,19 @@ def safe_get(driver, url, ready_timeout=SAFE_GET_READY_TIMEOUT):
 def inject_cookies(driver, cookies):
     # First navigation exists only to establish the x.com cookie domain.
     """Inject the configured X session cookies into a browser session.
-    
+
     Parameters
     ----------
     driver : selenium.webdriver.Chrome
         Active Selenium Chrome driver.
     cookies : list of dict
         Runtime session-cookie dictionaries.
-    
+
     Returns
     -------
     bool
         ``True`` when at least one cookie is accepted by Chrome.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1434,7 +1573,7 @@ def inject_cookies(driver, cookies):
 
 def build_search_url(logical_query, start_date, end_date_exclusive):
     """Build an X live-search URL for one logical query and date slice.
-    
+
     Parameters
     ----------
     logical_query : str
@@ -1443,12 +1582,12 @@ def build_search_url(logical_query, start_date, end_date_exclusive):
         Inclusive search start date.
     end_date_exclusive : datetime or str
         Exclusive search end date.
-    
+
     Returns
     -------
     tuple[str, str]
         Search URL and exact query string used for provenance.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1459,7 +1598,7 @@ def build_search_url(logical_query, start_date, end_date_exclusive):
 
 def parse_article(article, query_id, job_week, collection_run_id):
     """Parse one rendered X post card into the project raw-record schema.
-    
+
     Parameters
     ----------
     article : selenium.webdriver.remote.webelement.WebElement
@@ -1470,17 +1609,17 @@ def parse_article(article, query_id, job_week, collection_run_id):
         Project-week label associated with the parsed post.
     collection_run_id : str
         Identifier of the current collection run.
-    
+
     Returns
     -------
     dict or None
         Parsed raw record, or ``None`` when the card lacks a usable post ID.
-    
+
     Raises
     ------
     WebDriverException
         If Selenium cannot inspect the rendered post card.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1602,19 +1741,19 @@ RAW_COLUMNS = [
 
 def merge_query_ids(existing, new_id):
     """Merge a query identifier into a semicolon-delimited unique query-id list.
-    
+
     Parameters
     ----------
     existing : str or None
         Existing semicolon-delimited query-id string.
     new_id : str
         Query identifier to add.
-    
+
     Returns
     -------
     str
         Semicolon-delimited unique query identifiers.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1627,17 +1766,17 @@ def merge_query_ids(existing, new_id):
 
 def _journal_lock(name):
     """Return the per-worker lock used to serialize recovery-journal writes.
-    
+
     Parameters
     ----------
     name : str
         Worker name used to address an in-process lock.
-    
+
     Returns
     -------
     threading.RLock
         Per-worker recovery-journal lock.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1650,17 +1789,17 @@ def _journal_lock(name):
 
 def recovery_journal_path(worker_name):
     """Return the recovery-journal file path for a worker.
-    
+
     Parameters
     ----------
     worker_name : str
         Internal worker identifier.
-    
+
     Returns
     -------
     Path
         Recovery-journal path for the worker.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1671,19 +1810,19 @@ def recovery_journal_path(worker_name):
 
 def append_recovery_record(worker_name, rec):
     """Append one recoverable record to a worker journal before database commit.
-    
+
     Parameters
     ----------
     worker_name : str
         Internal worker identifier.
     rec : Mapping
         Parsed raw record to journal or persist.
-    
+
     Returns
     -------
     tuple[str, int]
         Journal filename and end-byte offset after the appended line.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1708,7 +1847,7 @@ def append_recovery_record(worker_name, rec):
 
 def store_record(conn, rec, journal_file=None, journal_offset=None):
     """Insert or merge one raw record and acknowledge its journal offset.
-    
+
     Parameters
     ----------
     conn : sqlite3.Connection
@@ -1719,12 +1858,12 @@ def store_record(conn, rec, journal_file=None, journal_offset=None):
         Recovery-journal file containing the record.
     journal_offset : int
         End-byte offset to acknowledge after commit.
-    
+
     Returns
     -------
     bool
         ``True`` when a new raw row is inserted; ``False`` when an existing row is merged.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1776,7 +1915,7 @@ def store_record(conn, rec, journal_file=None, journal_offset=None):
 def persist_record(conn, rec, worker_name):
     # Journal-first, DB-second = best-effort crash durability on Colab/Drive.
     """Journal and persist one raw record using the durability protocol.
-    
+
     Parameters
     ----------
     conn : sqlite3.Connection
@@ -1785,12 +1924,12 @@ def persist_record(conn, rec, worker_name):
         Parsed raw record to journal or persist.
     worker_name : str
         Internal worker identifier.
-    
+
     Returns
     -------
     bool
         ``True`` when a new raw row is inserted; otherwise ``False``.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1801,12 +1940,12 @@ def persist_record(conn, rec, worker_name):
 
 def recover_from_journals():
     """Replay unacknowledged recovery-journal records into SQLite idempotently.
-    
+
     Returns
     -------
     int
         Number of journal records replayed during recovery.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1865,19 +2004,19 @@ class TemporaryAccessIssue(Exception):
 
 def make_collection_run_id(job_row, worker_name):
     """Create a unique identifier for one worker execution of a collection job.
-    
+
     Parameters
     ----------
     job_row : sqlite3.Row or Mapping
         Persisted collection job row.
     worker_name : str
         Internal worker identifier.
-    
+
     Returns
     -------
     str
         Unique collection-run identifier.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1889,7 +2028,7 @@ def make_collection_run_id(job_row, worker_name):
 
 def should_split_job(job_row, returned_unique, last_scroll_new):
     """Decide whether a date slice is dense enough to require adaptive splitting.
-    
+
     Parameters
     ----------
     job_row : sqlite3.Row or Mapping
@@ -1898,12 +2037,12 @@ def should_split_job(job_row, returned_unique, last_scroll_new):
         Number of unique posts observed in the current slice.
     last_scroll_new : int
         Number of newly observed posts from the last scroll.
-    
+
     Returns
     -------
     bool
         Whether the current job should be replaced by child date slices.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1918,17 +2057,17 @@ def should_split_job(job_row, returned_unique, last_scroll_new):
 
 def detect_access_state(driver):
     """Classify visible browser state without bypassing access or verification controls.
-    
+
     Parameters
     ----------
     driver : selenium.webdriver.Chrome
         Active Selenium Chrome driver.
-    
+
     Returns
     -------
     tuple[str, str]
         Detected access state and explanatory note.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -1951,7 +2090,7 @@ def detect_access_state(driver):
 
 def scrape_job(driver, conn, job_row, worker_name, account_name, stats):
     """Execute one query/date-slice collection job and persist its audit metadata.
-    
+
     Parameters
     ----------
     driver : selenium.webdriver.Chrome
@@ -1966,12 +2105,12 @@ def scrape_job(driver, conn, job_row, worker_name, account_name, stats):
         Human-readable runtime account label.
     stats : dict
         Mutable per-worker counters for the current session.
-    
+
     Returns
     -------
     dict
         Per-job collection metrics and audit information.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2128,19 +2267,19 @@ def scrape_job(driver, conn, job_row, worker_name, account_name, stats):
 
 def worker_loop(worker_index, account):
     """Run the lifecycle of one independent browser worker until completion or stop.
-    
+
     Parameters
     ----------
     worker_index : int
         Zero-based worker index.
     account : Mapping
         Runtime account configuration loaded from the environment.
-    
+
     Returns
     -------
     str
         Final worker state.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2326,22 +2465,22 @@ def worker_loop(worker_index, account):
 
 def run_collection(max_workers=MAX_WORKERS):
     """Run the multi-worker collection controller with graceful stop and recovery.
-    
+
     Parameters
     ----------
     max_workers : int
         Maximum number of concurrent browser workers.
-    
+
     Returns
     -------
     None
         This controller reports progress and persists results as side effects.
-    
+
     Raises
     ------
     RuntimeError
         If no runtime account configuration is available.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2449,12 +2588,12 @@ def run_collection(max_workers=MAX_WORKERS):
 # -----------------------------------------------------------------------------
 def job_stats():
     """Print and return a compact summary of persisted queue and raw-record counts.
-    
+
     Returns
     -------
     pandas.DataFrame
         Job-status summary data frame.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2472,17 +2611,17 @@ def job_stats():
 
 def _fmt_duration(seconds):
     """Format an elapsed duration in a compact human-readable form.
-    
+
     Parameters
     ----------
     seconds : float or int or None
         Duration in seconds.
-    
+
     Returns
     -------
     str
         Compact formatted duration.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2502,19 +2641,19 @@ def _fmt_duration(seconds):
 
 def _pct(n, d):
     """Calculate a percentage constrained to the inclusive range 0–100.
-    
+
     Parameters
     ----------
     n : float or int
         Numerator value.
     d : float or int
         Denominator value.
-    
+
     Returns
     -------
     float
         Percentage in the range 0–100.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2524,17 +2663,17 @@ def _pct(n, d):
 
 def _badge(state):
     """Render an HTML status badge for a worker state.
-    
+
     Parameters
     ----------
     state : str
         Worker state to persist.
-    
+
     Returns
     -------
     str
         HTML fragment containing the status badge.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2550,17 +2689,17 @@ def _badge(state):
 
 def progress_dashboard_html(final=False):
     """Build the live HTML dashboard from persisted collection state.
-    
+
     Parameters
     ----------
     final : bool
         Whether the dashboard represents the terminal session state.
-    
+
     Returns
     -------
     str
         Rendered HTML dashboard.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2659,7 +2798,7 @@ def progress_dashboard_html(final=False):
 
 def show_progress_once():
     """Display one snapshot of the persisted collection dashboard.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2669,12 +2808,12 @@ def show_progress_once():
 
 def export_raw_csv():
     """Export the main raw X table to CSV.
-    
+
     Returns
     -------
     Path
         Path to the exported raw CSV file.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2690,12 +2829,12 @@ def export_raw_csv():
 
 def export_subruns_csv():
     """Export detailed adaptive-slice subrun audit records to CSV.
-    
+
     Returns
     -------
     Path
         Path to the exported subrun CSV file.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2711,12 +2850,12 @@ def export_subruns_csv():
 
 def export_worker_status_csv():
     """Export the latest persisted worker states to CSV.
-    
+
     Returns
     -------
     Path
         Path to the exported worker-status CSV file.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2732,12 +2871,12 @@ def export_worker_status_csv():
 def export_runs_csv():
     # Required audit file: exactly one row per Query × Project Week.
     """Export one audit row per logical Query × Project-Week to CSV.
-    
+
     Returns
     -------
     Path
         Path to the exported query-week audit CSV file.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2805,17 +2944,17 @@ def export_runs_csv():
 
 def export_excel(download=False):
     """Create the multi-sheet Excel workbook for inspection and audit.
-    
+
     Parameters
     ----------
     download : bool
         Whether to trigger a Colab browser download after export.
-    
+
     Returns
     -------
     Path
         Path to the generated Excel workbook.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2897,12 +3036,12 @@ def export_excel(download=False):
 
 def export_all():
     """Regenerate all supported CSV and Excel exports from the database.
-    
+
     Returns
     -------
     dict
         Mapping of export names to generated file paths.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -2933,22 +3072,22 @@ INACTIVE_REGISTRY_QUERY_IDS = {'XQ-H03'}
 
 def validate_query_plan(strict=True):
     """Validate the active query registry and project-week plan before collection.
-    
+
     Parameters
     ----------
     strict : bool
         Whether validation errors should raise an exception.
-    
+
     Returns
     -------
     dict
         Validation summary containing errors and warnings.
-    
+
     Raises
     ------
     ValueError
         If strict validation is enabled and the query plan is inconsistent.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -3020,12 +3159,12 @@ def validate_query_plan(strict=True):
 
 def query_plan_frames():
     """Build data frames summarizing the query registry and project weeks.
-    
+
     Returns
     -------
     tuple[pandas.DataFrame, pandas.DataFrame]
         Query-registry and project-week data frames.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -3056,17 +3195,17 @@ def query_plan_frames():
 
 def show_query_plan(show_details=True):
     """Display the human-readable query plan and validation summary.
-    
+
     Parameters
     ----------
     show_details : bool
         Whether to display detailed query/week tables.
-    
+
     Returns
     -------
     dict
         Validation summary displayed to the user.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -3097,7 +3236,7 @@ def show_query_plan(show_details=True):
         <div style='background:#151d35;padding:10px;border-radius:9px'><small>Registry version</small><div style='font-size:22px;font-weight:700'>{html.escape(PROJECT_CONFIG['query_version'])}</div></div>
       </div>
       <div style='margin-top:10px;color:#aeb9d5;font-size:12px'>
-        Window: <b>2026-02-28 → 2026-07-22 UTC</b> · W21 partial: <b>2026-07-18 → 2026-07-22</b> · sort: <b>{html.escape(PROJECT_CONFIG['sort_mode'])}</b><br>
+        Window: <b>{html.escape(PROJECT_CONFIG['project_start'])} → {html.escape(PROJECT_CONFIG['project_end'])} UTC</b> · W21 partial: <b>2026-07-18 → {html.escape(PROJECT_CONFIG['project_end'])}</b> · sort: <b>{html.escape(PROJECT_CONFIG['sort_mode'])}</b><br>
         High-risk anchored queries: <b>{html.escape(high_ids)}</b> · XQ-H03: <b>inactive pending Persian hashtag discovery + formal backfill</b>
       </div>
     </div>"""
@@ -3129,26 +3268,26 @@ QUERY_PLAN_PREFLIGHT = show_query_plan(show_details=True)
 
 def backfill_legacy_author_fields(account_index=0, limit=None):
     """Backfill missing legacy author identity fields by revisiting known post IDs.
-    
+
     Parameters
     ----------
     account_index : int
         Zero-based runtime account index used for backfill.
     limit : int or None
         Maximum number of legacy records to revisit; ``None`` means all.
-    
+
     Returns
     -------
     dict
         Counts and stop reason for the legacy backfill operation.
-    
+
     Raises
     ------
     IndexError
         If ``account_index`` does not reference a loaded runtime account.
     SessionInvalid
         If the selected X session is no longer valid.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -3265,12 +3404,12 @@ def backfill_legacy_author_fields(account_index=0, limit=None):
 
 def main():
     """Run query-plan validation, recovery, and the resumable X collection workflow.
-    
+
     Returns
     -------
     None
         The function runs the collection workflow for its side effects.
-    
+
     Notes
     -----
     This function is part of the resumable X collection pipeline and preserves
@@ -3278,7 +3417,8 @@ def main():
     """
     if not ACCOUNTS:
         raise RuntimeError(
-            'No runtime X account configuration found. Set X_ACCOUNTS_JSON before starting collection.'
+            "No runtime X account configuration found. "
+            f"Set {ACCOUNTS_ENV_VAR} before starting collection."
         )
     validate_query_plan(strict=True)
     recover_from_journals()
