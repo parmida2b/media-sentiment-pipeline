@@ -96,6 +96,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8")  # notes/prints below carry Persian §-references
@@ -139,13 +140,29 @@ def _norm_str(x):
 
 
 def _present(x) -> bool:
-    """True if x is a non-null, non-blank value"""
-    if x is None:
-        return False
-    if isinstance(x, float) and pd.isna(x):
-        return False
+    """True if x is a non-null, non-blank value.
+
+    Must handle pd.NA the same as None/NaN/NaT: _load_harmonized() fills any
+    column a platform's harmonized parquet doesn't have with pd.NA (raw_schema_v05
+    columns are unioned across platforms), so every downstream caller of
+    _present() sees pd.NA for those columns on every row of that platform.
+    A bare `pd.isna(x)` is used for the scalar case, but pd.isna() on a
+    list/tuple/set/dict returns an elementwise array (or, for dict, doesn't
+    apply cleanly at all) rather than a single bool, which raises ValueError
+    if truthed directly — so collections are special-cased on length first.
+    """
+    if isinstance(x, (list, tuple, set, dict)):
+        return len(x) > 0
     if isinstance(x, str):
         return x.strip() != ""
+    try:
+        is_na = pd.isna(x)
+    except (TypeError, ValueError):
+        return True
+    if isinstance(is_na, bool):
+        return not is_na
+    # some exotic scalar made pd.isna return a non-bool (e.g. an array-like)
+    # instead of erroring outright -- treat as present rather than crash.
     return True
 
 
@@ -317,17 +334,48 @@ def stage_date_rule(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 # stage 4 — Text availability (§2 step 4; §3 condition 4; §4 content-type table)
 # --------------------------------------------------------------------------
 
+# raw_schema_v05.md §4 / §8 content-type table: platform+content_type combos
+# that are legitimately textless by design. Single source of truth for both
+# stage_text_availability (via _needs_independent_text, below) and
+# stage_analysis_role (via _textless_role, in stage 7) -- previously each
+# stage re-encoded this fact independently.
+#
+# Keyed by (platform, content_type); "*" wildcards platform. Each entry is
+# the Analysis-role disposition (dataset_target, primary_exclusion_reason)
+# the combo resolves to, plus `requires_empty_text`:
+#   False -> always textless by design, regardless of whether text happens
+#            to be present (video_context, repost)
+#   True  -> only textless-by-design when the text actually turns out empty
+#            (a reddit original_post can still carry a selftext body)
+TEXTLESS_BY_DESIGN: dict[tuple[str, str], dict] = {
+    ("*", "video_context"): {"target": "context_only", "reason": None, "requires_empty_text": False},
+    ("*", "repost"): {"target": "audit_only", "reason": "repost_only", "requires_empty_text": False},
+    ("reddit", "original_post"): {"target": "context_only", "reason": None, "requires_empty_text": True},
+}
+
+
+def _textless_rule(platform, content_type) -> dict | None:
+    return TEXTLESS_BY_DESIGN.get((platform, content_type)) or TEXTLESS_BY_DESIGN.get(("*", content_type))
+
+
 def _needs_independent_text(platform, content_type) -> bool:
     """content_type/platform combos that are legitimately textless by design
-    (§4) skip the empty-text gate here and get resolved to context_only in
-    the Analysis-role stage instead."""
-    if content_type == "video_context":
-        return False
-    if content_type == "repost":
-        return False
-    if platform == "reddit" and content_type == "original_post":
-        return False
-    return True
+    (§4) skip the empty-text gate here and get resolved to context_only/
+    audit_only in the Analysis-role stage instead."""
+    return _textless_rule(platform, content_type) is None
+
+
+def _textless_role(platform, content_type, text_raw) -> tuple[str, str | None] | None:
+    """Analysis-role disposition (§4) for a platform/content_type combo that's
+    legitimately textless by design, or None if this row doesn't qualify
+    (either the combo requires text, or it's an empty-text-gated combo whose
+    text isn't actually empty on this row)."""
+    rule = _textless_rule(platform, content_type)
+    if rule is None:
+        return None
+    if rule["requires_empty_text"] and not _is_empty_text(text_raw):
+        return None
+    return rule["target"], rule["reason"]
 
 
 def stage_text_availability(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -375,34 +423,60 @@ def stage_text_availability(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFram
 # stage 5 — Provenance rule (§2 step 5; §3 paragraph on provenance_quality)
 # --------------------------------------------------------------------------
 
-def _assess_provenance(row) -> tuple[str, bool]:
+def _assess_provenance(df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     """Prefer the harmonization layer's own provenance_quality (raw_schema_v05
     §4.1, set by the Provenance-reconstruction evidence chain in
     legacy_data_intake_and_harmonization_plan_v1.md §6-§7) when present.
     Only fall back to a local has-run/has-file heuristic when it wasn't
-    populated upstream."""
-    upstream = _norm_str(row.get("provenance_quality"))
-    if upstream == "complete":
-        return "complete", False
-    if upstream in ("partial", "reconstructed"):
-        return "partial", False
+    populated upstream.
 
-    has_run = _present(row.get("collection_run_id"))
-    has_file = _present(row.get("original_file_name")) or _present(row.get("original_file_sha256"))
-    if not has_run and not has_file:
-        return "unknown", True  # not auditable at all -> invalid_provenance
+    Vectorized over the whole frame (np.select instead of a per-row
+    .apply()); the condition order below is the exact if/elif priority of
+    the original scalar version -- np.select keeps the first matching
+    condition per row, so a later condition being incidentally true for an
+    already-matched row (e.g. a `complete`-upstream row that also happens
+    to lack collection_run_id) never overrides the earlier match."""
+    raw_upstream = df.get("provenance_quality", pd.Series(pd.NA, index=df.index))
+    # guard with _present() first: comparing a bare pd.NA/NaT (what a platform
+    # missing this column gets from _load_harmonized()) with `==` yields pd.NA,
+    # not True/False -- so absent/blank upstream values are normalized to ""
+    # (a sentinel that can't match a real provenance_quality value) instead
+    # of being compared directly.
+    upstream_present = raw_upstream.map(_present)
+    upstream = raw_upstream.map(_norm_str).where(upstream_present, "")
 
-    complete_links = has_run and _present(row.get("query_id")) and _present(row.get("source_id"))
-    return ("complete", False) if complete_links else ("partial", False)
+    has_run = df.get("collection_run_id", pd.Series(pd.NA, index=df.index)).map(_present)
+    has_file = (
+        df.get("original_file_name", pd.Series(pd.NA, index=df.index)).map(_present)
+        | df.get("original_file_sha256", pd.Series(pd.NA, index=df.index)).map(_present)
+    )
+    has_query = df.get("query_id", pd.Series(pd.NA, index=df.index)).map(_present)
+    has_source = df.get("source_id", pd.Series(pd.NA, index=df.index)).map(_present)
+
+    not_auditable = ~has_run & ~has_file  # not auditable at all -> invalid_provenance
+    complete_links = has_run & has_query & has_source
+
+    conditions = [
+        upstream.eq("complete"),
+        upstream.isin(["partial", "reconstructed"]),
+        not_auditable,
+        complete_links,
+    ]
+    quality = pd.Series(
+        np.select(conditions, ["complete", "partial", "unknown", "complete"], default="partial"),
+        index=df.index,
+    )
+    invalid = pd.Series(
+        np.select(conditions, [False, False, True, False], default=False),
+        index=df.index,
+    ).astype(bool)
+    return quality, invalid
 
 
 def stage_provenance(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df = df.copy()
     if len(df):
-        assessed = df.apply(_assess_provenance, axis=1, result_type="expand")
-        assessed.columns = ["provenance_quality", "_provenance_invalid"]
-        df["provenance_quality"] = assessed["provenance_quality"]
-        df["_provenance_invalid"] = assessed["_provenance_invalid"]
+        df["provenance_quality"], df["_provenance_invalid"] = _assess_provenance(df)
     else:
         df["_provenance_invalid"] = pd.Series(dtype=bool)
 
@@ -450,39 +524,66 @@ def stage_topic_relevance(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
 # stage 7 — Analysis-role rule (§2 step 7; §3.2 role table; §4 content-type table)
 # --------------------------------------------------------------------------
 
+def _assess_analysis_role(df: pd.DataFrame) -> pd.DataFrame:
+    """Vectorized equivalent of the row-wise Analysis-role assignment (§3.2/
+    §4): np.select mirrors the original if/elif priority exactly (textless-
+    by-design combos first, then the defensive invalid-content-type gate,
+    then the opinion-role flags), so a later condition being incidentally
+    true for an already-matched row never overrides the earlier match.
+
+    TEXTLESS_BY_DESIGN currently has no (platform, content_type) combos that
+    overlap in content_type, so the three textless masks below are already
+    mutually exclusive per row; np.select's left-to-right priority is kept
+    anyway so this stays correct if that ever changes."""
+    ct, platform, text_raw = df["content_type"], df["platform"], df["text_raw"]
+
+    is_video_context = ct.eq("video_context")
+    is_repost = ct.eq("repost")
+    is_reddit_op_empty = platform.eq("reddit") & ct.eq("original_post") & text_raw.map(_is_empty_text)
+    is_textless = is_video_context | is_repost | is_reddit_op_empty
+    is_invalid_type = ~is_textless & ~ct.isin(CONTENT_TYPES_KNOWN)  # defensive; should already be filtered in stage 4
+    is_opinion_role = ~is_textless & ~is_invalid_type
+
+    surrogate_flag = df.get("_surrogate_id_only", pd.Series(False, index=df.index)).fillna(False).astype(bool)
+    partial_prov_flag = df.get("provenance_quality", pd.Series(pd.NA, index=df.index)).eq("partial")
+    missing_ts_flag = df.get("_missing_timestamp", pd.Series(False, index=df.index)).fillna(False).astype(bool)
+
+    conditions = [is_video_context, is_repost, is_reddit_op_empty, is_invalid_type, missing_ts_flag, partial_prov_flag]
+    target = pd.Series(
+        np.select(
+            conditions,
+            ["context_only", "audit_only", "context_only", "quarantine", "opinion_untimed", "opinion_limited"],
+            default="opinion_main",
+        ),
+        index=df.index,
+    )
+    reason = pd.Series(
+        np.select([is_repost, is_invalid_type], ["repost_only", "invalid_content_type"], default=None),
+        index=df.index,
+    )
+
+    # flags/secondary (§3.2) only apply to rows that reach the opinion-role
+    # branch -- textless/invalid rows carry secondary="" (matching the
+    # scalar version's hardcoded "" for those early returns), joined in the
+    # same surrogate/provenance/timestamp order as the original.
+    secondary = pd.Series("", index=df.index, dtype=object)
+    for flag, name in (
+        (surrogate_flag, "surrogate_id_only"),
+        (partial_prov_flag, "limited_provenance"),
+        (missing_ts_flag, "missing_timestamp"),
+    ):
+        appended = np.where(secondary.eq(""), name, secondary.astype(str) + ";" + name)
+        secondary = pd.Series(np.where(flag, appended, secondary), index=df.index, dtype=object)
+    secondary = pd.Series(np.where(is_opinion_role, secondary, ""), index=df.index, dtype=object)
+
+    return pd.DataFrame({"_target": target, "_reason": reason, "_secondary": secondary}, index=df.index)
+
+
 def stage_analysis_role(df: pd.DataFrame) -> pd.DataFrame:
     if not len(df):
         return _finalize(df, "quarantine", None)
 
-    def _role(row) -> tuple[str, str | None, str]:
-        ct, platform = row["content_type"], row["platform"]
-
-        if ct == "video_context":
-            return "context_only", None, ""
-        if ct == "repost":
-            return "audit_only", "repost_only", ""
-        if platform == "reddit" and ct == "original_post" and _is_empty_text(row["text_raw"]):
-            return "context_only", None, ""
-        if ct not in CONTENT_TYPES_KNOWN:  # defensive; should already be filtered in stage 4
-            return "quarantine", "invalid_content_type", ""
-
-        flags = []
-        if row.get("_surrogate_id_only"):
-            flags.append("surrogate_id_only")
-        if row.get("provenance_quality") == "partial":
-            flags.append("limited_provenance")
-        if row.get("_missing_timestamp"):
-            flags.append("missing_timestamp")
-        secondary = ";".join(flags)
-
-        if row.get("_missing_timestamp"):
-            return "opinion_untimed", None, secondary
-        if row.get("provenance_quality") == "partial":
-            return "opinion_limited", None, secondary
-        return "opinion_main", None, secondary
-
-    roles = df.apply(_role, axis=1, result_type="expand")
-    roles.columns = ["_target", "_reason", "_secondary"]
+    roles = _assess_analysis_role(df)
 
     chunks = []
     for target in roles["_target"].unique():

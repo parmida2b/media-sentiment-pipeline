@@ -48,7 +48,10 @@ sys.stdout.reconfigure(encoding="utf-8")
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
+from src.annotation.decision_gate import require_decision_log_gate  # noqa: E402
 from src.annotation.model_routes import get_locked_route  # noqa: E402
+
+DECISION_LOG_PATH = ROOT / "docs" / "decision_log.md"
 
 # Approved cost cap (USD) for the Full run, per docs/pre_analysis_decision_table_v1.md
 # row "سقف هزینه و زمان اجرا". Must stay None — and this script must keep
@@ -87,14 +90,21 @@ def parse_args() -> argparse.Namespace:
 def check_cost_cap(confirmed_cap: float) -> None:
     """Second Gate: refuse to run unless the caller's --confirm-cost-cap
     matches the cap actually approved and logged in docs/decision_log.md.
+    Also prints a (non-fatal) warning if APPROVED_COST_CAP_USD, once set,
+    can't actually be found anywhere in docs/decision_log.md — see
+    decision_gate.require_decision_log_gate.
     """
-    if APPROVED_COST_CAP_USD is None:
-        raise RuntimeError(
+    require_decision_log_gate(
+        APPROVED_COST_CAP_USD,
+        gate_name="APPROVED_COST_CAP_USD",
+        decision_log_path=DECISION_LOG_PATH,
+        missing_message=(
             "هنوز سقف هزینه‌ای برای Full run تأیید نشده — طبق "
             "docs/pre_analysis_decision_table_v1.md ('سقف هزینه و زمان اجرا'), "
             "اول باید سقف عددی بر اساس Pilot در docs/decision_log.md ثبت شود، "
             "بعد APPROVED_COST_CAP_USD در این فایل مقداردهی شود."
-        )
+        ),
+    )
     if confirmed_cap != APPROVED_COST_CAP_USD:
         raise ValueError(
             f"--confirm-cost-cap={confirmed_cap} با سقف تأییدشده "

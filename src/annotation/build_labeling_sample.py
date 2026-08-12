@@ -12,10 +12,14 @@ Annotator برای بخشی از نمونه" (at least two annotators for part o
 sample). compute_annotator_agreement.py scores Cohen's Kappa between the two
 once both are filled in.
 
-Source: data/interim/clean.jsonl (raw comments + automation_risk_score_user +
-joined video_geo, per join_and_clean.py — NOT yet deduped/normalized, so this
-script does its own dedup). Falls back to data/raw/*/youtube_comments*.jsonl
-if clean.jsonl doesn't exist yet.
+Source: preferentially data/interim/{opinion_main,opinion_limited,opinion_untimed}.parquet
+— the eligible-record outputs of src/preprocessing/apply_eligibility.py (§2-§4
+of docs/eligibility_rules_v03.md: deduped, date/provenance/topic-screened).
+If those haven't been generated yet, falls back to data/interim/clean.jsonl
+(raw comments + automation_risk_score_user + joined video_geo, per
+join_and_clean.py — NOT yet deduped/normalized, so this script does its own
+dedup), and then to data/raw/*/youtube_comments*.jsonl if clean.jsonl doesn't
+exist yet either. See docs/decision_log.md 2026-08-13 (eligibility hookup).
 
 content_id: config/schema.py's Record.content_id is not yet populated by the
 YouTube collector for the data on disk (post_id is the video id, not a
@@ -36,6 +40,8 @@ import json
 import random
 import sys
 from pathlib import Path
+
+import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -74,6 +80,16 @@ CLEAN_PATH = ROOT / "data" / "interim" / "clean.jsonl"
 OUTPUT_PATH = ROOT / "data" / "annotated" / "sample_sentiment_labels.csv"
 AGREEMENT_OUTPUT_PATH = ROOT / "data" / "annotated" / "sample_sentiment_labels_agreement_subset.csv"
 
+# apply_eligibility.py's _write_outputs() always writes these three (plus
+# context_only/audit_only/quarantine) under data/interim/, one parquet per
+# dataset_target, even when a target has 0 rows — so "do all three files
+# exist" is a reliable "has the eligibility pipeline been run at least once"
+# check. These three are the eligible-for-analysis buckets (§3/§3.2 of
+# docs/eligibility_rules_v03.md); context_only/audit_only/quarantine are not
+# opinion records and are intentionally excluded from the labeling sample.
+ELIGIBILITY_TARGETS = ("opinion_main", "opinion_limited", "opinion_untimed")
+ELIGIBILITY_DIR = ROOT / "data" / "interim"
+
 # Context-only columns the script fills in itself — never treated as
 # "already hand-labeled" by has_existing_annotations(). translation_fa is
 # carried over from whatever the previous version of this CSV had (a
@@ -109,29 +125,115 @@ def migrate_previous_rows(path: Path) -> list[dict]:
     return rows
 
 
-def load_records() -> list[dict]:
+def _eligibility_paths() -> list[Path]:
+    return [ELIGIBILITY_DIR / f"{target}.parquet" for target in ELIGIBILITY_TARGETS]
+
+
+def _val(row: dict, *cols: str):
+    """First non-blank value among `cols` in a pandas-row-as-dict, treating
+    NaN/NaT/pd.NA the same as missing (raw_schema_v05 columns are unioned
+    across platforms in apply_eligibility.py's _load_harmonized(), so a
+    platform missing a column sees pd.NA for it on every row)."""
+    for col in cols:
+        if col not in row:
+            continue
+        v = row[col]
+        if isinstance(v, str):
+            if v.strip():
+                return v.strip()
+            continue
+        if v is None:
+            continue
+        try:
+            if pd.isna(v):
+                continue
+        except (TypeError, ValueError):
+            pass
+        return v
+    return None
+
+
+def _load_from_eligibility_outputs(paths: list[Path]) -> list[dict]:
+    """Read apply_eligibility.py's opinion_main/opinion_limited/opinion_untimed
+    parquet outputs and reshape each row into this script's plain-dict record
+    shape (post_id/text/language/post_title/content_id) so downstream sampling
+    code doesn't need to know about raw_schema_v05 column names.
+
+    Field mapping (docs/raw_schema_v05.md §3/§6/§8):
+      post_id      <- source_parent_id (video/submission/conversation id —
+                       same concept as clean.jsonl's post_id), falling back
+                       to platform_content_id for records that ARE the parent
+                       (e.g. a Reddit self-post with no separate parent).
+      content_id   <- platform_content_id (the platform's own id for this
+                       exact piece of content; schema.py's Record.content_id).
+      text         <- text_raw
+      language     <- language_detected, falling back to language_reported
+                       (language_reported is rarely populated upstream and,
+                       when it is, isn't guaranteed to use the fa/en/ar codes
+                       LANGUAGE_QUOTAS expects).
+      post_title   <- source_parent_title
+    """
+    frames = [df for df in (pd.read_parquet(p) for p in paths) if len(df)]
+    if not frames:
+        return []
+    combined = pd.concat(frames, ignore_index=True, sort=False)
+
+    records = []
+    for row in combined.to_dict(orient="records"):
+        records.append({
+            "post_id": _val(row, "source_parent_id", "platform_content_id") or "",
+            "content_id": _val(row, "platform_content_id") or "",
+            "text": _val(row, "text_raw") or "",
+            "language": _val(row, "language_detected", "language_reported") or "",
+            "post_title": _val(row, "source_parent_title") or "",
+        })
+    return records
+
+
+def _load_raw_records() -> list[dict]:
+    """Returns the raw (pre-filter/dedup) record dicts, preferring the
+    eligibility pipeline's outputs (see module docstring) and falling back to
+    clean.jsonl / raw youtube_comments*.jsonl when those haven't been
+    generated yet."""
+    eligibility_paths = _eligibility_paths()
+    if all(p.exists() for p in eligibility_paths):
+        print(f"Sampling from eligibility pipeline outputs: {', '.join(p.name for p in eligibility_paths)}")
+        return _load_from_eligibility_outputs(eligibility_paths)
+
+    print(
+        "WARNING: eligibility pipeline outputs not found "
+        f"({', '.join(p.name for p in eligibility_paths)} under {ELIGIBILITY_DIR}) — "
+        "این سمپل بدون فیلتر eligibility (دوپلیکیت/بازه‌زمانی/provenance) ساخته شده — "
+        "قبل از استفاده‌ی نهایی src/preprocessing/apply_eligibility.py را اجرا کن."
+    )
     if CLEAN_PATH.exists():
         source_files = [CLEAN_PATH]
     else:
         source_files = [Path(p) for p in sorted(glob.glob(str(ROOT / "data" / "raw" / "*" / "youtube_comments*.jsonl")))]
 
-    seen = set()
-    records = []
+    raw = []
     for fp in source_files:
         with open(fp, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
                     continue
-                r = json.loads(line)
-                text = (r.get("text") or "").strip()
-                if len(text) < MIN_TEXT_LEN:
-                    continue
-                key = (r.get("post_id"), text)
-                if key in seen:
-                    continue
-                seen.add(key)
-                records.append(r)
+                raw.append(json.loads(line))
+    return raw
+
+
+def load_records() -> list[dict]:
+    seen = set()
+    records = []
+    for r in _load_raw_records():
+        text = (r.get("text") or "").strip()
+        if len(text) < MIN_TEXT_LEN:
+            continue
+        key = (r.get("post_id"), text)
+        if key in seen:
+            continue
+        seen.add(key)
+        records.append(r)
     return records
 
 
@@ -252,6 +354,15 @@ def main():
 
     agreement_n = max(AGREEMENT_SUBSET_MIN, round(len(rows) * AGREEMENT_SUBSET_FRACTION))
     agreement_n = min(agreement_n, len(rows))
+    if rows and agreement_n > 0.5 * len(rows):
+        print(
+            f"WARNING: the agreement subset ({agreement_n} rows) is more than 50% of the "
+            f"current sample ({len(rows)} rows), because AGREEMENT_SUBSET_MIN={AGREEMENT_SUBSET_MIN} "
+            f"is bigger than {AGREEMENT_SUBSET_FRACTION:.0%} of {len(rows)} rows would be. This "
+            "usually means the sample file is smaller than the full SAMPLE_SIZE=300 run (e.g. "
+            "reused an old/partial CSV without --resample) — the 'subset' the second annotator "
+            "gets is effectively the ENTIRE file, not a partial double-check. Continuing anyway."
+        )
     random.seed(RANDOM_SEED)
     agreement_rows = random.sample(rows, agreement_n)
     write_sample_csv(AGREEMENT_OUTPUT_PATH, agreement_rows)

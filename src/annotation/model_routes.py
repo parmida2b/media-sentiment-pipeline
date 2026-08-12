@@ -28,6 +28,12 @@ model, extra hop, slightly different price.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
+
+from src.annotation.decision_gate import require_decision_log_gate
+
+ROOT = Path(__file__).resolve().parent.parent.parent
+DECISION_LOG_PATH = ROOT / "docs" / "decision_log.md"
 
 
 @dataclass(frozen=True)
@@ -153,11 +159,17 @@ def get_locked_route() -> ModelRoute:
     Raises RuntimeError if no route has been locked yet (LOCKED_ROUTE_NAME is
     still None) — this is intentional: it is the safety check that stops
     anyone from running annotation over the whole dataset before the model
-    choice is actually decided and logged.
+    choice is actually decided and logged. Also prints a (non-fatal) warning
+    if LOCKED_ROUTE_NAME, once set, can't actually be found anywhere in
+    docs/decision_log.md — see decision_gate.require_decision_log_gate.
     """
-    if LOCKED_ROUTE_NAME is None:
-        raise RuntimeError(
+    require_decision_log_gate(
+        LOCKED_ROUTE_NAME,
+        gate_name="LOCKED_ROUTE_NAME",
+        decision_log_path=DECISION_LOG_PATH,
+        missing_message=(
             "هنوز مدلی برای Full run قفل نشده — اول evaluate_sentiment_accuracy.py "
             "را اجرا کن و نتیجه را در LOCKED_ROUTE_NAME ثبت کن"
-        )
+        ),
+    )
     return get_route(LOCKED_ROUTE_NAME)
