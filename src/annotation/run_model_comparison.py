@@ -40,6 +40,7 @@ load_dotenv(ROOT / ".env")
 from src.annotation.llm_client import AnnotationCache, annotate  # noqa: E402
 from src.annotation.model_routes import MODEL_ROUTES, PROVIDERS_REQUIRING_ENV_KEY  # noqa: E402
 from src.annotation.schema import TARGET_IDS  # noqa: E402
+from src.cost_tracking.run_context import make_run_id, snapshot_outputs  # noqa: E402
 
 CLEAN_PATH = ROOT / "data" / "interim" / "clean.jsonl"
 RAW_GLOB = str(ROOT / "data" / "raw" / "*" / "youtube_comments*.jsonl")
@@ -175,11 +176,18 @@ def main():
         for r in results:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
+    # Keep this pilot's results around under runs/{run_id}/ — OUTPUT_PATH
+    # above is still overwritten each run (other scripts read that fixed
+    # path), this is an additive, timestamped copy for comparing pilots.
+    run_id = make_run_id("scouting_" + os.environ.get("COMPARISON_RUN_TAG", "manual"))
+    run_dir = snapshot_outputs(run_id, OUTPUT_PATH, base_dir=OUTPUT_PATH.parent)
+
     total_compared = sum(sentiment_agreement_counter.values())
     if total_compared:
         agree_rate = sentiment_agreement_counter["all_agree"] / total_compared
         print(f"All-route sentiment agreement: {agree_rate:.0%} ({sentiment_agreement_counter['all_agree']}/{total_compared})")
     print(f"Full results written to {OUTPUT_PATH}")
+    print(f"Versioned copy: {run_dir / OUTPUT_PATH.name}")
     print(f"Usage/cost log: outputs/model_evaluation/usage_log.jsonl")
     print("\nThis is a scouting pass, not accuracy — it has no human ground truth. "
           "Run evaluate_sentiment_accuracy.py against the hand-labeled Gold Sample for real accuracy numbers.")

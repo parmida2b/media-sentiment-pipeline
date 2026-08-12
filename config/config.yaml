@@ -25,7 +25,13 @@ date_range:
   # see raw_schema_v03.md §10-1 "Window Lock". search.list calls also pass
   # this fixed END as publishedBefore directly (source_registry_v3.md §4-1).
 
-platforms: ["youtube"]
+# Documentational/forward-looking only: no orchestrator currently reads this
+# field to enable/disable per-platform collection, so it's safe to list a
+# platform here before it has a live conditional switch. Reddit is included
+# because it now emits Record via config/schema.py too (reddit_to_record.py,
+# per docs/decision_log.md 2026-08-12). X is deliberately NOT listed — no
+# real X data exists in data/raw yet, so adding it here would be misleading.
+platforms: ["youtube", "reddit"]
 
 # Platform-specific knobs. Only youtube_extract.py exists so far; other
 # platforms add their own sub-block here when they're built.

@@ -121,3 +121,43 @@ def get_route(route_name: str) -> ModelRoute:
             return route
     raise KeyError(f"Unknown route_name {route_name!r}. Known routes: "
                     f"{[r.route_name for r in MODEL_ROUTES]}")
+
+
+# --- Model lock (Gate per docs/pre_analysis_decision_table_v1.md) ---------
+
+LOCKED_ROUTE_NAME: str | None = None
+"""route_name (from MODEL_ROUTES above) locked in for the Full run — or None.
+
+This MUST stay None until:
+  1. src/validation/evaluate_sentiment_accuracy.py has been run on the full,
+     hand-labeled Gold Sample (not a scouting subset — see that script's own
+     docstring / run_model_comparison.py for the qualitative-only pass that
+     comes before it), and
+  2. the resulting choice (with its Macro-F1, failure rate, cost and latency
+     numbers) has been written down as a dated entry in docs/decision_log.md.
+
+This is the explicit Gate from docs/pre_analysis_decision_table_v1.md, row
+"مدل و Provider LLM": "... انتخاب مدل پس از Pilot روی ۱۰۰ رکورد و پیش از
+Full run قفل می‌شود" — model choice is locked *after* the Pilot and *before*
+the Full run, not before. Do not set this to a route_name to "just try it" —
+that defeats the point of the Gate (endless model-hopping without a written,
+falsifiable reason is explicitly forbidden by the same doc row: "مقایسه
+بی‌پایان مدل ممنوع"). Once you do set it, record the route_name and the
+decision_log.md entry date in a comment next to the assignment.
+"""
+
+
+def get_locked_route() -> ModelRoute:
+    """Return the ModelRoute locked in for the Full run.
+
+    Raises RuntimeError if no route has been locked yet (LOCKED_ROUTE_NAME is
+    still None) — this is intentional: it is the safety check that stops
+    anyone from running annotation over the whole dataset before the model
+    choice is actually decided and logged.
+    """
+    if LOCKED_ROUTE_NAME is None:
+        raise RuntimeError(
+            "هنوز مدلی برای Full run قفل نشده — اول evaluate_sentiment_accuracy.py "
+            "را اجرا کن و نتیجه را در LOCKED_ROUTE_NAME ثبت کن"
+        )
+    return get_route(LOCKED_ROUTE_NAME)

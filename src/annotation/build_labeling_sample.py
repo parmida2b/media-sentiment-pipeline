@@ -43,12 +43,32 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 from src.annotation.schema import GOLD_SAMPLE_COLUMNS, TARGETS  # noqa: E402
 
-SAMPLE_SIZE = 90  # split across en/fa/ar -> 30 each, adjusted to what's available
+# LANGUAGE_QUOTAS, not an even three-way split: per docs/source_registry_v3.md
+# SR-006 (reaffirmed in docs/decision_log.md 2026-08-07 and config.yaml's
+# keywords_ar/regions removal), Arabic is explicitly out of scope for this
+# project's main EN+FA analysis — it should not eat an equal share of the
+# annotator budget. fa/en get equal, near-full shares; ar gets a small
+# non-zero share (kept in the pipeline, e.g. for later out-of-scope checks,
+# but deliberately not annotator-budget-competitive with fa/en).
+# Sum must equal SAMPLE_SIZE (300, per docs/pre_analysis_decision_table_v1.md
+# and docs/PROJECT_EXECUTION_ORDER_v1.md مرحله ۷: "انتخاب تصادفی
+# طبقه‌بندی‌شده ۳۰۰ رکورد با Seed ثابت").
+LANGUAGE_QUOTAS = {"fa": 135, "en": 135, "ar": 30}
+LANGUAGES = list(LANGUAGE_QUOTAS.keys())
+SAMPLE_SIZE = sum(LANGUAGE_QUOTAS.values())  # 300
+assert SAMPLE_SIZE == 300, "SAMPLE_SIZE must track LANGUAGE_QUOTAS (see comment above)"
+
 RANDOM_SEED = 42
 MIN_TEXT_LEN = 3
-LANGUAGES = ["en", "fa", "ar"]
-AGREEMENT_SUBSET_FRACTION = 0.20  # §19: "حداقل دو annotator برای بخشی از نمونه"
-AGREEMENT_SUBSET_MIN = 10
+
+# §19: "حداقل دو annotator برای بخشی از نمونه" (at least two annotators for
+# part of the sample). docs/PROJECT_EXECUTION_ORDER_v1.md مرحله ۷ pins this
+# to a concrete number: "Double annotation برای ۱۲۰ رکورد" — a flat 20% of
+# the new SAMPLE_SIZE=300 (=60) would undershoot that, so AGREEMENT_SUBSET_MIN
+# is the new target (120) directly, not the old 90-sample-era floor of 10;
+# the max(MIN, fraction) logic below is unchanged, only the target number is.
+AGREEMENT_SUBSET_FRACTION = 0.20
+AGREEMENT_SUBSET_MIN = 120
 
 CLEAN_PATH = ROOT / "data" / "interim" / "clean.jsonl"
 OUTPUT_PATH = ROOT / "data" / "annotated" / "sample_sentiment_labels.csv"
@@ -115,23 +135,25 @@ def load_records() -> list[dict]:
     return records
 
 
-def stratified_sample(records: list[dict], n: int) -> list[dict]:
+def stratified_sample(records: list[dict], quotas: dict[str, int]) -> list[dict]:
+    """Sample per-language according to fixed `quotas` (see LANGUAGE_QUOTAS —
+    deliberately NOT an even split across languages, see comment there)."""
     random.seed(RANDOM_SEED)
-    by_lang = {lang: [r for r in records if r.get("language") == lang] for lang in LANGUAGES}
+    by_lang = {lang: [r for r in records if r.get("language") == lang] for lang in quotas}
     for group in by_lang.values():
         random.shuffle(group)
 
-    target_each = n // len(LANGUAGES)
     sample = []
     leftover = 0
-    for lang in LANGUAGES:
-        take = min(target_each, len(by_lang[lang]))
+    for lang, target in quotas.items():
+        take = min(target, len(by_lang[lang]))
         sample.extend(by_lang[lang][:take])
         by_lang[lang] = by_lang[lang][take:]
-        leftover += target_each - take
+        leftover += target - take
 
-    # redistribute leftover slots to languages that still have unused records
-    for lang in LANGUAGES:
+    # redistribute leftover slots (a language's quota exceeded what's
+    # available) to languages that still have unused records
+    for lang in quotas:
         if leftover <= 0:
             break
         take = min(leftover, len(by_lang[lang]))
@@ -207,7 +229,7 @@ def main():
                   "run extraction (and/or src/preprocessing/join_and_clean.py) first.")
             return
 
-        sample = stratified_sample(records, SAMPLE_SIZE)
+        sample = stratified_sample(records, LANGUAGE_QUOTAS)
         rows = [{
             "sample_id": i,
             "content_id": r.get("content_id") or derive_content_id(r.get("post_id", ""), r.get("text", "")),

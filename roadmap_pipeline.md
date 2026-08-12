@@ -1,3 +1,14 @@
+> ⚠️ **وضعیت (۲۰۲۶-۰۸-۱۳):** این فایل نقشه‌راه اولیه/آرمانیه — از همون اول
+> پروژه نوشته شده و **وضعیت فعلی کد رو نشون نمی‌ده**. مثلاً تلگرام رو جزو
+> پلتفرم‌های فعال آورده در حالی که طبق `docs/decision_log.md` ردیف
+> ۲۰۲۶-۰۸-۰۴ کلاً از دامنه حذف شده، و از `pipeline_runner.py` حرف می‌زنه که
+> هیچ‌وقت در `src/` ساخته نشد. برای وضعیت واقعی به
+> [`docs/decision_log.md`](docs/decision_log.md) و
+> [`docs/PROJECT_EXECUTION_ORDER_v1.md`](docs/PROJECT_EXECUTION_ORDER_v1.md)
+> مراجعه کن. محتوای این فایل رو **پاک نکردیم** چون بخش ۴ (مسیر تبدیل به
+> ایجنت مکالمه‌ای) هنوز به‌عنوان مرجع طراحی فاز ۲ مفیده — بخش‌های منسوخ پایین
+> جداگانه علامت خوردن.
+
 # نقشه راه: Pipeline تحلیل افکار عمومی → تبدیل به ایجنت مکالمه‌ای
 
 **فاز ۱:** ساخت pipeline محکم و config-محور (اولویت الان)
@@ -18,7 +29,7 @@ keywords_en: ["Iran US war", "Iran America conflict"]
 date_range:
   start: "2026-02-28"
   end: "2026-08-22"
-platforms: ["youtube", "reddit", "twitter", "yahoo finance"]
+platforms: ["youtube", "reddit", "twitter", "yahoo finance"]  # ⚠️ منسوخ: تلگرام/توییتر پلتفرم فعال نیستن، ببین docs/decision_log.md ۲۰۲۶-۰۸-۰۴
 financial_tickers: ["GC=F", "CL=F", "^GSPC", "^VIX", "BTC-USD"]
 sentiment_model: "gemini-2.5-flash"
 run_id: "auto"   # پیشنهاد: timestamp خودکار، برای ردیابی هر اجرا
@@ -82,6 +93,8 @@ config.yaml
 ### ۲.۲ `data_collection/`
 - `youtube.py`, `reddit.py`, `telegram.py` — هرکدوم یه تابع
   `extract(config) -> List[Record]` که طبق `schema.py` خروجی می‌ده.
+  ⚠️ منسوخ: تلگرام (و توییتر بالاتر) دیگه پلتفرم فعال نیستن (`docs/decision_log.md`
+  ۲۰۲۶-۰۸-۰۴) — فقط YouTube ادامه پیدا کرد.
 - `source_advisor.py` (ساخته شده) — پیشنهاد منبع/رویداد + gate تأیید.
 - **قانون:** اگه یه پلتفرم fail شد (quota، BAN، خطای API)، بقیه پلتفرم‌ها
   باید ادامه پیدا کنن (try/except دور هر پلتفرم، نه دور کل حلقه).
@@ -126,6 +139,9 @@ config.yaml
   تبدیل کنه — شامل جامعه آماری، محدودیت‌ها، یافته‌ها، نمودارها.
 
 ### ۲.۸ `pipeline_runner.py`
+⚠️ منسوخ/اجرا نشده: این فایل هیچ‌وقت در `src/` ساخته نشد؛ مراحل پایین هرکدوم
+جدا و دستی اجرا می‌شن، نه از پشت یک CLI/orchestrator واحد (ببین
+`docs/README.md` بخش ۴ — `architecture.md` هنوز TODOئه).
 - یک CLI ساده: `python pipeline_runner.py --config config.yaml --stage all`
 - پشتیبانی از `--stage <name>` برای اجرای تک‌مرحله‌ای (برای دیباگ/توسعه).
 - لاگ ساختاریافته (نه فقط print) — پیشنهاد: `logging` استاندارد پایتون با

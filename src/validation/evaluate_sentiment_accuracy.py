@@ -47,6 +47,7 @@ load_dotenv(ROOT / ".env")
 from src.annotation.llm_client import AnnotationCache, annotate  # noqa: E402
 from src.annotation.model_routes import MODEL_ROUTES, PROVIDERS_REQUIRING_ENV_KEY  # noqa: E402
 from src.annotation.schema import SENTIMENT_LABELS, STANCE_LABELS, TARGET_IDS  # noqa: E402
+from src.cost_tracking.run_context import make_run_id, snapshot_outputs  # noqa: E402
 
 INPUT_PATH = ROOT / "data" / "annotated" / "sample_sentiment_labels.csv"
 RESULTS_PATH = ROOT / "outputs" / "model_evaluation" / "sentiment_accuracy_results.jsonl"
@@ -299,6 +300,13 @@ def main():
     with open(SUMMARY_PATH, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
+    # Keep this benchmark's results around under runs/{run_id}/ — RESULTS_PATH
+    # and SUMMARY_PATH above are still overwritten each run (other scripts
+    # read those fixed paths), this is an additive, timestamped copy for
+    # comparing benchmark runs over time.
+    run_id = make_run_id("gold_benchmark_" + os.environ.get("EVAL_RUN_TAG", "manual"))
+    run_dir = snapshot_outputs(run_id, RESULTS_PATH, SUMMARY_PATH, base_dir=RESULTS_PATH.parent)
+
     print(f"\n=== Results (n={len(rows)} gold rows) ===")
     for route_name, r in summary["routes"].items():
         print(f"\n{route_name}:")
@@ -320,6 +328,7 @@ def main():
 
     print(f"\nDetailed per-row results: {RESULTS_PATH}")
     print(f"Summary: {SUMMARY_PATH}")
+    print(f"Versioned copies: {run_dir}")
 
 
 if __name__ == "__main__":

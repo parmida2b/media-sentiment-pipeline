@@ -20,6 +20,9 @@ python src/ingestion/youtube_extract.py
 قبل از اجرا مطمئن شو `.env` مقدار `YOUTUBE_API_KEY` و `AUTHOR_HASH_SALT` رو داره
 (نمونه در `.env.example`).
 
+**⚠️ هیچ‌وقت محتوای `.env` رو در اسکرین‌شات، چت، یا PR paste نکن** — اگه شک کردی
+کلیدی جایی لو رفته، همون لحظه از کنسول همون Provider (Google/Groq/...) rotate‌ش کن.
+
 ## اجرای خودکار هفتگی (Windows Task Scheduler)
 
 فایل `scripts/run_youtube_incremental_weekly.ps1` استخراج بالا رو با لاگ‌گیری در
