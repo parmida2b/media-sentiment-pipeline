@@ -17,7 +17,7 @@ media-sentiment-pipeline/
 ├── config/
 │   ├── config.yaml               <- موضوع/کلمات‌کلیدی/بازه‌زمانی/تنظیمات هر پلتفرم
 │   ├── config_loader.py
-│   └── schema.py                 <- تعریف مشترک فرمت داده (فقط حسین ویرایش کنه)
+│   └── schema.py                 <- تعریف مشترک فرمت داده (ایده از یاسمن؛ توسعه/نگهداری با پارمیدا)
 ├── src/
 │   ├── ingestion/                 <- استخراج خام از هر پلتفرم
 │   │   ├── youtube_extract.py، channels.py، checkpoint.py، geo_tagger.py   <- پارمیدا
@@ -107,8 +107,8 @@ git push origin main
 - **هر کس فقط توی فایل‌های پوشه خودش کار کنه.** مثلاً پارمیدا فقط توی
   `src/ingestion/` (بخش یوتیوب) و `src/annotation/` + `src/validation/`،
   علی فقط توی `src/temporal_analysis/` و `src/event_analysis/`.
-- **`config/schema.py` فقط حسینه که تغییرش می‌ده.** اگه کسی نیاز به تغییر
-  فرمت داره، اول توی گروه بگه، حسین اعمال کنه، بقیه `pull` کنن.
+- **`config/schema.py` رو پارمیدا نگهداری/تغییر می‌ده** (ایده اولیه از یاسمن). اگه کسی نیاز به تغییر
+  فرمت داره، اول توی گروه بگه، پارمیدا اعمال کنه، بقیه `pull` کنن.
 - قبل از هر `push`، حتماً یه `git pull origin main` بزنید تا اگه تغییری
   اومده بود، conflict رو زودتر و کوچیک‌تر ببینید (نه آخر روز پنجم!).
 

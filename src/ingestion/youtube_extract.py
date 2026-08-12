@@ -834,7 +834,7 @@ def main():
                 text=c["text"], date=c["date"], source="youtube", platform="youtube",
                 author_metadata=AuthorMetadata(
                     author_channel_id=c["author_channel_id"], like_count=c["like_count"],
-                    author_hash=author_hash.hash_author(c["author_channel_id"], c["author_display_name"]),
+                    author_hash=author_hash.hash_author("youtube", c["author_channel_id"]),
                 ),
                 language=detected_language, post_id=video_id, post_title=detail["title"],
                 reply_count=c["reply_count"], is_reply=c["is_reply"],

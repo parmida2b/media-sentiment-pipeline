@@ -9,6 +9,17 @@ Hashes author_channel_id (YouTube's stable per-user id) rather than the
 display name, because display names change and channel_id is what later
 milestones (e.g. author-balanced weighting, project brief section 25) would
 actually need to group by the same author across comments/videos.
+
+2026-08-12 (decision_log.md): reformatted to match docs/raw_schema_v05.md
+§5's formula, sha256(f"{platform}:{stable_author_id}:{PROJECT_AUTHOR_SALT}")
+- ordering/content of the pre-hash string changed from the old
+"channel_id:{salt}:{channel_id}" scheme, so old and new hashes for the same
+real author do NOT match (see src/ingestion/backfill_author_hash_v05.py for
+the one-time re-hash of already-collected data). The old display_name
+fallback (for when channel_id was unavailable) was also dropped: v05 defines
+no format for that case, and hashing a mutable display name worked against
+the whole point of a stable per-author id anyway. Callers should record
+author_id_status separately (v05 §5) when this returns None instead.
 """
 
 import hashlib
@@ -38,19 +49,18 @@ def _get_salt() -> str:
     return salt
 
 
-def hash_author(channel_id: str | None, display_name: str | None) -> str | None:
-    """Returns a salted sha256 hex digest identifying the author, preferring
-    the stable channel_id over the mutable display name. Returns None if
-    neither is available (nothing to hash)."""
-    salt = _get_salt()
+def hash_author(platform: str, channel_id: str | None) -> str | None:
+    """Returns a salted sha256 hex digest identifying the author on this
+    platform, per docs/raw_schema_v05.md §5:
+        sha256(f"{platform}:{stable_author_id}:{PROJECT_AUTHOR_SALT}")
 
-    if channel_id:
-        digest_input = f"channel_id:{salt}:{channel_id}"
-    elif display_name:
-        # Prefixed differently so a channel_id-based hash and a
-        # display-name-based hash for the "same" author never collide.
-        digest_input = f"display_name:{salt}:{display_name}"
-    else:
+    Returns None if no stable id is available - deliberately no fallback to
+    a mutable display name (v05 defines no format for that case; the
+    fallback here was intentionally dropped on 2026-08-12, see module
+    docstring). Callers should set author_id_status separately when this
+    returns None."""
+    if not channel_id:
         return None
-
+    salt = _get_salt()
+    digest_input = f"{platform}:{channel_id}:{salt}"
     return hashlib.sha256(digest_input.encode("utf-8")).hexdigest()

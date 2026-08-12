@@ -2,7 +2,7 @@
 schema.py — unified data format definition for the whole team
 ---------------------------------------------------------------
 This file is the single source of truth for the data format.
-Only Hossein edits this file; everyone else just imports from it.
+Idea by Yasaman; implemented and maintained by Parmida — everyone else just imports from it.
 If a field needs to change, coordinate with the team first.
 
 Version: v3 - Day 4 (see docs/decision_log.md for the v2/v3 additive changes)
@@ -50,7 +50,7 @@ class Record:
     # automation risk (16), and geo (17). All optional with defaults so
     # existing v1 producers/consumers of Record are unaffected. See
     # docs/decision_log.md for why these were added and coordinate with
-    # Hossein before renaming/removing anything above this line.
+    # the team before renaming/removing anything above this line.
     content_id: Optional[str] = None       # platform's own id for this exact piece of content (e.g. comment id) - required for dedup/uniqueness checks
     parent_id: Optional[str] = None        # content_id of the parent, when is_reply is True
     collected_at_utc: Optional[str] = None # when THIS pipeline fetched the record, distinct from `date` (when it was posted)
@@ -75,7 +75,7 @@ class Record:
     # (the team's raw-data export contract) and docs/source_registry_v3.md
     # (the allowed-sources list). See docs/decision_log.md for the full
     # rationale. All optional with defaults so existing producers/consumers
-    # of Record are unaffected. Coordinate with Hossein before renaming/
+    # of Record are unaffected. Coordinate with the team before renaming/
     # removing anything above this line, same as the v2 block.
     content_type: Optional[str] = None        # "comment" | "reply" | ... - raw_schema_v03 §8
     matched_query_ids: Optional[str] = None    # ";"-joined query_ids that discovered this content's video (raw_schema_v03 §3)

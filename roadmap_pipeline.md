@@ -57,7 +57,7 @@ config.yaml
 ### مسئولیت ماژول‌ها (بر اساس تقسیم‌کار فعلی تیم)
 | ماژول | مسئول | ورودی | خروجی |
 |---|---|---|---|
-| `config/` | حسین | - | `config.yaml`, `schema.py` |
+| `config/` | حسین (`config.yaml`) + پارمیدا (`schema.py`) | - | `config.yaml`, `schema.py` |
 | `data_collection/` | پارمیدا + حسین | config | raw jsonl + trace |
 | `preprocessing/` | پارمیدا | raw jsonl | clean jsonl + گزارش تمیزکاری |
 | `classification/` | پارمیدا | clean jsonl | sentiment-labeled jsonl |

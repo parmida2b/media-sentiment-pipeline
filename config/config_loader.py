@@ -1,6 +1,6 @@
 """
 config_loader.py — reads config/config.yaml, validates it, and hands
-everyone else a resolved PipelineConfig (Parmida; coordinate with Hossein
+everyone else a resolved PipelineConfig (Parmida; coordinate with the team
 since this lives in config/ alongside schema.py).
 
 Version: v1 - Day 2

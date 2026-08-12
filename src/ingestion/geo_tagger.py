@@ -8,8 +8,8 @@ LLM call, across process restarts. `data_dir` is topic-scoped (see
 config/config_loader.py) so switching topics doesn't reuse another topic's
 cached relevance tags.
 
-Deliberately does not touch config/schema.py (team convention: only
-Hossein edits that file) — this metadata lives in its own side file and
+Deliberately does not touch config/schema.py (team convention: Parmida
+maintains that file) — this metadata lives in its own side file and
 gets joined by video_id/post_id at analysis time.
 """
 
