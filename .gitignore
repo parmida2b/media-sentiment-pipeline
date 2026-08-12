@@ -10,6 +10,12 @@ data/processed/*
 data/interim/*
 *.jsonl
 *.csv
+# Allow version-controlled documentation templates
+!docs/collection_coverage_template.csv
+!docs/data_handoff_manifest_template.csv
+!docs/query_execution_audit_template.csv
+!docs/schema_mapping_template.csv
+
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/interim/.gitkeep

@@ -1,0 +1,4 @@
+handoff_id,platform,provided_by,received_at_utc,original_file_name,relative_path,file_role,file_format,file_size_bytes,sha256,source_schema_version,source_query_registry_version,collector_name,collector_version,run_log_available,config_available,contains_secrets,notes
+HF001,x,,,,,raw,csv,,,unknown,unknown,unknown,,false,false,false,
+HF002,reddit,,,,,raw,jsonl,,,unknown,unknown,unknown,,false,false,false,
+HF003,youtube,,,,,raw,csv,,,unknown,unknown,unknown,,false,false,false,

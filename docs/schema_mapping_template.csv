@@ -1,0 +1,4 @@
+platform,target_column,source_column,mapping_status,source_type,target_type,transformation_rule,field_origin,missing_reason,example_source,example_target,review_status,notes
+x,platform,,derived,string,string,"constant: x",derived,,,x,pending,
+reddit,platform,,derived,string,string,"constant: reddit",derived,,,reddit,pending,
+youtube,platform,,derived,string,string,"constant: youtube",derived,,,youtube,pending,

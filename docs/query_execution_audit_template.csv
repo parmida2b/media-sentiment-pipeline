@@ -1,0 +1,4 @@
+collection_run_id,platform,assigned_query_registry_version,query_id,assigned_query,executed_query,requested_start_utc,requested_end_utc,sort_mode,cap,pagination_status,execution_status,evidence_source,evidence_path,notes
+,x,unknown,,,,,,,,,unknown,unknown,,
+,reddit,unknown,,,,,,,,,unknown,unknown,,
+,youtube,unknown,,,,,,,,,unknown,unknown,,
