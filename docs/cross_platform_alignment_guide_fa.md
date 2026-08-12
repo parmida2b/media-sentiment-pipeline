@@ -5,8 +5,15 @@
 > [`source_registry_v4.md`](source_registry_v4.md) و
 > [`legacy_data_intake_and_harmonization_plan_v1.md`](legacy_data_intake_and_harmonization_plan_v1.md).
 > جدول بخش ۶ («وضعیت فعلی هر پلتفرم») هم دیگه درست نیست — الان `x_scraper.py`
-> (حسین) و کالکتورهای Reddit (علی) هر دو موجودن، فقط export مطابق schema
-> استاندارد هنوز روشون پیاده نشده.
+> (حسین) و کالکتورهای Reddit (علی) هر دو موجودن. **به‌روزرسانی ۲۰۲۶-۰۸-۱۲:**
+> Reddit حالا export مطابق schema استاندارد هم داره —
+> [`src/ingestion/reddit_to_record.py`](../src/ingestion/reddit_to_record.py)
+> خروجی موجود کالکتورهای Selenium ردیت رو به `config/schema.py`'s `Record`
+> و `data/raw/reddit/reddit_raw_export.csv` (طبق
+> [`raw_schema_columns.py`](../config/raw_schema_columns.py)) تبدیل می‌کنه؛
+> جزئیات و محدودیت‌های شناخته‌شده (selftext هنوز استخراج نمی‌شه، geo_tagger
+> سطح-پست وصل نشده) در همون فایل و `docs/decision_log.md` ردیف ۲۰۲۶-۰۸-۱۲
+> مستندن. X هنوز export مطابق schema استاندارد نداره.
 >
 > بخش‌های ۳ و ۴ (پروفایل رفتاری کاربر و فرمول تشخیص بات/`automation_risk.py`)
 > هنوز **معتبر و زنده**‌ان — این منطق جای دیگه‌ای بازنویسی نشده، همچنان مرجعه.

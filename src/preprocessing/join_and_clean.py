@@ -16,6 +16,15 @@ separate change so this one stays reviewable.
 Input:
   data/raw/{topic_id}/youtube_comments_*.jsonl   (one or more files/weeks)
   data/raw/{topic_id}/video_geo_metadata.jsonl   (optional, joined in when present)
+  data/raw/reddit/reddit_comments_*.jsonl        (Day 5, Parmida - written by
+      src/ingestion/reddit_to_record.py, same Record shape. NOT topic_id-
+      scoped like YouTube's path - Reddit's existing collector scripts
+      (reddit_parent_post_collector.py / reddit_raw_json_pipeline.py) already
+      use a fixed data/raw/reddit/ path, so this reads from there rather than
+      retrofitting topic-scoping onto them. video_geo_metadata.jsonl has no
+      Reddit equivalent yet (see reddit_to_record.py's module docstring for
+      why) - Reddit records simply never match the geo lookup below, same as
+      any YouTube record for an untagged video.
 
 Output:
   data/interim/clean.jsonl          - every input record, unchanged, plus
@@ -54,18 +63,44 @@ def _load_jsonl(path: Path) -> list[dict]:
     return records
 
 
-def _load_all_comments(raw_dir: Path) -> list[dict]:
-    records = []
+def _load_all_comments(raw_dir: Path) -> tuple[list[dict], dict[str, int]]:
+    """Returns (records, counts_by_platform). raw_dir is the topic-scoped
+    YouTube dir; Reddit is read from its own fixed data/raw/reddit/ dir
+    (see module docstring) regardless of topic_id."""
+    counts: dict[str, int] = {}
+
+    youtube_records: list[dict] = []
     for path in sorted(raw_dir.glob("youtube_comments_*.jsonl")):
-        records.extend(_load_jsonl(path))
-    return records
+        youtube_records.extend(_load_jsonl(path))
+    counts["youtube"] = len(youtube_records)
+
+    reddit_dir = raw_dir.parent / "reddit"
+    reddit_records: list[dict] = []
+    for path in sorted(reddit_dir.glob("reddit_comments_*.jsonl")):
+        reddit_records.extend(_load_jsonl(path))
+    counts["reddit"] = len(reddit_records)
+
+    return youtube_records + reddit_records, counts
 
 
 def _load_geo_lookup(raw_dir: Path) -> dict[str, dict]:
-    geo_path = raw_dir / "video_geo_metadata.jsonl"
-    if not geo_path.exists():
-        return {}
-    return {row["video_id"]: row for row in _load_jsonl(geo_path) if row.get("video_id")}
+    """Both YouTube's and Reddit's video_geo_metadata.jsonl are written by
+    the same geo_tagger.tag_video_cached() (see reddit_to_record.py) and use
+    the same {"video_id": <id>, ...} shape, so they merge into one lookup
+    dict keyed by id (video_id for YouTube, post_id for Reddit - the field
+    is still literally called "video_id" in the cache record, a naming
+    leak from geo_tagger.py being YouTube-first, not a bug)."""
+    lookup: dict[str, dict] = {}
+    for geo_path in (
+        raw_dir / "video_geo_metadata.jsonl",
+        raw_dir.parent / "reddit" / "video_geo_metadata.jsonl",
+    ):
+        if not geo_path.exists():
+            continue
+        lookup.update(
+            {row["video_id"]: row for row in _load_jsonl(geo_path) if row.get("video_id")}
+        )
+    return lookup
 
 
 def _user_key(record: dict) -> str | None:
@@ -82,9 +117,12 @@ def run(topic_id: str | None = None) -> None:
     interim_dir.mkdir(parents=True, exist_ok=True)
     audits_dir.mkdir(parents=True, exist_ok=True)
 
-    comments = _load_all_comments(raw_dir)
+    comments, platform_counts = _load_all_comments(raw_dir)
     if not comments:
-        raise SystemExit(f"no youtube_comments_*.jsonl files found under {raw_dir}")
+        raise SystemExit(
+            f"no youtube_comments_*.jsonl found under {raw_dir} and no "
+            f"reddit_comments_*.jsonl found under {raw_dir.parent / 'reddit'}"
+        )
     geo_lookup = _load_geo_lookup(raw_dir)
 
     user_rows = score_users(build_user_table(comments))
@@ -104,12 +142,15 @@ def run(topic_id: str | None = None) -> None:
             out.write(json.dumps(record, ensure_ascii=False) + "\n")
 
     report_path = audits_dir / "cleaning_report.md"
-    _write_cleaning_report(report_path, comments, user_rows, raw_dir)
-    print(f"wrote {len(comments)} records -> {out_path}")
+    _write_cleaning_report(report_path, comments, user_rows, raw_dir, platform_counts)
+    print(f"wrote {len(comments)} records -> {out_path} ({platform_counts})")
     print(f"wrote report -> {report_path}")
 
 
-def _write_cleaning_report(path: Path, comments: list[dict], user_rows: list[dict], raw_dir: Path) -> None:
+def _write_cleaning_report(
+    path: Path, comments: list[dict], user_rows: list[dict], raw_dir: Path,
+    platform_counts: dict[str, int],
+) -> None:
     flagged = sorted(
         (r for r in user_rows if r["is_flagged_bot_suspect"]),
         key=lambda r: r["automation_risk_score_user"],
@@ -118,11 +159,16 @@ def _write_cleaning_report(path: Path, comments: list[dict], user_rows: list[dic
     pct_flagged = (len(flagged) / len(user_rows) * 100) if user_rows else 0.0
 
     lines = [
-        "# Cleaning report — YouTube bot-detection pass",
+        "# Cleaning report — cross-platform bot-detection pass",
         "",
-        f"- Source: `{raw_dir}`",
+        f"- Sources: `{raw_dir}` (YouTube), `{raw_dir.parent / 'reddit'}` (Reddit)",
+        f"- Records by platform: {platform_counts}",
         f"- Total comment/reply records: {len(comments)}",
-        f"- Distinct users seen: {len(user_rows)}",
+        f"- Distinct users seen: {len(user_rows)} (per-platform - a real "
+        "person active on both YouTube and Reddit has two separate "
+        "user_keys here, one per platform's own author_hash; see "
+        "cross_platform_alignment_guide_fa.md §5 checklist item 4, "
+        "cross-platform identity linkage is explicitly not attempted)",
         f"- Users flagged (`automation_risk_score_user >= {FLAG_THRESHOLD}`): "
         f"{len(flagged)} ({pct_flagged:.1f}% of users)",
         "",

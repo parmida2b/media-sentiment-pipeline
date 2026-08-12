@@ -56,6 +56,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
+import requests
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
@@ -139,6 +140,15 @@ JSON_PAGE_PAUSE_SECONDS = 4.0
 
 JSON_PAGE_TIMEOUT_SECONDS = 25
 
+# Real HTTP status codes that mean "blocked/rate-limited", checked with a
+# plain requests.get() (no Selenium cookies transferred - a fresh anonymous
+# request to a public endpoint) before trusting Firefox's rendered text.
+# Text-matching alone (visible_json_page_blocked) misses any block page that
+# doesn't happen to contain one of the known phrases; a real status code is a
+# much harder signal to miss.
+HTTP_BLOCK_STATUS_CODES = {403, 429, 503}
+HTTP_PROBE_TIMEOUT_SECONDS = 10
+
 # Existing JSON = already collected successfully -> skip.
 RESUME_EXISTING_JSON = True
 
@@ -169,6 +179,16 @@ COMMENTS_WINDOW_FILE = (
 COVERAGE_FILE = (
     OUTPUT_DIR
     / "weekly_coverage_W01_W21.csv"
+)
+
+MORE_NODES_FILE = (
+    OUTPUT_DIR
+    / "more_nodes_not_expanded.csv"
+)
+
+SUBMISSIONS_FILE = (
+    OUTPUT_DIR
+    / "submissions_from_raw_json.csv"
 )
 
 
@@ -873,6 +893,32 @@ def read_json_text_from_firefox(
     )
 
 
+def probe_http_status(
+    url: str,
+) -> int | None:
+    """One plain, cookie-less GET to `url` just to read the real HTTP status
+    code. Best-effort diagnostic only: any network-level failure here (not a
+    real 4xx/5xx from Reddit, just "couldn't reach it") returns None and the
+    caller falls back to the existing Firefox-based text check rather than
+    treating a probe failure as a hard stop."""
+
+    try:
+        response = requests.get(
+            url,
+            timeout=HTTP_PROBE_TIMEOUT_SECONDS,
+            headers={
+                "User-Agent": (
+                    "media-sentiment-pipeline-starter/1.0 "
+                    "(research project, public .json endpoint status check)"
+                ),
+            },
+        )
+        return response.status_code
+
+    except requests.RequestException:
+        return None
+
+
 def fetch_and_save_raw_json(
     driver: webdriver.Firefox,
     parent: dict[str, str],
@@ -910,6 +956,77 @@ def fetch_and_save_raw_json(
         timezone.utc
     )
 
+    http_status_code = probe_http_status(
+        json_url
+    )
+
+    http_status_value = (
+        str(http_status_code)
+        if http_status_code is not None
+        else "probe_failed"
+    )
+
+    if http_status_code in HTTP_BLOCK_STATUS_CODES:
+
+        status = "http_block_status_code"
+
+        append_fetch_log(
+            {
+                "post_id": post_id,
+                "subreddit": parent["subreddit"],
+                "post_created_at_utc": parent["created_at_utc"],
+                "post_url": parent["url"],
+                "json_url": json_url,
+                "status": status,
+                "http_status": http_status_value,
+                "started_at_utc": started_at.isoformat(),
+                "finished_at_utc": datetime.now(
+                    timezone.utc
+                ).isoformat(),
+                "raw_json_file": "",
+                "message": (
+                    f"requests probe got HTTP {http_status_code} before "
+                    "Firefox was even opened for this URL - treated as a "
+                    "real block/rate-limit signal, not text-matched."
+                ),
+            }
+        )
+
+        return (
+            status,
+            False,
+        )
+
+    if http_status_code == 404:
+
+        status = "http_404_not_found"
+
+        append_fetch_log(
+            {
+                "post_id": post_id,
+                "subreddit": parent["subreddit"],
+                "post_created_at_utc": parent["created_at_utc"],
+                "post_url": parent["url"],
+                "json_url": json_url,
+                "status": status,
+                "http_status": http_status_value,
+                "started_at_utc": started_at.isoformat(),
+                "finished_at_utc": datetime.now(
+                    timezone.utc
+                ).isoformat(),
+                "raw_json_file": "",
+                "message": (
+                    "Post no longer resolves (removed/banned subreddit/bad "
+                    "id) - skipping just this post, not stopping the run."
+                ),
+            }
+        )
+
+        return (
+            status,
+            True,
+        )
+
     try:
 
         driver.get(
@@ -931,7 +1048,7 @@ def fetch_and_save_raw_json(
                     "post_url": parent["url"],
                     "json_url": json_url,
                     "status": status,
-                    "http_status": "",
+                    "http_status": http_status_value,
                     "started_at_utc": started_at.isoformat(),
                     "finished_at_utc": datetime.now(
                         timezone.utc
@@ -969,7 +1086,7 @@ def fetch_and_save_raw_json(
                     "post_url": parent["url"],
                     "json_url": json_url,
                     "status": status,
-                    "http_status": "",
+                    "http_status": http_status_value,
                     "started_at_utc": started_at.isoformat(),
                     "finished_at_utc": datetime.now(
                         timezone.utc
@@ -1247,13 +1364,62 @@ COMMENT_FIELDS = [
     "comment_id",
     "post_id",
     "subreddit",
+    "subreddit_id",  # Reddit's own stable id for the subreddit ("t5_xxxxx") - the Reddit analogue of YouTube's channel_id, used as source_container_id downstream.
     "author",
+    # Reddit's actually-stable per-user id (format "t2_xxxxx"). `author` is
+    # the username, which can change; hashing the username instead of this
+    # would repeat the exact mistake YouTube's author_hash deliberately
+    # dropped (see src/ingestion/author_hash.py's module docstring).
+    "author_fullname",
     "comment",
     "comment_created_at_utc",
     "score",
     "depth",
     "parent_id",
     "is_top_level",
+    "matched_query_ids",
+    "matched_source_ids",
+    "matched_search_terms",
+    "raw_json_file",
+]
+
+# Per-post count of "more" placeholder nodes Reddit's public .json returns in
+# place of a deeper/wider slice of a comment tree. Populated by
+# walk_comment_children as a side effect of parsing; used to log how many
+# comments were silently not expanded (see MORE_NODES_FIELDS below) instead
+# of that loss being invisible in weekly coverage.
+MORE_NODES_FIELDS = [
+    "post_id",
+    "subreddit",
+    "more_node_count",
+    "estimated_missing_comments",
+    "max_more_depth",
+    "raw_json_file",
+]
+
+# The submission (the post itself) is a distinct content type from its
+# comments/replies (docs/legacy_data_intake_and_harmonization_plan_v1.md §8,
+# Reddit rules: "Submission، Comment و Reply از هم تفکیک می‌شوند"). Until
+# 2026-08-12 this pipeline only ever parsed data[1] (the comment listing) -
+# data[0] (the submission listing, which carries selftext for self-posts)
+# was never read, so a self-post's own opinion text was silently invisible
+# downstream. Kept in its own file/shape rather than shoehorned into
+# COMMENT_FIELDS, since a submission isn't a comment (no parent_id/depth).
+SUBMISSION_FIELDS = [
+    "post_id",
+    "subreddit",
+    "subreddit_id",
+    "author",
+    "author_fullname",
+    "title",
+    "selftext",       # body text for self-posts; "" for link/image/video posts
+    "is_self",
+    "external_url",   # the linked URL for non-self posts; "" for self-posts
+    "created_at_utc",
+    "score",
+    "num_comments",
+    "permalink",
+    "link_flair_text",
     "matched_query_ids",
     "matched_source_ids",
     "matched_search_terms",
@@ -1285,7 +1451,15 @@ def walk_comment_children(
     output: list[
         dict[str, Any]
     ],
+    more_nodes_stats: dict[str, Any] | None = None,
 ) -> None:
+    """
+    more_nodes_stats, when given, is mutated in place with:
+        {"count": <number of "more" nodes seen>,
+         "estimated_missing": <sum of each node's own "count" field,
+             i.e. Reddit's own count of comment ids it didn't expand>,
+         "max_depth": <deepest depth at which a "more" node was seen>}
+    """
 
     for child in children:
 
@@ -1346,9 +1520,21 @@ def walk_comment_children(
                             "subreddit"
                         ]
                     ),
+                    "subreddit_id": (
+                        data.get(
+                            "subreddit_id"
+                        )
+                        or ""
+                    ),
                     "author": (
                         data.get(
                             "author"
+                        )
+                        or ""
+                    ),
+                    "author_fullname": (
+                        data.get(
+                            "author_fullname"
                         )
                         or ""
                     ),
@@ -1429,17 +1615,105 @@ def walk_comment_children(
                     parent,
                     raw_file,
                     output,
+                    more_nodes_stats,
                 )
 
-        # kind == "more" is preserved in raw JSON but not expanded here.
+        # kind == "more": Reddit's own placeholder for a slice of the comment
+        # tree it didn't expand in this response. Preserved in the raw JSON
+        # untouched (per this module's raw-first contract), but previously
+        # silently dropped here with no trace in any output file. Now at
+        # least counted, using Reddit's own per-node "count" (how many
+        # comment ids that stub represents), so coverage reporting can say
+        # "N more nodes, ~M comments not expanded" instead of nothing.
+        elif kind == "more" and more_nodes_stats is not None:
+
+            more_nodes_stats["count"] += 1
+
+            try:
+                hidden = int(data.get("count") or 0)
+            except (TypeError, ValueError):
+                hidden = 0
+
+            more_nodes_stats["estimated_missing"] += hidden
+
+            try:
+                node_depth = int(data.get("depth"))
+            except (TypeError, ValueError):
+                node_depth = 0
+
+            if node_depth > more_nodes_stats["max_depth"]:
+                more_nodes_stats["max_depth"] = node_depth
+
+
+def parse_submission(
+    data: list,
+    parent: dict[str, str],
+    raw_file: Path,
+) -> dict[str, Any] | None:
+    """data[0] is the submission's own Listing (data[1] is the comment
+    listing, handled separately by walk_comment_children) - never read by
+    this pipeline before 2026-08-12, so a self-post's own body text
+    (selftext) was invisible downstream even though it was sitting in the
+    already-saved raw JSON the whole time. Returns None only when the shape
+    genuinely isn't there (malformed/unexpected raw JSON) - never guesses."""
+
+    try:
+        submission_data = (
+            data[0]
+            ["data"]
+            ["children"]
+            [0]
+            ["data"]
+        )
+    except (
+        KeyError,
+        TypeError,
+        IndexError,
+    ):
+        return None
+
+    return {
+        "post_id": submission_data.get("id") or parent["post_id"],
+        "subreddit": submission_data.get("subreddit") or parent["subreddit"],
+        "subreddit_id": submission_data.get("subreddit_id") or "",
+        "author": submission_data.get("author") or "",
+        "author_fullname": submission_data.get("author_fullname") or "",
+        "title": submission_data.get("title") or parent.get("title", ""),
+        "selftext": submission_data.get("selftext") or "",
+        "is_self": bool(submission_data.get("is_self")),
+        "external_url": (
+            "" if submission_data.get("is_self") else (submission_data.get("url") or "")
+        ),
+        "created_at_utc": unix_to_iso(submission_data.get("created_utc")),
+        "score": submission_data.get("score"),
+        "num_comments": submission_data.get("num_comments"),
+        "permalink": submission_data.get("permalink") or "",
+        "link_flair_text": submission_data.get("link_flair_text") or "",
+        "matched_query_ids": parent["matched_query_ids"],
+        "matched_source_ids": parent["matched_source_ids"],
+        "matched_search_terms": parent["matched_search_terms"],
+        "raw_json_file": str(raw_file),
+    }
 
 
 def parse_one_raw_json(
     raw_file: Path,
     parent: dict[str, str],
-) -> list[
-    dict[str, Any]
+) -> tuple[
+    list[dict[str, Any]],
+    dict[str, Any],
+    dict[str, Any] | None,
 ]:
+    """Returns (comments, more_nodes_stats, submission_row) for this one
+    post's raw JSON. more_nodes_stats is always a dict (count=0 when nothing
+    was collapsed), never None, so callers don't need an extra null-check.
+    submission_row is None only when the raw JSON's shape is unreadable."""
+
+    more_nodes_stats = {
+        "count": 0,
+        "estimated_missing": 0,
+        "max_depth": 0,
+    }
 
     try:
 
@@ -1460,7 +1734,7 @@ def parse_one_raw_json(
             f"{error}"
         )
 
-        return []
+        return [], more_nodes_stats, None
 
     if not (
         isinstance(
@@ -1471,7 +1745,7 @@ def parse_one_raw_json(
             data
         ) >= 2
     ):
-        return []
+        return [], more_nodes_stats, None
 
     try:
 
@@ -1486,7 +1760,7 @@ def parse_one_raw_json(
         TypeError,
         IndexError,
     ):
-        return []
+        return [], more_nodes_stats, None
 
     comments: list[
         dict[str, Any]
@@ -1497,24 +1771,48 @@ def parse_one_raw_json(
         parent,
         raw_file,
         comments,
+        more_nodes_stats,
     )
 
-    return comments
+    submission_row = parse_submission(
+        data,
+        parent,
+        raw_file,
+    )
+
+    return comments, more_nodes_stats, submission_row
 
 
 def parse_all_raw_json(
     parents: list[
         dict[str, str]
     ],
-) -> list[
-    dict[str, Any]
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
 ]:
+    """Returns (comments, more_nodes_rows, submission_rows). more_nodes_rows
+    has one row per post that had at least one unexpanded "more" node (shape:
+    MORE_NODES_FIELDS). submission_rows has one row per post whose raw JSON
+    was readable (shape: SUBMISSION_FIELDS) - including link posts with
+    selftext="", so every post still gets one row even when it has no body
+    text of its own (see reddit_to_record.py for which of these actually
+    become a Record: link posts without selftext don't)."""
 
     lookup = parent_lookup(
         parents
     )
 
     comments: list[
+        dict[str, Any]
+    ] = []
+
+    more_nodes_rows: list[
+        dict[str, Any]
+    ] = []
+
+    submission_rows: list[
         dict[str, Any]
     ] = []
 
@@ -1535,12 +1833,43 @@ def parse_all_raw_json(
         if parent is None:
             continue
 
-        comments.extend(
+        post_comments, more_stats, submission_row = (
             parse_one_raw_json(
                 raw_file,
                 parent,
             )
         )
+
+        comments.extend(
+            post_comments
+        )
+
+        if submission_row is not None:
+            submission_rows.append(
+                submission_row
+            )
+
+        if more_stats["count"] > 0:
+            more_nodes_rows.append(
+                {
+                    "post_id": post_id,
+                    "subreddit": parent[
+                        "subreddit"
+                    ],
+                    "more_node_count": more_stats[
+                        "count"
+                    ],
+                    "estimated_missing_comments": more_stats[
+                        "estimated_missing"
+                    ],
+                    "max_more_depth": more_stats[
+                        "max_depth"
+                    ],
+                    "raw_json_file": str(
+                        raw_file
+                    ),
+                }
+            )
 
     # Defensive dedup by Reddit comment id.
     deduped: dict[
@@ -1575,7 +1904,57 @@ def parse_all_raw_json(
 
     return list(
         deduped.values()
-    )
+    ), more_nodes_rows, submission_rows
+
+
+def write_more_nodes_csv(
+    more_nodes_rows: list[
+        dict[str, Any]
+    ],
+    output_file: Path,
+) -> None:
+
+    with output_file.open(
+        "w",
+        newline="",
+        encoding="utf-8-sig",
+    ) as file:
+
+        writer = csv.DictWriter(
+            file,
+            fieldnames=MORE_NODES_FIELDS,
+            extrasaction="ignore",
+        )
+
+        writer.writeheader()
+        writer.writerows(
+            more_nodes_rows
+        )
+
+
+def write_submissions_csv(
+    submission_rows: list[
+        dict[str, Any]
+    ],
+    output_file: Path,
+) -> None:
+
+    with output_file.open(
+        "w",
+        newline="",
+        encoding="utf-8-sig",
+    ) as file:
+
+        writer = csv.DictWriter(
+            file,
+            fieldnames=SUBMISSION_FIELDS,
+            extrasaction="ignore",
+        )
+
+        writer.writeheader()
+        writer.writerows(
+            submission_rows
+        )
 
 
 def write_comments_csv(
@@ -1962,7 +2341,7 @@ def rebuild_offline_outputs(
     ],
 ) -> None:
 
-    comments = (
+    comments, more_nodes_rows, submission_rows = (
         parse_all_raw_json(
             parents
         )
@@ -1972,6 +2351,16 @@ def rebuild_offline_outputs(
         comments,
         COMMENTS_FILE,
         include_week=False,
+    )
+
+    write_more_nodes_csv(
+        more_nodes_rows,
+        MORE_NODES_FILE,
+    )
+
+    write_submissions_csv(
+        submission_rows,
+        SUBMISSIONS_FILE,
     )
 
     window_comments = (
@@ -2041,6 +2430,38 @@ def rebuild_offline_outputs(
     print(
         f"Coverage CSV: "
         f"{COVERAGE_FILE}"
+    )
+
+    total_more_nodes = sum(
+        row["more_node_count"]
+        for row in more_nodes_rows
+    )
+
+    total_estimated_missing = sum(
+        row["estimated_missing_comments"]
+        for row in more_nodes_rows
+    )
+
+    print(
+        "\nUnexpanded 'more' nodes "
+        f"(posts affected: {len(more_nodes_rows)}, "
+        f"total 'more' nodes: {total_more_nodes}, "
+        "estimated comments not collected: "
+        f"~{total_estimated_missing}) -> "
+        f"{MORE_NODES_FILE}"
+    )
+
+    self_posts_with_text = sum(
+        1
+        for row in submission_rows
+        if row["is_self"] and row["selftext"]
+    )
+
+    print(
+        f"\nSubmissions parsed: {len(submission_rows)} "
+        f"(self-posts with body text: {self_posts_with_text}, "
+        f"link/no-text posts: {len(submission_rows) - self_posts_with_text}) -> "
+        f"{SUBMISSIONS_FILE}"
     )
 
 

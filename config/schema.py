@@ -28,6 +28,14 @@ class AuthorMetadata:
     # compatibility with data already collected under v1.
     author_hash: Optional[str] = None
 
+    # v4 (Day 5, Parmida) - docs/raw_schema_v05.md §5 defines this alongside
+    # author_hash but it was never added to Record when the v2 author_hash
+    # field went in. One of: available/deleted/unavailable/not_provided.
+    # Lets a collector record *why* author_hash is None (e.g. Reddit's
+    # "[deleted]"/"[removed]" authors have no stable id to hash) instead of
+    # that case being indistinguishable from "collector forgot to hash it".
+    author_id_status: Optional[str] = None
+
 
 @dataclass
 class Record:
@@ -94,6 +102,14 @@ class Record:
     project_week: Optional[str] = None         # "W01".."W21" or "OUT" - raw_schema_v03 §10
     in_window: Optional[bool] = None
     is_partial_week: Optional[bool] = None
+
+    # v4 (Day 5, Parmida) - raw_schema_columns.py already lists content_status
+    # (§6) as part of the shared export contract; Record never had a matching
+    # field. One of: active/deleted/removed/unknown. "[deleted]"/"[removed]"
+    # text is not valid opinion content (docs/legacy_data_intake_and_
+    # harmonization_plan_v1.md §8, Reddit rules) - this lets downstream steps
+    # filter on it explicitly instead of string-matching text_raw themselves.
+    content_status: Optional[str] = None
 
     def to_json_line(self) -> str:
         d = asdict(self)
