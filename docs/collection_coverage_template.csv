@@ -1,0 +1,4 @@
+platform,source_file,quality_grade,raw_n,parseable_n,unique_platform_id_n,missing_id_n,missing_timestamp_n,missing_text_n,oldest_created_at_utc,newest_created_at_utc,days_with_data,weeks_with_data,duplicate_id_n,query_known_pct,source_known_pct,notes
+x,,pending,,,,,,,,,,,,,,
+reddit,,pending,,,,,,,,,,,,,,
+youtube,,pending,,,,,,,,,,,,,,
