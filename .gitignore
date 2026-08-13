@@ -48,3 +48,5 @@ data_backup/
 .DS_Store
 .vscode/
 .idea/
+
+checklist_execution_prompts.md
