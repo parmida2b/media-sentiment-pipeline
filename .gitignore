@@ -17,6 +17,10 @@ data/interim/*
 !docs/query_execution_audit_template.csv
 !docs/schema_mapping_template.csv
 
+# The real handoff manifest is a small, hand-maintained provenance/audit
+# deliverable (checklist.md final output #1), not raw scraped data — track it.
+!docs/data_handoff_manifest.csv
+
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/interim/.gitkeep
@@ -70,3 +74,4 @@ data_backup/
 .idea/
 
 checklist_execution_prompts.md
+outputs_guide_fa.md
