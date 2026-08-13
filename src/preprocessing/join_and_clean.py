@@ -51,16 +51,7 @@ sys.path.insert(0, str(ROOT))
 from config.config_loader import load_config  # noqa: E402
 
 from user_features import FLAG_THRESHOLD, build_user_table, score_users  # noqa: E402
-
-
-def _load_jsonl(path: Path) -> list[dict]:
-    records = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                records.append(json.loads(line))
-    return records
+from src.common.jsonl_io import read_jsonl_file as _load_jsonl  # noqa: E402
 
 
 def _load_all_comments(raw_dir: Path) -> tuple[list[dict], dict[str, int]]:

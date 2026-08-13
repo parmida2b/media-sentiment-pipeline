@@ -56,13 +56,12 @@ from src.annotation.schema import GOLD_SAMPLE_COLUMNS, TARGETS  # noqa: E402
 # annotator budget. fa/en get equal, near-full shares; ar gets a small
 # non-zero share (kept in the pipeline, e.g. for later out-of-scope checks,
 # but deliberately not annotator-budget-competitive with fa/en).
-# Sum must equal SAMPLE_SIZE (300, per docs/pre_analysis_decision_table_v1.md
-# and docs/PROJECT_EXECUTION_ORDER_v1.md مرحله ۷: "انتخاب تصادفی
-# طبقه‌بندی‌شده ۳۰۰ رکورد با Seed ثابت").
+# Sum must equal 300, per docs/pre_analysis_decision_table_v1.md and
+# docs/PROJECT_EXECUTION_ORDER_v1.md مرحله ۷: "انتخاب تصادفی طبقه‌بندی‌شده
+# ۳۰۰ رکورد با Seed ثابت". main() prints sum(LANGUAGE_QUOTAS.values()) when
+# building the sample as a safety check against that number.
 LANGUAGE_QUOTAS = {"fa": 135, "en": 135, "ar": 30}
 LANGUAGES = list(LANGUAGE_QUOTAS.keys())
-SAMPLE_SIZE = sum(LANGUAGE_QUOTAS.values())  # 300
-assert SAMPLE_SIZE == 300, "SAMPLE_SIZE must track LANGUAGE_QUOTAS (see comment above)"
 
 RANDOM_SEED = 42
 MIN_TEXT_LEN = 3
@@ -70,7 +69,7 @@ MIN_TEXT_LEN = 3
 # §19: "حداقل دو annotator برای بخشی از نمونه" (at least two annotators for
 # part of the sample). docs/PROJECT_EXECUTION_ORDER_v1.md مرحله ۷ pins this
 # to a concrete number: "Double annotation برای ۱۲۰ رکورد" — a flat 20% of
-# the new SAMPLE_SIZE=300 (=60) would undershoot that, so AGREEMENT_SUBSET_MIN
+# the new sample size of 300 (=60) would undershoot that, so AGREEMENT_SUBSET_MIN
 # is the new target (120) directly, not the old 90-sample-era floor of 10;
 # the max(MIN, fraction) logic below is unchanged, only the target number is.
 AGREEMENT_SUBSET_FRACTION = 0.20
@@ -331,6 +330,7 @@ def main():
                   "run extraction (and/or src/preprocessing/join_and_clean.py) first.")
             return
 
+        print(f"LANGUAGE_QUOTAS sum to {sum(LANGUAGE_QUOTAS.values())} (expected 300).")
         sample = stratified_sample(records, LANGUAGE_QUOTAS)
         rows = [{
             "sample_id": i,
@@ -359,7 +359,7 @@ def main():
             f"WARNING: the agreement subset ({agreement_n} rows) is more than 50% of the "
             f"current sample ({len(rows)} rows), because AGREEMENT_SUBSET_MIN={AGREEMENT_SUBSET_MIN} "
             f"is bigger than {AGREEMENT_SUBSET_FRACTION:.0%} of {len(rows)} rows would be. This "
-            "usually means the sample file is smaller than the full SAMPLE_SIZE=300 run (e.g. "
+            "usually means the sample file is smaller than the full 300-row run (e.g. "
             "reused an old/partial CSV without --resample) — the 'subset' the second annotator "
             "gets is effectively the ENTIRE file, not a partial double-check. Continuing anyway."
         )

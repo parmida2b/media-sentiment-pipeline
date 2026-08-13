@@ -30,12 +30,17 @@ instead — that swap is a follow-up, not done here. Until then, the
 audited Eligible Sample count §12 of the doc requires for the real Gold
 Sample / Full run.
 
-Data source (same fallback order as run_model_comparison.load_sample):
+Data source (same fallback order and, as of this change, the same raw_globs
+list as run_model_comparison.load_sample — both now go through
+src/common/jsonl_io.py's load_source_records() / DEFAULT_RAW_GLOBS so the
+two scripts can't silently diverge on which population they're reading
+again):
   1. data/interim/clean.jsonl, if it exists
   2. else data/raw/*/youtube_comments*.jsonl
-     + data/raw/*/reddit_comments*.jsonl (per src/ingestion/reddit_to_record.py's
-       output path — matches zero files today, picked up automatically once
-       Reddit data lands there; that is the "و در آینده reddit" the task asked for)
+     + data/raw/reddit/reddit_comments*.jsonl (per src/ingestion/
+       reddit_to_record.py's fixed, non-topic-scoped output path — matches
+       zero files today, picked up automatically once Reddit data lands
+       there)
 
 Token estimation
 -----------------
@@ -87,12 +92,14 @@ sys.path.insert(0, str(ROOT))
 from src.annotation.model_routes import MODEL_ROUTES, estimate_cost_usd  # noqa: E402
 from src.annotation.prompt_contract import build_prompt  # noqa: E402
 from src.annotation.schema import TARGET_IDS  # noqa: E402
+from src.common.jsonl_io import DEFAULT_RAW_GLOBS, load_source_records  # noqa: E402
 
 CLEAN_PATH = ROOT / "data" / "interim" / "clean.jsonl"
-RAW_GLOBS = [
-    str(ROOT / "data" / "raw" / "*" / "youtube_comments*.jsonl"),
-    str(ROOT / "data" / "raw" / "*" / "reddit_comments*.jsonl"),  # future reddit
-]
+# Same raw-fallback source list as run_model_comparison.py's RAW_GLOBS — see
+# src/common/jsonl_io.py's DEFAULT_RAW_GLOBS docstring for why this includes
+# both YouTube and Reddit rather than YouTube only, and why the Reddit
+# pattern points at the fixed data/raw/reddit/ dir (not a topic-scoped one).
+RAW_GLOBS = DEFAULT_RAW_GLOBS
 USAGE_LOG_PATH = ROOT / "outputs" / "model_evaluation" / "usage_log.jsonl"
 OUTPUT_PATH = ROOT / "outputs" / "model_evaluation" / "full_run_cost_estimate.json"
 
@@ -137,22 +144,12 @@ def load_eligible_texts() -> tuple[list[str], dict]:
     a real count, not a scouting sample."""
     if CLEAN_PATH.exists():
         source_desc = {"type": "clean_jsonl", "files": [str(CLEAN_PATH)]}
-        files = [CLEAN_PATH]
     else:
-        files = [Path(fp) for pattern in RAW_GLOBS for fp in sorted(glob.glob(pattern))]
-        source_desc = {"type": "raw_glob", "files": [str(f) for f in files]}
+        files = [fp for pattern in RAW_GLOBS for fp in sorted(glob.glob(pattern))]
+        source_desc = {"type": "raw_glob", "files": files}
 
-    texts: list[str] = []
-    for fp in files:
-        with open(fp, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                record = json.loads(line)
-                text = (record.get("text") or "").strip()
-                if text:
-                    texts.append(text)
+    records = load_source_records(CLEAN_PATH, RAW_GLOBS)
+    texts = [text for r in records if (text := (r.get("text") or "").strip())]
     return texts, source_desc
 
 

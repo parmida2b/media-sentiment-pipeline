@@ -21,7 +21,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import os
 import random
@@ -40,10 +39,14 @@ load_dotenv(ROOT / ".env")
 from src.annotation.llm_client import AnnotationCache, annotate  # noqa: E402
 from src.annotation.model_routes import MODEL_ROUTES, PROVIDERS_REQUIRING_ENV_KEY  # noqa: E402
 from src.annotation.schema import TARGET_IDS  # noqa: E402
+from src.common.jsonl_io import DEFAULT_RAW_GLOBS, load_source_records  # noqa: E402
 from src.cost_tracking.run_context import make_run_id, snapshot_outputs  # noqa: E402
 
 CLEAN_PATH = ROOT / "data" / "interim" / "clean.jsonl"
-RAW_GLOB = str(ROOT / "data" / "raw" / "*" / "youtube_comments*.jsonl")
+# Same raw-fallback source list as estimate_full_run_cost.py's RAW_GLOBS —
+# see src/common/jsonl_io.py's DEFAULT_RAW_GLOBS docstring for why this
+# includes both YouTube and Reddit rather than YouTube only.
+RAW_GLOBS = DEFAULT_RAW_GLOBS
 OUTPUT_PATH = ROOT / "outputs" / "model_evaluation" / "sentiment_model_comparison.jsonl"
 
 DEFAULT_SAMPLE_SIZE = 20
@@ -52,22 +55,7 @@ RUN_ID = "scouting_" + os.environ.get("COMPARISON_RUN_TAG", "manual")
 
 
 def load_sample(n: int) -> list[dict]:
-    source = CLEAN_PATH if CLEAN_PATH.exists() else None
-    records: list[dict] = []
-    if source:
-        with open(source, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    records.append(json.loads(line))
-    else:
-        for fp in sorted(glob.glob(RAW_GLOB)):
-            with open(fp, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        records.append(json.loads(line))
-
+    records = load_source_records(CLEAN_PATH, RAW_GLOBS)
     records = [r for r in records if (r.get("text") or "").strip()]
     random.seed(RANDOM_SEED)
     fa = [r for r in records if r.get("language") == "fa"]
@@ -108,7 +96,7 @@ def main():
 
     sample = load_sample(args.sample_size)
     if not sample:
-        print(f"No records found in {CLEAN_PATH} or {RAW_GLOB} — run extraction first.")
+        print(f"No records found in {CLEAN_PATH} or {RAW_GLOBS} — run extraction first.")
         return
 
     print(f"Comparing {len(routes)} routes on {len(sample)} comments: "
