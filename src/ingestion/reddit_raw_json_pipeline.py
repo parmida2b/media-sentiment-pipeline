@@ -956,8 +956,21 @@ def fetch_and_save_raw_json(
         timezone.utc
     )
 
-    http_status_code = probe_http_status(
-        json_url
+    # Skip the anonymous requests-probe entirely when a real Firefox profile
+    # is configured: that profile carries logged-in cookies, so the plain
+    # cookie-less requests.get() and the Firefox page load are two different
+    # identities hitting Reddit for the same post (2x requests per post), and
+    # the anonymous one gets rate-limited/blocked far more easily - producing
+    # a false "blocked" status here even though the authenticated Firefox
+    # load would have succeeded. Without a profile both requests are
+    # anonymous anyway, so the probe stays on: it is a real, cheap signal
+    # that avoids opening Firefox for a post Reddit is already blocking.
+    http_status_code = (
+        probe_http_status(
+            json_url
+        )
+        if not FIREFOX_PROFILE_PATH
+        else None
     )
 
     http_status_value = (
