@@ -182,10 +182,12 @@ YouTube Data API v3
 | `emotion` | anger / fear / sadness / hope / joy / disgust / surprise / none_or_unclear |
 | `content_type` | personal_opinion / news_or_report / quotation / satire / spam / unclear |
 
-**Stance** همیشه نسبت به یکی از ۵ Target ثابت سنجیده می‌شود (نه «موضوع کلی»):
-`iran_government_policy`, `us_government_policy`, `military_action`, `negotiation_diplomacy`, `human_economic_impact`.
+**Stance** همیشه نسبت به یکی از ۶ Target ثابت سنجیده می‌شود (نه «موضوع کلی»):
+`T01` تشدید/اقدام نظامی، `T02` مذاکره/آتش‌بس/دیپلماسی، `T03` تحریم/فشار اقتصادی
+(اصلی — تحلیل اصلی روی همین سه)، و `T04` سیاست دولت ایران، `T05` سیاست دولت
+آمریکا، `T06` پیامدهای انسانی (تکمیلی — فقط در صورت کیفیت کافی Gold Sample).
 
-مثال کلیدی از خود پرامپت: «این جنگ خیلی خطرناکه، ولی تصمیم دولت آمریکا قابل‌دفاعه» → `sentiment=negative` ولی `stance=support` (نسبت به Target=us_government_policy). این دو محور می‌توانند عمداً در جهت‌های مختلف باشند.
+مثال کلیدی از خود پرامپت: «این جنگ خیلی خطرناکه، ولی تصمیم دولت آمریکا قابل‌دفاعه» → `sentiment=negative` ولی `stance=support` (نسبت به Target=T05). این دو محور می‌توانند عمداً در جهت‌های مختلف باشند.
 
 **پرامپت نسخه‌بندی‌شده** — [`prompt_contract.py`](../src/annotation/prompt_contract.py) (`PROMPT_VERSION` فعلی: `2026-08-07.v1`، هر تغییر در تعریف یک برچسب باید این نسخه را ببرد بالا چون روی هر رکورد annotation ثبت می‌شود). خروجی الزامی مدل یک JSON با ۶ فیلد است: چهار برچسب + `confidence` (self-reported، هرگز جایگزین اعتبارسنجی واقعی نیست) + `reason_code` کوتاه.
 

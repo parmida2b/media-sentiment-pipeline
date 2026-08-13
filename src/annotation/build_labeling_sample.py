@@ -49,21 +49,31 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 from src.annotation.schema import GOLD_SAMPLE_COLUMNS, TARGETS  # noqa: E402
 
-# LANGUAGE_QUOTAS, not an even three-way split: per docs/source_registry_v3.md
-# SR-006 (reaffirmed in docs/decision_log.md 2026-08-07 and config.yaml's
-# keywords_ar/regions removal), Arabic is explicitly out of scope for this
-# project's main EN+FA analysis — it should not eat an equal share of the
-# annotator budget. fa/en get equal, near-full shares; ar gets a small
-# non-zero share (kept in the pipeline, e.g. for later out-of-scope checks,
-# but deliberately not annotator-budget-competitive with fa/en).
-# Sum must equal 300, per docs/pre_analysis_decision_table_v1.md and
+# Two-dimensional quotas: docs/checklist.md §17 requires BOTH Platform and
+# Language as main strata ("طبقات اصلی: Platform و Language", "۱۰۰ رکورد برای
+# هر پلتفرم") — so each of the 3 platforms gets a flat 100-record quota.
+# Within each platform's 100, the language split is NOT even three-way: per
+# docs/source_registry_v3.md SR-006 (reaffirmed in docs/decision_log.md
+# 2026-08-07 and config.yaml's keywords_ar/regions removal), Arabic is
+# explicitly out of scope for this project's main EN+FA analysis, so it
+# should not eat an equal share of the annotator budget. fa/en get equal,
+# near-full shares (45 each); ar gets a small non-zero share (10 — kept in
+# the pipeline, e.g. for later out-of-scope checks, but deliberately not
+# annotator-budget-competitive with fa/en). 45+45+10=100 per platform, so the
+# *language* marginal across all 3 platforms still sums to fa=135/en=135/
+# ar=30 — the exact split docs/decision_log.md 2026-08-13 already justified —
+# this only adds the missing Platform dimension on top of it.
+# Grand total must equal 300, per docs/pre_analysis_decision_table_v1.md and
 # docs/PROJECT_EXECUTION_ORDER_v1.md مرحله ۷: "انتخاب تصادفی طبقه‌بندی‌شده
-# ۳۰۰ رکورد با Seed ثابت". main() prints sum(LANGUAGE_QUOTAS.values()) when
-# building the sample as a safety check against that number.
-LANGUAGE_QUOTAS = {"fa": 135, "en": 135, "ar": 30}
-LANGUAGES = list(LANGUAGE_QUOTAS.keys())
+# ۳۰۰ رکورد با Seed ثابت". main() prints the summed total when building the
+# sample as a safety check against that number.
+PLATFORMS = ["x", "reddit", "youtube"]
+LANGUAGES = ["fa", "en", "ar"]
+PLATFORM_LANGUAGE_QUOTAS = {
+    platform: {"fa": 45, "en": 45, "ar": 10} for platform in PLATFORMS
+}
 
-RANDOM_SEED = 42
+RANDOM_SEED = 1405  # docs/checklist.md §17: "Seed ثابت: 1405"
 MIN_TEXT_LEN = 3
 
 # §19: "حداقل دو annotator برای بخشی از نمونه" (at least two annotators for
@@ -95,9 +105,9 @@ ELIGIBILITY_DIR = ROOT / "data" / "interim"
 # teammate hand-added Persian translations for 60/90 rows before this
 # script's schema was extended — see docs/decision_log.md 2026-08-07); it's
 # not part of schema.GOLD_SAMPLE_COLUMNS but is kept as a convenience column.
-CONTEXT_COLUMNS = ["sample_id", "content_id", "language", "text", "post_title", "translation_fa"]
-CSV_COLUMNS = ["sample_id", "content_id", "language", "text", "post_title", "translation_fa"] + [
-    c for c in GOLD_SAMPLE_COLUMNS if c not in ("sample_id", "content_id", "language", "text")
+CONTEXT_COLUMNS = ["sample_id", "content_id", "platform", "language", "text", "post_title", "translation_fa"]
+CSV_COLUMNS = ["sample_id", "content_id", "platform", "language", "text", "post_title", "translation_fa"] + [
+    c for c in GOLD_SAMPLE_COLUMNS if c not in ("sample_id", "content_id", "platform", "language", "text")
 ]
 
 
@@ -165,11 +175,14 @@ def _load_from_eligibility_outputs(paths: list[Path]) -> list[dict]:
                        (e.g. a Reddit self-post with no separate parent).
       content_id   <- platform_content_id (the platform's own id for this
                        exact piece of content; schema.py's Record.content_id).
+      platform     <- platform (required top-level field on every Record;
+                       one of PLATFORMS — needed for the Platform stratum
+                       docs/checklist.md §17 requires alongside Language).
       text         <- text_raw
       language     <- language_detected, falling back to language_reported
                        (language_reported is rarely populated upstream and,
                        when it is, isn't guaranteed to use the fa/en/ar codes
-                       LANGUAGE_QUOTAS expects).
+                       PLATFORM_LANGUAGE_QUOTAS expects).
       post_title   <- source_parent_title
     """
     frames = [df for df in (pd.read_parquet(p) for p in paths) if len(df)]
@@ -182,6 +195,7 @@ def _load_from_eligibility_outputs(paths: list[Path]) -> list[dict]:
         records.append({
             "post_id": _val(row, "source_parent_id", "platform_content_id") or "",
             "content_id": _val(row, "platform_content_id") or "",
+            "platform": _val(row, "platform") or "",
             "text": _val(row, "text_raw") or "",
             "language": _val(row, "language_detected", "language_reported") or "",
             "post_title": _val(row, "source_parent_title") or "",
@@ -236,30 +250,68 @@ def load_records() -> list[dict]:
     return records
 
 
-def stratified_sample(records: list[dict], quotas: dict[str, int]) -> list[dict]:
-    """Sample per-language according to fixed `quotas` (see LANGUAGE_QUOTAS —
-    deliberately NOT an even split across languages, see comment there)."""
+def stratified_sample(records: list[dict], quotas: dict[str, dict[str, int]]) -> list[dict]:
+    """Sample per (platform, language) cell according to fixed `quotas` (see
+    PLATFORM_LANGUAGE_QUOTAS). Both dimensions are required strata per
+    docs/checklist.md §17 ("طبقات اصلی: Platform و Language") — sampling by
+    language alone (the previous behaviour) could let one platform crowd out
+    the others entirely.
+
+    Leftover slots (a cell's quota exceeds what's actually available) are
+    redistributed in two passes: first to other languages within the SAME
+    platform (keeps each platform's 100-record total intact), then, only if
+    a whole platform's pool is thinner than its quota, across platforms
+    (keeps the grand total at 300 at the cost of an uneven platform split —
+    printed as a warning by the caller so it's never silent)."""
     random.seed(RANDOM_SEED)
-    by_lang = {lang: [r for r in records if r.get("language") == lang] for lang in quotas}
-    for group in by_lang.values():
+    by_cell = {
+        (platform, lang): [r for r in records if r.get("platform") == platform and r.get("language") == lang]
+        for platform, langs in quotas.items() for lang in langs
+    }
+    for group in by_cell.values():
         random.shuffle(group)
 
     sample = []
-    leftover = 0
-    for lang, target in quotas.items():
-        take = min(target, len(by_lang[lang]))
-        sample.extend(by_lang[lang][:take])
-        by_lang[lang] = by_lang[lang][take:]
-        leftover += target - take
+    leftover_by_platform = {platform: 0 for platform in quotas}
+    for platform, langs in quotas.items():
+        for lang, target in langs.items():
+            pool = by_cell[(platform, lang)]
+            take = min(target, len(pool))
+            sample.extend(pool[:take])
+            by_cell[(platform, lang)] = pool[take:]
+            leftover_by_platform[platform] += target - take
 
-    # redistribute leftover slots (a language's quota exceeded what's
-    # available) to languages that still have unused records
-    for lang in quotas:
-        if leftover <= 0:
-            break
-        take = min(leftover, len(by_lang[lang]))
-        sample.extend(by_lang[lang][:take])
-        leftover -= take
+    # pass 1: redistribute within the same platform's other languages
+    for platform, langs in quotas.items():
+        leftover = leftover_by_platform[platform]
+        for lang in langs:
+            if leftover <= 0:
+                break
+            pool = by_cell[(platform, lang)]
+            take = min(leftover, len(pool))
+            sample.extend(pool[:take])
+            by_cell[(platform, lang)] = pool[take:]
+            leftover -= take
+        leftover_by_platform[platform] = leftover
+
+    # pass 2: last resort, redistribute across platforms if one platform's
+    # own pool couldn't cover its quota even after pass 1
+    total_leftover = sum(leftover_by_platform.values())
+    if total_leftover > 0:
+        remaining_pool = [r for pool in by_cell.values() for r in pool]
+        random.shuffle(remaining_pool)
+        backfilled = remaining_pool[:total_leftover]
+        sample.extend(backfilled)
+        shortfall_note = (
+            f" Only {len(backfilled)}/{total_leftover} could actually be backfilled — "
+            "records overall are too few to hit 300."
+            if len(backfilled) < total_leftover else ""
+        )
+        print(
+            f"WARNING: {total_leftover} slot(s) could not be filled within their own "
+            f"(platform, language) cell (pool exhausted) and were backfilled from other "
+            f"platforms — per-platform shortfall was {leftover_by_platform}.{shortfall_note}"
+        )
 
     random.shuffle(sample)
     return sample
@@ -272,7 +324,7 @@ def stratified_sample(records: list[dict], quotas: dict[str, int]) -> list[dict]
 # schema's single label column, kept here so old hand-labeled files are still
 # detected and protected.
 KNOWN_ANNOTATION_COLUMNS = {
-    c for c in GOLD_SAMPLE_COLUMNS if c not in ("sample_id", "content_id", "language", "text")
+    c for c in GOLD_SAMPLE_COLUMNS if c not in ("sample_id", "content_id", "platform", "language", "text")
 } | {"human_label"}
 
 
@@ -330,11 +382,13 @@ def main():
                   "run extraction (and/or src/preprocessing/join_and_clean.py) first.")
             return
 
-        print(f"LANGUAGE_QUOTAS sum to {sum(LANGUAGE_QUOTAS.values())} (expected 300).")
-        sample = stratified_sample(records, LANGUAGE_QUOTAS)
+        quota_total = sum(n for langs in PLATFORM_LANGUAGE_QUOTAS.values() for n in langs.values())
+        print(f"PLATFORM_LANGUAGE_QUOTAS sum to {quota_total} (expected 300).")
+        sample = stratified_sample(records, PLATFORM_LANGUAGE_QUOTAS)
         rows = [{
             "sample_id": i,
             "content_id": r.get("content_id") or derive_content_id(r.get("post_id", ""), r.get("text", "")),
+            "platform": r.get("platform", ""),
             "language": r.get("language", ""),
             "text": r.get("text", ""),
             "post_title": r.get("post_title", ""),
@@ -369,8 +423,10 @@ def main():
 
     from collections import Counter
     lang_counts = Counter(r["language"] for r in rows)
+    platform_counts = Counter(r["platform"] for r in rows)
     print(f"Wrote {len(rows)} comments to {OUTPUT_PATH}")
     print(f"Wrote {len(agreement_rows)} comments (subset, for a SECOND annotator) to {AGREEMENT_OUTPUT_PATH}")
+    print(f"By platform: {dict(platform_counts)}")
     print(f"By language: {dict(lang_counts)}")
     n_with_translation = sum(1 for r in rows if r.get("translation_fa"))
     if n_with_translation:

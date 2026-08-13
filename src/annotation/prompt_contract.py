@@ -36,8 +36,9 @@ LABEL DEFINITIONS (these are 4 SEPARATE axes — never merge them):
    - "unclear": addresses the Target but the position can't be determined.
    Example (from the assignment doc): "This war is very dangerous, but the
    US government's decision is defensible" → sentiment=negative,
-   stance=support (toward Target=us_government_policy). Sentiment and stance
-   can legitimately point in different directions — do not force them to agree.
+   stance=support (toward Target=T05, "سیاست یا اقدامات دولت آمریکا"). Sentiment
+   and stance can legitimately point in different directions — do not force
+   them to agree.
 
 3. emotion — the dominant emotion expressed, if any: one of {EMOTION_LABELS}
 

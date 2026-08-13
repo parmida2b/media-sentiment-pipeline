@@ -38,14 +38,24 @@ CONTENT_TYPE_LABELS = [
 # this in sync with docs/decision_log.md if the team changes it; it is a
 # graded decision (§7 "Target‌های Stance" row in the mandatory decisions
 # table), not something to edit silently.
+#
+# IDs and Persian labels are pinned to docs/Chapter_1_Project_Definition_and_
+# Research_Design_v5.md's Target table and docs/pre_analysis_decision_table_v1.md
+# §7 — the same T01-T06 IDs docs/event_registry_v3.md and docs/query_registry_v5.md
+# already reference. T01-T03 are the PRIMARY targets locked for the main
+# analysis; T04-T06 are supplementary and only used if Gold Sample quality
+# allows (docs/checklist.md §16/§17, pre_analysis_decision_table_v1.md §7).
 TARGETS = {
-    "iran_government_policy": "سیاست دولت ایران",
-    "us_government_policy": "سیاست دولت آمریکا",
-    "military_action": "اقدام نظامی مشخص",
-    "negotiation_diplomacy": "مذاکره یا دیپلماسی",
-    "human_economic_impact": "اثر انسانی یا اقتصادی",
+    "T01": "اقدام نظامی یا تشدید درگیری",
+    "T02": "مذاکره، آتش‌بس و دیپلماسی",
+    "T03": "تحریم و فشار اقتصادی",
+    "T04": "سیاست یا اقدامات دولت ایران",
+    "T05": "سیاست یا اقدامات دولت آمریکا",
+    "T06": "پیامدهای انسانی و حفاظت از غیرنظامیان",
 }
 TARGET_IDS = list(TARGETS.keys())
+PRIMARY_TARGET_IDS = ["T01", "T02", "T03"]
+SUPPLEMENTARY_TARGET_IDS = ["T04", "T05", "T06"]
 
 # --- §22 structured output contract ----------------------------------------
 # Every LLM annotation call must return exactly these fields. confidence is
@@ -108,6 +118,7 @@ def validate_annotation_output(payload: dict[str, object]) -> None:
 GOLD_SAMPLE_COLUMNS = [
     "sample_id",
     "content_id",
+    "platform",
     "language",
     "text",
     "target",
