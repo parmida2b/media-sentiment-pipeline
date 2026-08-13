@@ -1,0 +1,32 @@
+﻿asset_id,name_fa,category,instrument_type,unit,currency,transform,role,market,tier,price_type,source,source_series_id,endpoint,close_local,tz,ts_exact,instrument_variant,auto_adjust,notes
+DXY,U.S. Dollar Index,fx,index,index_points,,log_return,secondary,global,2,index_level,yahoo,DX-Y.NYB,yfinance/yahoo-chart,17:00:00,America/New_York,True,,False,
+EURUSD,EUR/USD,fx,fx_rate,USD_per_EUR,,log_return,secondary,fx24,3,close,yahoo,EURUSD=X,yfinance/yahoo-chart,17:00:00,America/New_York,True,,False,24/5 market - Sunday 22:00 UTC to Friday 22:00 UTC
+IRR_USD,USD/IRR - free market,fx,spot,IRR_per_USD,IRR,log_return,core,iran_otc,1,close,tgju,price_dollar_rl,tgju.org/archive-tool,20:00:00,Asia/Tehran,False,free_market,False, Free-market rate - do not mix with official or NIMA rates
+OIL_BRENT,Brent crude oil (front-month futures),oil,futures,USD_per_barrel,USD,log_return,core,global,1,vendor_close,yahoo,BZ=F,yfinance/yahoo-chart,19:30:00,Europe/London,True,front_month_future,False,
+OIL_WTI,WTI crude oil (front-month futures),oil,futures,USD_per_barrel,USD,log_return,secondary,global,2,vendor_close,yahoo,CL=F,yfinance/yahoo-chart,14:30:00,America/New_York,True,front_month_future,False,
+GOLD_USD,Gold futures,gold,futures,USD_per_troy_oz,USD,log_return,core,global,1,vendor_close,yahoo,GC=F,yfinance/yahoo-chart,13:30:00,America/New_York,True,front_month_future,False,
+IRR_GOLD18,18K gold,gold,spot,IRR_per_gram,IRR,log_return,core,iran_otc,2,close,tgju,geram18,tgju.org/archive-tool,20:00:00,Asia/Tehran,False,free_market,False,
+IRR_GOLD24,24K gold,gold,spot,IRR_per_gram,IRR,log_return,secondary,iran_otc,3,close,tgju,geram24,tgju.org/archive-tool,20:00:00,Asia/Tehran,False,free_market,False,
+IRR_COIN,Bahar Azadi full coin,gold,spot,IRR_per_coin,IRR,log_return,secondary,iran_otc,2,close,tgju,sekeb,tgju.org/archive-tool,20:00:00,Asia/Tehran,False,free_market,False,
+IRR_COIN_G,Gram gold coin,gold,spot,IRR_per_coin,IRR,log_return,secondary,iran_otc,3,close,tgju,gerami,tgju.org/archive-tool,20:00:00,Asia/Tehran,False,free_market,False,
+SP500,S&P 500,index,index,index_points,,log_return,secondary,global,2,index_level,yahoo,^GSPC,yfinance/yahoo-chart,16:00:00,America/New_York,True,,False,
+TA125,Tel Aviv TA-125 Index,index,index,index_points,,log_return,secondary,global,3,index_level,yahoo,^TA125.TA,yfinance/yahoo-chart,17:25:00,Asia/Jerusalem,True,,False,
+TEDPIX,Tehran Stock Exchange TEDPIX,index,index,index_points,,log_return,core,iran_exchange,2,index_level,tsetmc,32097828799138957,cdn.tsetmc.com/api/Index,12:30:00,Asia/Tehran,True,,False,
+VIX,S&P 500 Volatility Index,volatility,index,index_points,,log_change,core,global,1,index_level,yahoo,^VIX,yfinance/yahoo-chart,16:15:00,America/New_York,True,,False,
+OVX,Oil Volatility Index,volatility,index,index_points,,log_change,core,global,1,index_level,yahoo,^OVX,yfinance/yahoo-chart,16:15:00,America/New_York,True,,False,Oil-specific volatility measure; more relevant to Hormuz risk than broad VIX
+UST10Y,U.S. 10-Year Treasury Yield,economic,yield,percent,,first_diff,secondary,global,3,yield,yahoo,^TNX,yfinance/yahoo-chart,16:00:00,America/New_York,True,,False," This is a percentage yield, not a price; use first difference, not log return"
+GAS_NG,Natural gas futures,economic,futures,USD_per_MMBtu,USD,log_return,secondary,global,2,vendor_close,yahoo,NG=F,yfinance/yahoo-chart,14:30:00,America/New_York,True,,False,
+TANKER_FRO,Frontline,economic,equity,USD_per_share,USD,log_return,secondary,global,2,adjusted_close,yahoo,FRO,yfinance/yahoo-chart,16:00:00,America/New_York,True,,True,auto_adjust is required because variable dividends can be material
+TANKER_STNG,Scorpio Tankers,economic,equity,USD_per_share,USD,log_return,secondary,global,2,adjusted_close,yahoo,STNG,yfinance/yahoo-chart,16:00:00,America/New_York,True,,True,
+TANKER_DHT,DHT Holdings,economic,equity,USD_per_share,USD,log_return,secondary,global,2,adjusted_close,yahoo,DHT,yfinance/yahoo-chart,16:00:00,America/New_York,True,,True,
+DEFENSE,Defense industry ETF,economic,etf,USD_per_share,USD,log_return,secondary,global,3,adjusted_close,yahoo,ITA,yfinance/yahoo-chart,16:00:00,America/New_York,True,,True,
+BTC,Bitcoin,economic,crypto,USD_per_BTC,USD,log_return,secondary,crypto,3,close,yahoo,BTC-USD,yfinance/yahoo-chart,00:00:00,UTC,True,,False,24/7 market - covers weekend events
+ETH,Ethereum,economic,crypto,USD_per_ETH,USD,log_return,secondary,crypto,3,close,yahoo,ETH-USD,yfinance/yahoo-chart,00:00:00,UTC,True,,False,24/7
+SPREAD_BRENT_WTI,Brent-WTI spread,oil,spread,USD_per_barrel,USD,first_diff,core,global,1,derived,derived,OIL_BRENT - OIL_WTI,internal,16:00:00,America/New_York,True,,False," Can be negative; use first difference, never a logarithmic transform"
+RV_BRENT_10D,Brent 10-day realized volatility,volatility,vol_measure,annualised_sd,,log_change,secondary,global,2,derived,derived,"std(logret OIL_BRENT,10)*sqrt(252)",internal,16:00:00,America/New_York,True,,False,
+IRR_IMPLIED_USD,Gold-implied USD/IRR rate,fx,ratio,IRR_per_USD,IRR,log_return,core,iran_otc,1,derived,derived,IRR_GOLD18 / (GOLD_USD * 0.75 / 31.1034768),internal,20:00:00,Asia/Tehran,False,implied,False,Units are normalized so the series is comparable with observed IRR_USD
+TANKER_BASKET,Tanker basket,economic,index,index_base100,,log_return,core,global,2,derived,derived,"mean(FRO,STNG,DHT) normalised",internal,16:00:00,America/New_York,True,,False,Free proxy for tanker/shipping performance and Hormuz risk
+OIL_BRENT__FRED,Brent Europe FOB spot,verify,spot,USD_per_barrel,USD,log_return,verify,global,9,close,fred,DCOILBRENTEU,api.stlouisfed.org/fred/series/observations,,,False,spot_fob,False," Spot series, not futures; the level is not directly comparable with BZ=F"
+OIL_WTI__FRED,WTI Cushing spot,verify,spot,USD_per_barrel,USD,log_return,verify,global,9,close,fred,DCOILWTICO,api.stlouisfed.org/fred/series/observations,,,False,spot_cushing,False,
+VIX__FRED,VIX - CBOE,verify,index,index_points,,log_change,verify,global,9,index_level,fred,VIXCLS,api.stlouisfed.org/fred/series/observations,,,False,,False,
+UST10Y__FRED,U.S. 10-Year Treasury,verify,yield,percent,,first_diff,verify,global,9,yield,fred,DGS10,api.stlouisfed.org/fred/series/observations,,,False,,False,

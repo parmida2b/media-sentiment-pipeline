@@ -1,0 +1,2 @@
+component,status,required_input,decision,planned_primary_method,planned_sensitivity
+weekly_social_financial_alignment,pending_social_outcomes,data/processed/social_media/social_weekly_outcomes_v1.csv,Do not calculate or report correlations until final eligible labels are available.,"Spearman; lags 0, 1, 2 weeks; paired-week permutation p-value; BH-FDR",Pearson; exclude partial W21; alternative OIL_WTI and IRR_GOLD18 indicators

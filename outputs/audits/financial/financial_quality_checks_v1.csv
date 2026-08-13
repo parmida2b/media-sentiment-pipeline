@@ -1,0 +1,11 @@
+check_id,passed,observed_value
+all_frozen_inputs_exist,True,8/8
+daily_key_is_unique,True,1160
+study_start_matches_contract,True,2026-02-28
+study_end_matches_contract,True,2026-07-22
+project_has_21_registered_weeks,True,21
+all_primary_assets_have_21_weekly_values,True,"{'GOLD_USD': 21, 'IRR_USD': 21, 'OIL_BRENT': 21, 'VIX': 21}"
+w21_marked_partial_by_design,True,W21=2026-07-18..2026-07-22
+three_primary_events_used,True,3
+event_output_has_four_primary_assets_each,True,"{'EV-016': 4, 'EV-025': 4, 'EV-031': 4}"
+no_level_series_used_for_weekly_statistics,True,weekly sums of daily log changes

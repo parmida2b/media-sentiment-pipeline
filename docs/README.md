@@ -52,6 +52,7 @@
 | [`youtube_data_pipeline_fa.md`](youtube_data_pipeline_fa.md) | مسیر فنی کامل داده‌ی یوتیوب از استخراج تا annotation | معتبر برای بخش YouTube |
 | [`data_and_features_dictionary_fa.md`](data_and_features_dictionary_fa.md) | توضیح ستون‌ها برای کسی که تحلیل/داشبورد می‌سازه (نه کدنویس) | معتبر برای بخش YouTube |
 | [`manual_labeling_guide_fa.md`](manual_labeling_guide_fa.md) | راهنمای annotator برای لیبل دستی (Gold Sample) | معتبر |
+| [`financial/README_FINANCIAL_WORKFLOW_FA.md`](financial/README_FINANCIAL_WORKFLOW_FA.md) | ترتیب اجرای بخش مالی، ورودی‌ها و خروجی‌ها | معتبر |
 
 ## ۳. راهنمای عملیاتی/Git (بدون تاریخ انقضا)
 

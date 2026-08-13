@@ -36,3 +36,17 @@ cp .env.example .env   # کلیدهای API خودت رو بذار
 
 ## ساختار پروژه
 جزئیات کامل توی `GIT_WORKFLOW.md` هست.
+
+## جریان مالی
+
+راهنمای کامل در [`docs/financial/README_FINANCIAL_WORKFLOW_FA.md`](docs/financial/README_FINANCIAL_WORKFLOW_FA.md) قرار دارد. ورودی‌های مالی عمومی و Freeze‌شده با Notebook اول به بازده‌های هفتگی تبدیل می‌شوند و Notebook دوم، پس از آماده‌شدن Outcomeهای هفتگی X، Reddit و YouTube، هم‌ترازی زمانی را اجرا می‌کند.
+
+```bash
+python -m src.temporal_analysis.build_financial_outputs
+```
+
+جمع‌آوری مجدد اختیاری است و به `FRED_API_KEY` در فایل محلی `.env` نیاز دارد:
+
+```bash
+python -m src.ingestion.finance_market_extract
+```

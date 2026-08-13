@@ -1,5 +1,6 @@
 .env
 .env.*
+!.env.example
 *.key
 credentials.json
 client_secret*.json
@@ -45,6 +46,20 @@ outputs/*
 data/raw_original/x/
 data/raw_original/reddit/
 data/raw_original/youtube/
+data/raw_original/financial/
+
+# Public, frozen financial inputs are intentionally versioned so the
+# financial notebooks can be reproduced without repeating web collection.
+!data/interim/financial/
+!data/interim/financial/frozen_inputs/
+!data/interim/financial/frozen_inputs/*.csv
+
+# Small, reviewable financial tables and audits are project deliverables.
+!outputs/tables/financial/
+!outputs/tables/financial/*.csv
+!outputs/audits/financial/
+!outputs/audits/financial/*.csv
+!outputs/audits/financial/*.txt
 
 data_backup/
 

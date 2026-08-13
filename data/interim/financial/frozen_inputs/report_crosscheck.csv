@@ -1,0 +1,5 @@
+﻿A,B,mode,n,type_A,type_B,median_relative_difference,maximum_relative_difference,threshold,result,return_correlation,same_direction_share
+VIX,VIX__FRED,level,100,index,index,0.00%,0.00%,2.0%,PASS,,
+UST10Y,UST10Y__FRED,level,99,yield,yield,0.14%,0.72%,5.0%,PASS,,
+OIL_BRENT,OIL_BRENT__FRED,return,96,futures,spot,,,rho>=0.9,FAIL,0.844,84%
+OIL_WTI,OIL_WTI__FRED,return,98,futures,spot,,,rho>=0.9,PASS,0.995,98%
