@@ -25,6 +25,15 @@ Input:
       Reddit equivalent yet (see reddit_to_record.py's module docstring for
       why) - Reddit records simply never match the geo lookup below, same as
       any YouTube record for an untagged video.
+  data/raw/x/x_comments_*.jsonl                  (Day 5, Parmida - written by
+      src/ingestion/x_to_record.py, same Record shape, same fixed non-
+      topic_id-scoped path pattern as Reddit above (x_scraper.py already
+      uses its own fixed output root, see x_to_record.py's module
+      docstring). X has no video_geo_metadata.jsonl either yet - Tier-0 geo
+      tagging was never wired in for X (same "not done yet" reasoning as
+      automation_risk_score - see x_to_record.py's docstring), so X records
+      simply never match the geo lookup below, same as Reddit/untagged
+      YouTube.
 
 Output:
   data/interim/clean.jsonl          - every input record, unchanged, plus
@@ -56,8 +65,8 @@ from src.common.jsonl_io import read_jsonl_file as _load_jsonl  # noqa: E402
 
 def _load_all_comments(raw_dir: Path) -> tuple[list[dict], dict[str, int]]:
     """Returns (records, counts_by_platform). raw_dir is the topic-scoped
-    YouTube dir; Reddit is read from its own fixed data/raw/reddit/ dir
-    (see module docstring) regardless of topic_id."""
+    YouTube dir; Reddit and X are each read from their own fixed
+    data/raw/{reddit,x}/ dir (see module docstring) regardless of topic_id."""
     counts: dict[str, int] = {}
 
     youtube_records: list[dict] = []
@@ -71,7 +80,13 @@ def _load_all_comments(raw_dir: Path) -> tuple[list[dict], dict[str, int]]:
         reddit_records.extend(_load_jsonl(path))
     counts["reddit"] = len(reddit_records)
 
-    return youtube_records + reddit_records, counts
+    x_dir = raw_dir.parent / "x"
+    x_records: list[dict] = []
+    for path in sorted(x_dir.glob("x_comments_*.jsonl")):
+        x_records.extend(_load_jsonl(path))
+    counts["x"] = len(x_records)
+
+    return youtube_records + reddit_records + x_records, counts
 
 
 def _load_geo_lookup(raw_dir: Path) -> dict[str, dict]:
@@ -111,8 +126,9 @@ def run(topic_id: str | None = None) -> None:
     comments, platform_counts = _load_all_comments(raw_dir)
     if not comments:
         raise SystemExit(
-            f"no youtube_comments_*.jsonl found under {raw_dir} and no "
-            f"reddit_comments_*.jsonl found under {raw_dir.parent / 'reddit'}"
+            f"no youtube_comments_*.jsonl found under {raw_dir}, no "
+            f"reddit_comments_*.jsonl found under {raw_dir.parent / 'reddit'}, "
+            f"and no x_comments_*.jsonl found under {raw_dir.parent / 'x'}"
         )
     geo_lookup = _load_geo_lookup(raw_dir)
 
@@ -152,7 +168,8 @@ def _write_cleaning_report(
     lines = [
         "# Cleaning report — cross-platform bot-detection pass",
         "",
-        f"- Sources: `{raw_dir}` (YouTube), `{raw_dir.parent / 'reddit'}` (Reddit)",
+        f"- Sources: `{raw_dir}` (YouTube), `{raw_dir.parent / 'reddit'}` (Reddit), "
+        f"`{raw_dir.parent / 'x'}` (X)",
         f"- Records by platform: {platform_counts}",
         f"- Total comment/reply records: {len(comments)}",
         f"- Distinct users seen: {len(user_rows)} (per-platform - a real "
