@@ -41,6 +41,11 @@ outputs/*
 !outputs/model_evaluation/.gitkeep
 .ipynb_checkpoints/
 
+# raw_original platform data — large binary/CSV files stay local, only README is tracked
+data/raw_original/x/
+data/raw_original/reddit/
+data/raw_original/youtube/
+
 data_backup/
 
 .claude/settings.local.json
