@@ -1,0 +1,29 @@
+{
+  "n_rows": 300,
+  "prompt_version": "2026-08-07.v1",
+  "routes": {
+    "groq_cheap_fast": {
+      "route_name": "groq_cheap_fast",
+      "n_calls": 300,
+      "n_success": 300,
+      "n_call_failures": 0,
+      "n_parse_failures": 0,
+      "total_cost_usd": 0.012786420000000005,
+      "cost_per_1000_records_usd": 0.04262140000000002,
+      "total_latency_ms": 1325271.0000002263,
+      "latency_ms_per_1000_records": 4417570.000000754
+    },
+    "openrouter_gemini_flash_lite": {
+      "route_name": "openrouter_gemini_flash_lite",
+      "n_calls": 300,
+      "n_success": 300,
+      "n_call_failures": 0,
+      "n_parse_failures": 0,
+      "total_cost_usd": 0.03199469999999999,
+      "cost_per_1000_records_usd": 0.10664899999999997,
+      "total_latency_ms": 1373802.999999738,
+      "latency_ms_per_1000_records": 4579343.33333246
+    }
+  },
+  "note": "Cache-warming pass only — precision/recall/F1/confusion matrix were NOT computed (most rows have no sentiment_label/stance_label yet). Re-run without --warm-cache-only once labeling is done to get real accuracy metrics (cached calls made here will be reused, at no extra cost)."
+}

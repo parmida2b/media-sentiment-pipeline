@@ -24,6 +24,13 @@ Metrics per route (§23's "حداقل Metrics" list):
 Usage:
     python src/validation/evaluate_sentiment_accuracy.py
     python src/validation/evaluate_sentiment_accuracy.py --routes groq_cheap_fast,openrouter_gemini_flash_lite
+
+    # Cache-warming pass (no gold labels needed yet): annotate() every row of
+    # the Gold Sample CSV, including still-unlabeled ones, so AnnotationCache
+    # is pre-populated before human labeling finishes. No metrics are
+    # computed (there's no ground truth to score against yet) — just
+    # annotate success/failure counts, total cost, and latency.
+    python src/validation/evaluate_sentiment_accuracy.py --warm-cache-only --routes groq_cheap_fast,groq_default
 """
 
 from __future__ import annotations
@@ -52,6 +59,7 @@ from src.cost_tracking.run_context import make_run_id, snapshot_outputs  # noqa:
 INPUT_PATH = ROOT / "data" / "annotated" / "sample_sentiment_labels.csv"
 RESULTS_PATH = ROOT / "outputs" / "model_evaluation" / "sentiment_accuracy_results.jsonl"
 SUMMARY_PATH = ROOT / "outputs" / "model_evaluation" / "sentiment_accuracy_summary.json"
+WARM_CACHE_SUMMARY_PATH = ROOT / "outputs" / "model_evaluation" / "warm_cache_summary.json"
 RUN_ID = "gold_benchmark_" + os.environ.get("EVAL_RUN_TAG", "manual")
 
 SENTIMENT_ALIASES = {  # accept a few obvious Persian/short-hand transcription variants
@@ -88,6 +96,30 @@ def load_gold_rows() -> list[dict]:
             rows.append(row)
     print(f"Loaded {len(rows)} hand-labeled rows "
           f"({skipped_no_target} had a stance_label but no valid target — stance not scored for those).")
+    return rows
+
+
+def load_all_rows() -> list[dict]:
+    """Like load_gold_rows(), but keeps every row of the Gold Sample CSV —
+    including ones with neither sentiment_label nor stance_label filled in
+    yet. Used by --warm-cache-only to pre-populate AnnotationCache ahead of
+    human labeling finishing, so the labeling wait isn't also an LLM-call
+    wait. _sentiment_gold / _stance_gold / _target are still attached (None
+    where absent) so the rest of the pipeline (annotate() call, row dict
+    shape) doesn't need a separate code path."""
+    rows = []
+    with open(INPUT_PATH, "r", encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            sentiment = normalize_sentiment(row.get("sentiment_label", ""))
+            stance = (row.get("stance_label") or "").strip().lower()
+            target = (row.get("target") or "").strip()
+            row["_sentiment_gold"] = sentiment
+            row["_stance_gold"] = stance if stance in STANCE_LABELS else None
+            row["_target"] = target if target in TARGET_IDS else None
+            rows.append(row)
+    n_labeled = sum(1 for r in rows if r["_sentiment_gold"] or r["_stance_gold"])
+    print(f"Loaded {len(rows)} rows ({n_labeled} already hand-labeled, "
+          f"{len(rows) - n_labeled} still unlabeled — warm-cache-only skips the label filter).")
     return rows
 
 
@@ -223,20 +255,67 @@ def score_route(rows: list[dict], route_name: str) -> dict:
     }
 
 
+def warm_cache_route_summary(rows: list[dict], route_name: str) -> dict:
+    """Like score_route(), but with no ground truth to score against yet:
+    just annotate() success/failure counts, total cost, and latency for one
+    route, over whatever rows actually got a prediction attached."""
+    n_calls = n_success = n_call_failures = n_parse_failures = 0
+    total_cost_usd = total_latency_ms = 0.0
+    n_cost_known = 0
+
+    for row in rows:
+        pred = row["_predictions"].get(route_name)
+        if pred is None:
+            continue
+        n_calls += 1
+        total_latency_ms += pred.latency_ms
+        if pred.cost_usd is not None:
+            total_cost_usd += pred.cost_usd
+            n_cost_known += 1
+        if pred.call_error is not None:
+            n_call_failures += 1
+            continue
+        if pred.parse_error is not None or pred.validation_error is not None:
+            n_parse_failures += 1
+            continue
+        n_success += 1
+
+    return {
+        "route_name": route_name,
+        "n_calls": n_calls,
+        "n_success": n_success,
+        "n_call_failures": n_call_failures,
+        "n_parse_failures": n_parse_failures,
+        "total_cost_usd": total_cost_usd,
+        "cost_per_1000_records_usd": (total_cost_usd / n_cost_known * 1000) if n_cost_known else None,
+        "total_latency_ms": total_latency_ms,
+        "latency_ms_per_1000_records": (total_latency_ms / n_calls * 1000) if n_calls else None,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--routes", type=str, default=None,
                          help="comma-separated route_names to evaluate (default: all with a usable API key)")
+    parser.add_argument("--warm-cache-only", action="store_true",
+                         help="Annotate every row of the Gold Sample CSV (labeled or not) against each "
+                              "selected route to pre-populate AnnotationCache, without waiting for human "
+                              "labeling to finish. Skips precision/recall/F1/confusion-matrix computation "
+                              "(no ground truth yet) — reports annotate success/failure counts, total "
+                              "cost, and latency only. Normal (no-flag) behavior is unchanged.")
     args = parser.parse_args()
 
     if not INPUT_PATH.exists():
         print(f"{INPUT_PATH} not found — run src/annotation/build_labeling_sample.py first.")
         return
 
-    rows = load_gold_rows()
-    if not rows:
-        print("No labeled rows to evaluate. Fill in sentiment_label/stance_label (+ target) and re-run.")
-        return
+    if args.warm_cache_only:
+        rows = load_all_rows()
+    else:
+        rows = load_gold_rows()
+        if not rows:
+            print("No labeled rows to evaluate. Fill in sentiment_label/stance_label (+ target) and re-run.")
+            return
 
     api_keys = {
         "GROQ_API_KEY": os.getenv("GROQ_API_KEY", ""),
@@ -257,9 +336,17 @@ def main():
         print("No model routes available to evaluate.")
         return
 
-    print(f"Evaluating {len(routes)} routes on {len(rows)} gold-labeled rows: {[r.route_name for r in routes]}\n")
+    if args.warm_cache_only:
+        print(f"[--warm-cache-only] Warming cache with {len(routes)} routes on all {len(rows)} rows "
+              f"(labeled or not): {[r.route_name for r in routes]}\n")
+    else:
+        print(f"Evaluating {len(routes)} routes on {len(rows)} gold-labeled rows: {[r.route_name for r in routes]}\n")
 
     cache = AnnotationCache()
+    CACHE_SAVE_EVERY = 10  # periodic flush so a crash/interrupt mid-run (e.g. a route
+    # exhausting its daily quota partway through, or the process getting killed) doesn't
+    # throw away every already-paid-for annotate() call — AnnotationCache used to only
+    # save once at the very end of the whole loop.
     for i, row in enumerate(rows, 1):
         row["_predictions"] = {}
         target_id = row["_target"] or TARGET_IDS[0]  # rows with no valid target still get scored on sentiment
@@ -270,7 +357,41 @@ def main():
                 cache=cache, run_id=RUN_ID, content_id=content_id,
             )
         print(f"[{i}/{len(rows)}] scored against {len(routes)} routes")
+        if i % CACHE_SAVE_EVERY == 0:
+            cache.save()
     cache.save()
+
+    if args.warm_cache_only:
+        warm_summary = {
+            "n_rows": len(rows),
+            "prompt_version": next(iter(rows[0]["_predictions"].values())).prompt_version,
+            "routes": {route.route_name: warm_cache_route_summary(rows, route.route_name) for route in routes},
+            "note": "Cache-warming pass only — precision/recall/F1/confusion matrix were NOT computed "
+                    "(most rows have no sentiment_label/stance_label yet). Re-run without "
+                    "--warm-cache-only once labeling is done to get real accuracy metrics "
+                    "(cached calls made here will be reused, at no extra cost).",
+        }
+        WARM_CACHE_SUMMARY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(WARM_CACHE_SUMMARY_PATH, "w", encoding="utf-8") as f:
+            json.dump(warm_summary, f, ensure_ascii=False, indent=2)
+
+        print(f"\n=== Cache warm-up results (n={len(rows)} rows) ===")
+        total_cost = total_success = total_calls = 0.0
+        for route_name, r in warm_summary["routes"].items():
+            print(f"\n{route_name}:")
+            print(f"  n_calls={r['n_calls']}  n_success={r['n_success']}  "
+                  f"n_call_failures={r['n_call_failures']}  n_parse_failures={r['n_parse_failures']}")
+            if r["cost_per_1000_records_usd"] is not None:
+                print(f"  total_cost={r['total_cost_usd']:.4f} USD  cost/1000={r['cost_per_1000_records_usd']:.4f} USD  "
+                      f"latency/1000={r['latency_ms_per_1000_records']/1000:.1f}s")
+            total_cost += r["total_cost_usd"]
+            total_success += r["n_success"]
+            total_calls += r["n_calls"]
+        print(f"\nTotal across {len(routes)} routes: {int(total_calls)} annotate calls, "
+              f"{int(total_success)} succeeded, total_cost={total_cost:.4f} USD")
+        print(f"\nWarm-cache summary: {WARM_CACHE_SUMMARY_PATH}")
+        print(f"AnnotationCache updated: {cache.path}")
+        return
 
     summary = {
         "n_gold_rows": len(rows),
