@@ -1,0 +1,13 @@
+event_id,event_date,project_week,title_fa,analysis_role,asset_id,mapped_first_observed_return_date,mapping_gap_calendar_days,pre_window_n_observed_returns,post_window_n_observed_returns,pre_3_observed_returns_cumulative_change,event_and_next_2_observed_returns_cumulative_change,interpretation_scope
+EV-016,2026-04-07,W06,اعلام آتش‌بس دوهفته‌ای,primary_confirmatory,OIL_BRENT,2026-04-07,0,3,3,-0.07249684783841252,-0.12617289694520487,descriptive_temporal_alignment_not_causal
+EV-016,2026-04-07,W06,اعلام آتش‌بس دوهفته‌ای,primary_confirmatory,GOLD_USD,2026-04-07,0,3,3,0.0019794532313337516,0.02907584528085367,descriptive_temporal_alignment_not_causal
+EV-016,2026-04-07,W06,اعلام آتش‌بس دوهفته‌ای,primary_confirmatory,VIX,2026-04-07,0,3,3,-0.04277227420618054,-0.19362847705432762,descriptive_temporal_alignment_not_causal
+EV-016,2026-04-07,W06,اعلام آتش‌بس دوهفته‌ای,primary_confirmatory,IRR_USD,2026-04-07,0,3,3,-0.009838546922299409,-0.0032484076433130092,descriptive_temporal_alignment_not_causal
+EV-025,2026-06-17,W16,امضای تفاهم‌نامه اسلام‌آباد,primary_confirmatory,OIL_BRENT,2026-06-17,0,3,3,-0.12635537194059168,-0.01342448797979071,descriptive_temporal_alignment_not_causal
+EV-025,2026-06-17,W16,امضای تفاهم‌نامه اسلام‌آباد,primary_confirmatory,GOLD_USD,2026-06-17,0,3,3,0.058822054774331785,-0.034403935292839326,descriptive_temporal_alignment_not_causal
+EV-025,2026-06-17,W16,امضای تفاهم‌نامه اسلام‌آباد,primary_confirmatory,VIX,2026-06-17,0,3,3,-0.15586422857021734,0.053016505016640444,descriptive_temporal_alignment_not_causal
+EV-025,2026-06-17,W16,امضای تفاهم‌نامه اسلام‌آباد,primary_confirmatory,IRR_USD,2026-06-17,0,3,3,-0.09888959944189339,0.037419354838710325,descriptive_temporal_alignment_not_causal
+EV-031,2026-06-27,W18,ازسرگیری حملات متقابل,primary_confirmatory,OIL_BRENT,2026-06-29,2,3,3,-0.06603533791347735,-0.005834118369333761,descriptive_temporal_alignment_not_causal
+EV-031,2026-06-27,W18,ازسرگیری حملات متقابل,primary_confirmatory,GOLD_USD,2026-06-29,2,3,3,-0.012397383080112276,-0.002549808141872935,descriptive_temporal_alignment_not_causal
+EV-031,2026-06-27,W18,ازسرگیری حملات متقابل,primary_confirmatory,VIX,2026-06-29,2,3,3,-0.05541302906049695,-0.0988592998320995,descriptive_temporal_alignment_not_causal
+EV-031,2026-06-27,W18,ازسرگیری حملات متقابل,primary_confirmatory,IRR_USD,2026-06-27,0,3,3,0.022151898734176882,0.05820433436532573,descriptive_temporal_alignment_not_causal

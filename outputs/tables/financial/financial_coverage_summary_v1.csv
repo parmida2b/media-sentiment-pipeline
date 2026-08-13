@@ -1,0 +1,9 @@
+asset_id,analysis_tier,analysis_use,first_feature_date,last_feature_date,n_daily_return_obs,n_weeks_with_return,n_weeks_adequate,minimum_weekly_coverage,median_weekly_coverage,main_test_eligible
+TEDPIX,descriptive_only,not_in_main_tests,2026-05-20,2026-07-22,41,10,9,0.5,1.0,False
+GOLD_USD,primary,main,2026-03-03,2026-07-22,98,21,21,0.8,1.0,True
+IRR_USD,primary,main,2026-03-01,2026-07-22,124,21,21,0.8333333333333334,1.0,True
+OIL_BRENT,primary,main,2026-03-03,2026-07-22,98,21,21,0.8,1.0,True
+VIX,primary,main,2026-03-03,2026-07-22,99,21,21,0.8,1.0,True
+IRR_GOLD18,secondary,sensitivity,2026-03-01,2026-07-22,124,21,21,0.8333333333333334,1.0,False
+OIL_WTI,secondary,sensitivity,2026-03-03,2026-07-22,98,21,21,0.8,1.0,False
+SP500,secondary,context,2026-03-03,2026-07-22,98,21,21,0.8,1.0,False

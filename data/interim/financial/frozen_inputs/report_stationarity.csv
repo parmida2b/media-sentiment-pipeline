@@ -1,0 +1,55 @@
+﻿series,stage,n,p_ADF,p_KPSS,assessment
+BTC,level,145,0.6226,0.0222, probably non-stationary
+DEFENSE,level,99,0.0651,0.0768, inconclusive - low power
+DXY,level,99,0.5457,0.01, probably non-stationary
+ETH,level,145,0.6078,0.01, probably non-stationary
+EURUSD,level,103,0.3617,0.01, probably non-stationary
+GAS_NG,level,99,0.2783,0.0489, probably non-stationary
+GOLD_USD,level,99,0.2564,0.01, probably non-stationary
+IRR_COIN,level,125,0.096,0.027, probably non-stationary
+IRR_COIN_G,level,125,0.0158,0.1, probably stationary
+IRR_GOLD18,level,125,0.1358,0.1, inconclusive - low power
+IRR_GOLD24,level,125,0.1154,0.0938, inconclusive - low power
+IRR_IMPLIED_USD,level,82,0.2998,0.01, probably non-stationary
+IRR_USD,level,125,0.6803,0.01, probably non-stationary
+OIL_BRENT,level,99,0.3805,0.01, probably non-stationary
+OIL_WTI,level,99,0.1783,0.01, probably non-stationary
+OVX,level,99,0.6162,0.01, probably non-stationary
+RV_BRENT_10D,level,89,0.7632,0.01, probably non-stationary
+SP500,level,99,0.8175,0.01, probably non-stationary
+SPREAD_BRENT_WTI,level,99,0.0134,0.1, probably stationary
+TA125,level,94,0.3077,0.0401, probably non-stationary
+TANKER_BASKET,level,99,0.112,0.0231, probably non-stationary
+TANKER_DHT,level,99,0.0058,0.1, probably stationary
+TANKER_FRO,level,99,0.2821,0.01, probably non-stationary
+TANKER_STNG,level,99,0.2337,0.0954, inconclusive - low power
+TEDPIX,level,42,0.1502,0.0132, probably non-stationary
+UST10Y,level,99,0.2303,0.01, probably non-stationary
+VIX,level,100,0.1904,0.01, probably non-stationary
+BTC,transformed (log_return),144,0.0,0.1, probably stationary
+DEFENSE,transformed (log_return),98,0.0,0.1, probably stationary
+DXY,transformed (log_return),98,0.0,0.1, probably stationary
+ETH,transformed (log_return),144,0.0,0.1, probably stationary
+EURUSD,transformed (log_return),102,0.0,0.1, probably stationary
+GAS_NG,transformed (log_return),98,0.0,0.1, probably stationary
+GOLD_USD,transformed (log_return),98,0.0,0.1, probably stationary
+IRR_COIN,transformed (log_return),124,0.0,0.1, probably stationary
+IRR_COIN_G,transformed (log_return),124,0.0,0.1, probably stationary
+IRR_GOLD18,transformed (log_return),124,0.0,0.1, probably stationary
+IRR_GOLD24,transformed (log_return),124,0.0,0.1, probably stationary
+IRR_IMPLIED_USD,transformed (log_return),81,0.0,0.1, probably stationary
+IRR_USD,transformed (log_return),124,0.0,0.1, probably stationary
+OIL_BRENT,transformed (log_return),98,0.0,0.1, probably stationary
+OIL_WTI,transformed (log_return),98,0.0,0.1, probably stationary
+OVX,transformed (log_change),98,0.0,0.1, probably stationary
+RV_BRENT_10D,transformed (log_change),88,0.0525,0.1, inconclusive - low power
+SP500,transformed (log_return),98,0.0,0.1, probably stationary
+SPREAD_BRENT_WTI,transformed (first_diff),98,0.0,0.1, probably stationary
+TA125,transformed (log_return),93,0.0,0.1, probably stationary
+TANKER_BASKET,transformed (log_return),98,0.0,0.1, probably stationary
+TANKER_DHT,transformed (log_return),98,0.0,0.1, probably stationary
+TANKER_FRO,transformed (log_return),98,0.0,0.1, probably stationary
+TANKER_STNG,transformed (log_return),98,0.0,0.1, probably stationary
+TEDPIX,transformed (log_return),41,0.012,0.023, inconclusive - possible structural break
+UST10Y,transformed (first_diff),98,0.0,0.1, probably stationary
+VIX,transformed (log_change),99,0.0,0.1, probably stationary

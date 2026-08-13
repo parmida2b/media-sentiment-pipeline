@@ -43,6 +43,14 @@ query context are undocumented. It may be an early or test collection. It must
 be reviewed against the collection manifest before being placed under
 `youtube/records/`.
 
+## Financial
+
+`financial/{yahoo,tgju,fred,tsetmc}/` contains read-only copies of the source
+responses underlying the frozen financial inputs. These are public market
+series, not social-media observations. A new collector run is written under
+`data/raw/{topic_id}/financial/runs/{run_id}/`; the collector never writes into
+this frozen directory.
+
 ## Use rule
 
 - Do not write to `data/raw_original/` from collectors, preprocessing, or
