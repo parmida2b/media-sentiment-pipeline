@@ -1,26 +1,26 @@
 {
   "sentiment_label": {
-    "n_compared": 0,
-    "n_skipped_incomplete": 18,
-    "cohens_kappa": NaN,
-    "percent_agreement": NaN
+    "n_compared": 120,
+    "n_skipped_incomplete": 0,
+    "cohens_kappa": 0.5169946332737029,
+    "percent_agreement": 0.7
   },
   "stance_label": {
-    "n_compared": 0,
-    "n_skipped_incomplete": 18,
-    "cohens_kappa": NaN,
-    "percent_agreement": NaN
+    "n_compared": 120,
+    "n_skipped_incomplete": 0,
+    "cohens_kappa": 0.47106817968676723,
+    "percent_agreement": 0.6083333333333333
   },
   "emotion_label": {
-    "n_compared": 0,
-    "n_skipped_incomplete": 18,
-    "cohens_kappa": NaN,
-    "percent_agreement": NaN
+    "n_compared": 120,
+    "n_skipped_incomplete": 0,
+    "cohens_kappa": 0.2622950819672131,
+    "percent_agreement": 0.575
   },
   "content_type_label": {
-    "n_compared": 0,
-    "n_skipped_incomplete": 18,
-    "cohens_kappa": NaN,
-    "percent_agreement": NaN
+    "n_compared": 120,
+    "n_skipped_incomplete": 0,
+    "cohens_kappa": 0.661670871049117,
+    "percent_agreement": 0.8416666666666667
   }
 }
