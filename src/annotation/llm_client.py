@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -84,6 +85,19 @@ def _append_usage_log(entry: dict) -> None:
 
 # --- raw provider callers -----------------------------------------------------
 
+# §22's structured output (sentiment/stance/emotion/content_type/confidence/
+# reason_code) is a small JSON object — real completions run well under 200
+# tokens. Left unset, providers default max_tokens to the model's own ceiling
+# (e.g. 65535 for gemini-2.5-flash-lite), and OpenRouter's pre-flight balance
+# check rejects a call if the account can't afford that *ceiling*, even
+# though the real response is tiny (seen 2026-08-14: "HTTP 402 ... requested
+# up to 65535 tokens, but can only afford 57073" on an account with plenty of
+# credit for the actual annotation). Capping this explicitly fixes that
+# false-insufficient-credit rejection without touching any account/balance —
+# generous enough to never truncate a real response, per docs/decision_log.md.
+MAX_OUTPUT_TOKENS = 500
+
+
 @dataclass
 class RawCallResult:
     raw_text: Optional[str]
@@ -93,28 +107,80 @@ class RawCallResult:
     call_error: Optional[str]  # None on success, else a short error message
 
 
-def _call_groq(api_key: str, route: ModelRoute, prompt: str) -> RawCallResult:
-    from groq import Groq
+def _is_daily_quota_message(message: str) -> bool:
+    # Same heuristic as src/ingestion/geo_tagger.py's _is_daily_quota_message
+    # (2026-08-12): Groq's 429 body says "...on tokens per day (TPD): Limit
+    # 100000, Used 99901..." for a daily cap vs "...per minute (TPM)..." for
+    # a transient one. A day/date never comes back sooner by retrying.
+    text = (message or "").lower()
+    return "per day" in text or "rpd" in text or "tpd" in text
 
-    client = Groq(api_key=api_key)
-    t0 = time.monotonic()
-    try:
-        response = client.chat.completions.create(
-            model=route.model_name,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-        )
-        latency_ms = (time.monotonic() - t0) * 1000
-        usage = getattr(response, "usage", None)
+
+_groq_exhausted_keys: set[str] = set()  # keys that hit their *daily* quota this process
+
+
+def _load_groq_keys(api_keys: dict[str, str]) -> list[str]:
+    """Multi-key support (2026-08-14, mirrors geo_tagger.py's 2026-08-12
+    precedent): GROQ_API_KEYS (comma-separated) pools several teammates' own
+    Groq accounts' daily quota — each key must belong to a real teammate's
+    own account, never a throwaway/duplicate one (Groq ToS; see
+    docs/decision_log.md). Falls back to the single GROQ_API_KEY (api_keys
+    dict, same as every other provider here) when GROQ_API_KEYS isn't set."""
+    multi = os.getenv("GROQ_API_KEYS")
+    if multi:
+        keys = [k.strip() for k in multi.split(",") if k.strip()]
+        if keys:
+            return keys
+    single = api_keys.get("GROQ_API_KEY", "")
+    return [single] if single else []
+
+
+def _call_groq(api_keys: dict[str, str], route: ModelRoute, prompt: str) -> RawCallResult:
+    from groq import Groq, RateLimitError
+
+    keys = _load_groq_keys(api_keys)
+    usable_keys = [k for k in keys if k not in _groq_exhausted_keys]
+    if not usable_keys:
         return RawCallResult(
-            raw_text=response.choices[0].message.content,
-            latency_ms=latency_ms,
-            input_tokens=getattr(usage, "prompt_tokens", None),
-            output_tokens=getattr(usage, "completion_tokens", None),
-            call_error=None,
+            None, 0.0, None, None,
+            f"HTTP 429: all {len(keys)} configured Groq key(s) exhausted their daily quota.",
         )
-    except Exception as e:  # noqa: BLE001 — provider SDKs raise varied exception types
-        return RawCallResult(None, (time.monotonic() - t0) * 1000, None, None, str(e)[:300])
+
+    last_error = None
+    for key in usable_keys:
+        client = Groq(api_key=key)
+        t0 = time.monotonic()
+        try:
+            response = client.chat.completions.create(
+                model=route.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0,
+                max_tokens=MAX_OUTPUT_TOKENS,
+            )
+            latency_ms = (time.monotonic() - t0) * 1000
+            usage = getattr(response, "usage", None)
+            return RawCallResult(
+                raw_text=response.choices[0].message.content,
+                latency_ms=latency_ms,
+                input_tokens=getattr(usage, "prompt_tokens", None),
+                output_tokens=getattr(usage, "completion_tokens", None),
+                call_error=None,
+            )
+        except RateLimitError as e:
+            message = str(getattr(e, "message", None) or e)
+            if _is_daily_quota_message(message):
+                _groq_exhausted_keys.add(key)
+                print(f"[warn] llm_client: Groq key ...{key[-4:]} hit its daily quota — "
+                      f"rotating to next key ({len(usable_keys) - usable_keys.index(key) - 1} left to try).")
+                last_error = RawCallResult(None, (time.monotonic() - t0) * 1000, None, None, f"HTTP 429: {message[:250]}")
+                continue  # try the next key, same call, no backoff needed — different account
+            last_error = RawCallResult(None, (time.monotonic() - t0) * 1000, None, None, f"HTTP 429: {message[:250]}")
+            break  # transient (per-minute) limit — let annotate()'s outer retry/backoff handle it
+        except Exception as e:  # noqa: BLE001 — provider SDKs raise varied exception types
+            last_error = RawCallResult(None, (time.monotonic() - t0) * 1000, None, None, str(e)[:300])
+            break
+
+    return last_error
 
 
 def _call_openai_compatible(
@@ -135,6 +201,7 @@ def _call_openai_compatible(
                 "model": route.model_name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0,
+                "max_tokens": MAX_OUTPUT_TOKENS,
             },
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
@@ -156,7 +223,7 @@ def _call_openai_compatible(
 
 def _call_provider(route: ModelRoute, prompt: str, api_keys: dict[str, str]) -> RawCallResult:
     if route.provider == "groq":
-        return _call_groq(api_keys["GROQ_API_KEY"], route, prompt)
+        return _call_groq(api_keys, route, prompt)
     if route.provider == "openrouter":
         return _call_openai_compatible(
             api_keys["OPENROUTER_API_KEY"], "https://openrouter.ai/api/v1", route, prompt,

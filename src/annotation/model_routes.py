@@ -131,7 +131,10 @@ def get_route(route_name: str) -> ModelRoute:
 
 # --- Model lock (Gate per docs/pre_analysis_decision_table_v1.md) ---------
 
-LOCKED_ROUTE_NAME: str | None = None
+LOCKED_ROUTE_NAME: str | None = "openrouter_gemini_flash_lite"
+# Locked 2026-08-14 — see docs/decision_log.md's dated entry for the full
+# Macro-F1/coverage/failure/cost numbers this decision is based on
+# (evaluate_sentiment_accuracy.py, n=300 gold rows, all 3 available routes).
 """route_name (from MODEL_ROUTES above) locked in for the Full run — or None.
 
 This MUST stay None until:

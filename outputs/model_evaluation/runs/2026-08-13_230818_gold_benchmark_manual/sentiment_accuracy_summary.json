@@ -1,0 +1,442 @@
+{
+  "n_gold_rows": 300,
+  "prompt_version": "2026-08-07.v1",
+  "routes": {
+    "groq_cheap_fast": {
+      "route_name": "groq_cheap_fast",
+      "confidence_threshold": 0.6,
+      "n_calls": 300,
+      "failure_rate": 0.0,
+      "json_parse_failure_rate": 0.0,
+      "coverage": 1.0,
+      "cost_per_1000_records_usd": 0.042679666666666664,
+      "latency_ms_per_1000_records": 4803493.333333467,
+      "sentiment": {
+        "n_gold_labeled": 300,
+        "n_scored_after_coverage": 300,
+        "n": 300,
+        "accuracy": 0.59,
+        "macro_f1": 0.3768261995504739,
+        "per_class": {
+          "positive": {
+            "precision": 0.53125,
+            "recall": 0.425,
+            "f1": 0.47222222222222215,
+            "support": 40
+          },
+          "negative": {
+            "precision": 0.6008583690987125,
+            "recall": 0.958904109589041,
+            "f1": 0.7387862796833773,
+            "support": 146
+          },
+          "neutral": {
+            "precision": 0.8333333333333334,
+            "recall": 0.18018018018018017,
+            "f1": 0.2962962962962963,
+            "support": 111
+          },
+          "mixed": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 3
+          },
+          "unclear": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusion_matrix": {
+          "true=negative|pred=negative": 140,
+          "true=neutral|pred=neutral": 20,
+          "true=positive|pred=negative": 20,
+          "true=neutral|pred=unclear": 7,
+          "true=neutral|pred=negative": 71,
+          "true=positive|pred=positive": 17,
+          "true=negative|pred=neutral": 3,
+          "true=neutral|pred=positive": 11,
+          "true=negative|pred=positive": 3,
+          "true=neutral|pred=mixed": 2,
+          "true=mixed|pred=positive": 1,
+          "true=positive|pred=unclear": 2,
+          "true=positive|pred=neutral": 1,
+          "true=mixed|pred=negative": 2
+        },
+        "by_language": {
+          "ar": {
+            "accuracy": 0.45,
+            "correct": 9,
+            "total": 20
+          },
+          "en": {
+            "accuracy": 0.625,
+            "correct": 105,
+            "total": 168
+          },
+          "fa": {
+            "accuracy": 0.5625,
+            "correct": 63,
+            "total": 112
+          }
+        },
+        "by_text_length": {
+          "long(>150)": {
+            "accuracy": 0.673469387755102,
+            "correct": 99,
+            "total": 147
+          },
+          "medium(50-150)": {
+            "accuracy": 0.6063829787234043,
+            "correct": 57,
+            "total": 94
+          },
+          "short(<50)": {
+            "accuracy": 0.3559322033898305,
+            "correct": 21,
+            "total": 59
+          }
+        },
+        "by_content_type": {
+          "news_or_report": {
+            "accuracy": 0.5227272727272727,
+            "correct": 23,
+            "total": 44
+          },
+          "personal_opinion": {
+            "accuracy": 0.5860655737704918,
+            "correct": 143,
+            "total": 244
+          },
+          "quotation": {
+            "accuracy": 0.9090909090909091,
+            "correct": 10,
+            "total": 11
+          },
+          "spam": {
+            "accuracy": 1.0,
+            "correct": 1,
+            "total": 1
+          }
+        },
+        "by_sarcasm_or_quote": {
+          "other": {
+            "accuracy": 0.5778546712802768,
+            "correct": 167,
+            "total": 289
+          },
+          "sarcasm_or_quote": {
+            "accuracy": 0.9090909090909091,
+            "correct": 10,
+            "total": 11
+          }
+        }
+      },
+      "stance": {
+        "n_gold_labeled": 208,
+        "n_scored_after_coverage": 208,
+        "n": 208,
+        "accuracy": 0.5721153846153846,
+        "macro_f1": 0.3485100792218998,
+        "per_class": {
+          "support": {
+            "precision": 0.7,
+            "recall": 0.34146341463414637,
+            "f1": 0.4590163934426229,
+            "support": 41
+          },
+          "oppose": {
+            "precision": 0.5517241379310345,
+            "recall": 0.9504950495049505,
+            "f1": 0.6981818181818182,
+            "support": 101
+          },
+          "neutral_or_balanced": {
+            "precision": 0.8181818181818182,
+            "recall": 0.13846153846153847,
+            "f1": 0.2368421052631579,
+            "support": 65
+          },
+          "unrelated": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 1
+          },
+          "unclear": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusion_matrix": {
+          "true=oppose|pred=oppose": 96,
+          "true=support|pred=oppose": 26,
+          "true=neutral_or_balanced|pred=oppose": 51,
+          "true=neutral_or_balanced|pred=neutral_or_balanced": 9,
+          "true=oppose|pred=neutral_or_balanced": 1,
+          "true=support|pred=support": 14,
+          "true=neutral_or_balanced|pred=support": 5,
+          "true=oppose|pred=unrelated": 3,
+          "true=support|pred=neutral_or_balanced": 1,
+          "true=oppose|pred=support": 1,
+          "true=unrelated|pred=oppose": 1
+        },
+        "by_target": {
+          "T01": {
+            "accuracy": 0.3968253968253968,
+            "correct": 25,
+            "total": 63
+          },
+          "T02": {
+            "accuracy": 0.5319148936170213,
+            "correct": 25,
+            "total": 47
+          },
+          "T03": {
+            "accuracy": 0.5,
+            "correct": 4,
+            "total": 8
+          },
+          "T04": {
+            "accuracy": 0.7333333333333333,
+            "correct": 22,
+            "total": 30
+          },
+          "T05": {
+            "accuracy": 0.7755102040816326,
+            "correct": 38,
+            "total": 49
+          },
+          "T06": {
+            "accuracy": 0.45454545454545453,
+            "correct": 5,
+            "total": 11
+          }
+        }
+      }
+    },
+    "openrouter_gemini_flash_lite": {
+      "route_name": "openrouter_gemini_flash_lite",
+      "confidence_threshold": 0.55,
+      "n_calls": 300,
+      "failure_rate": 0.39666666666666667,
+      "json_parse_failure_rate": 0.0,
+      "coverage": 0.5966666666666667,
+      "cost_per_1000_records_usd": 0.10638784530386741,
+      "latency_ms_per_1000_records": 5025789.999999595,
+      "sentiment": {
+        "n_gold_labeled": 300,
+        "n_scored_after_coverage": 179,
+        "n": 179,
+        "accuracy": 0.6759776536312849,
+        "macro_f1": 0.5782765266788394,
+        "per_class": {
+          "positive": {
+            "precision": 0.5294117647058824,
+            "recall": 0.47368421052631576,
+            "f1": 0.5,
+            "support": 19
+          },
+          "negative": {
+            "precision": 0.6344086021505376,
+            "recall": 0.8939393939393939,
+            "f1": 0.7421383647798742,
+            "support": 66
+          },
+          "neutral": {
+            "precision": 0.8125,
+            "recall": 0.5714285714285714,
+            "f1": 0.6709677419354838,
+            "support": 91
+          },
+          "mixed": {
+            "precision": 0.5,
+            "recall": 0.3333333333333333,
+            "f1": 0.4,
+            "support": 3
+          },
+          "unclear": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusion_matrix": {
+          "true=negative|pred=negative": 59,
+          "true=neutral|pred=neutral": 52,
+          "true=positive|pred=positive": 9,
+          "true=neutral|pred=negative": 29,
+          "true=negative|pred=neutral": 6,
+          "true=neutral|pred=positive": 8,
+          "true=positive|pred=neutral": 5,
+          "true=negative|pred=mixed": 1,
+          "true=mixed|pred=neutral": 1,
+          "true=positive|pred=negative": 4,
+          "true=neutral|pred=unclear": 2,
+          "true=positive|pred=unclear": 1,
+          "true=mixed|pred=negative": 1,
+          "true=mixed|pred=mixed": 1
+        },
+        "by_language": {
+          "ar": {
+            "accuracy": 0.625,
+            "correct": 10,
+            "total": 16
+          },
+          "en": {
+            "accuracy": 0.6990291262135923,
+            "correct": 72,
+            "total": 103
+          },
+          "fa": {
+            "accuracy": 0.65,
+            "correct": 39,
+            "total": 60
+          }
+        },
+        "by_text_length": {
+          "long(>150)": {
+            "accuracy": 0.759493670886076,
+            "correct": 60,
+            "total": 79
+          },
+          "medium(50-150)": {
+            "accuracy": 0.625,
+            "correct": 35,
+            "total": 56
+          },
+          "short(<50)": {
+            "accuracy": 0.5909090909090909,
+            "correct": 26,
+            "total": 44
+          }
+        },
+        "by_content_type": {
+          "news_or_report": {
+            "accuracy": 0.7916666666666666,
+            "correct": 19,
+            "total": 24
+          },
+          "personal_opinion": {
+            "accuracy": 0.6486486486486487,
+            "correct": 96,
+            "total": 148
+          },
+          "quotation": {
+            "accuracy": 0.8333333333333334,
+            "correct": 5,
+            "total": 6
+          },
+          "spam": {
+            "accuracy": 1.0,
+            "correct": 1,
+            "total": 1
+          }
+        },
+        "by_sarcasm_or_quote": {
+          "other": {
+            "accuracy": 0.6705202312138728,
+            "correct": 116,
+            "total": 173
+          },
+          "sarcasm_or_quote": {
+            "accuracy": 0.8333333333333334,
+            "correct": 5,
+            "total": 6
+          }
+        }
+      },
+      "stance": {
+        "n_gold_labeled": 208,
+        "n_scored_after_coverage": 89,
+        "n": 89,
+        "accuracy": 0.6629213483146067,
+        "macro_f1": 0.5725558385579937,
+        "per_class": {
+          "support": {
+            "precision": 0.625,
+            "recall": 0.75,
+            "f1": 0.6818181818181818,
+            "support": 20
+          },
+          "oppose": {
+            "precision": 0.7692307692307693,
+            "recall": 0.625,
+            "f1": 0.6896551724137931,
+            "support": 32
+          },
+          "neutral_or_balanced": {
+            "precision": 0.8214285714285714,
+            "recall": 0.6388888888888888,
+            "f1": 0.7187499999999999,
+            "support": 36
+          },
+          "unrelated": {
+            "precision": 0.1111111111111111,
+            "recall": 1.0,
+            "f1": 0.19999999999999998,
+            "support": 1
+          },
+          "unclear": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusion_matrix": {
+          "true=oppose|pred=oppose": 20,
+          "true=support|pred=support": 15,
+          "true=support|pred=oppose": 4,
+          "true=neutral_or_balanced|pred=neutral_or_balanced": 23,
+          "true=neutral_or_balanced|pred=unclear": 1,
+          "true=oppose|pred=support": 6,
+          "true=neutral_or_balanced|pred=support": 3,
+          "true=oppose|pred=neutral_or_balanced": 4,
+          "true=neutral_or_balanced|pred=unrelated": 7,
+          "true=neutral_or_balanced|pred=oppose": 2,
+          "true=oppose|pred=unclear": 1,
+          "true=oppose|pred=unrelated": 1,
+          "true=unrelated|pred=unrelated": 1,
+          "true=support|pred=neutral_or_balanced": 1
+        },
+        "by_target": {
+          "T01": {
+            "accuracy": 0.6666666666666666,
+            "correct": 42,
+            "total": 63
+          },
+          "T02": {
+            "accuracy": 0.6363636363636364,
+            "correct": 7,
+            "total": 11
+          },
+          "T03": {
+            "accuracy": 1.0,
+            "correct": 1,
+            "total": 1
+          },
+          "T04": {
+            "accuracy": 1.0,
+            "correct": 4,
+            "total": 4
+          },
+          "T05": {
+            "accuracy": 0.5,
+            "correct": 5,
+            "total": 10
+          }
+        }
+      }
+    }
+  },
+  "limitations": [
+    "No time-window breakdown: the Gold Sample CSV carries no timestamp column (§19 schema).",
+    "Small n (typically ~90 rows split across languages) — per-class and per-breakdown cells with few examples are noisy; treat splits below ~10 examples as indicative only."
+  ]
+}
