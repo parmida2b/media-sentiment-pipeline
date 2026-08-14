@@ -191,35 +191,29 @@ Dataset ورودی Full Annotation باید پیش از مرحله ۶ مشخص �
 
 ### ۷.۱ Gold Sample
 
-1. انتخاب تصادفی طبقه‌بندی‌شده ۳۰۰ رکورد با Seed ثابت؛
-2. Double annotation برای ۱۲۰ رکورد؛
+Gold Sample برای ایجاد یک مرجع انسانی قابل اعتماد جهت ارزیابی کیفیت Annotation و مدل استفاده می‌شود.
+
+فرآیند پیشنهادی شامل مراحل زیر است:
+
+1. انتخاب تصادفی طبقه‌بندی‌شده از `eligible_content` با Seed ثابت؛
+2. اجرای Double annotation روی بخشی از نمونه؛
 3. محاسبه Percent Agreement و Cohen’s Kappa؛
 4. بررسی اختلاف‌ها و Adjudication موارد مورد اختلاف؛
 5. ایجاد Gold Label نهایی.
 
+اندازه Gold Sample و سهم Double annotation از پیش در طرح آماری یا Decision Log مشخص و پیش از اجرای Annotation قفل می‌شود. انتخاب اندازه نمونه باید با توجه به حجم داده واجد شرایط، تعداد کلاس‌ها، تعداد پلتفرم‌ها، زبان‌ها و نیاز ارزیابی مدل انجام شود.
+
 ### ۷.۲ Pilot و انتخاب مدل
 
-Pilot نباید باعث شود مجموعه ارزیابی نهایی کاملاً مستقل نباشد.
+Pilot باید به‌گونه‌ای طراحی شود که مجموعه ارزیابی نهایی تا حد ممکن مستقل از فرآیند انتخاب Prompt، Model یا Provider باقی بماند.
 
-روش ترجیحی:
+روش ترجیحی این است که Pilot/Development Sample از Gold Sample مورد استفاده برای ارزیابی نهایی جدا باشد. در این حالت، داده‌های Pilot برای توسعه و انتخاب Prompt، Model، Provider و تنظیمات استفاده می‌شوند و Gold Sample نهایی فقط برای ارزیابی عملکرد مدل نگه داشته می‌شود.
 
-```text
-Pilot / Development Sample = 100 records
-Final Gold Evaluation Sample = 300 records
-```
+اگر به دلیل محدودیت حجم داده لازم باشد Pilot از داخل Gold Sample انتخاب شود، تقسیم داده باید پیش از آزمایش مدل مشخص و قفل شود. در این حالت، بخشی از Gold Sample به‌عنوان `Development/Pilot subset` و بخش دیگری به‌عنوان `Held-out Final Evaluation subset` در نظر گرفته می‌شود.
 
-در این حالت Pilot Sample از Gold Sample نهایی جداست.
+رکوردهایی که در `Development/Pilot subset` برای انتخاب Prompt، Model، Provider یا تنظیمات استفاده شده‌اند، نباید دوباره به‌عنوان داده مستقل در ارزیابی نهایی عملکرد مدل تلقی شوند.
 
-اگر به دلیل محدودیت حجم داده لازم باشد Pilot از داخل همان ۳۰۰ رکورد Gold انتخاب شود، تقسیم باید پیش از آزمایش مدل قفل شود:
-
-```text
-Gold Sample = 300
-
-Development / Pilot subset = 100
-Held-out Final Evaluation subset = 200
-```
-
-در این حالت ۱۰۰ رکورد Development برای انتخاب Prompt، Model یا Provider استفاده می‌شوند و **نباید در معیار نهایی عملکرد مدل دوباره به‌عنوان داده مستقل ارزیابی تلقی شوند**.
+اندازه Gold Sample، Pilot/Development subset و Held-out Evaluation subset براساس طرح آماری مصوب پروژه، حجم داده واجد شرایط و الزامات ارزیابی تعیین و پیش از اجرای Pilot در Decision Log ثبت می‌شود.
 
 ### ۷.۳ معیار انتخاب مدل/Provider
 
