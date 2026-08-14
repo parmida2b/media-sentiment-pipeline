@@ -97,16 +97,25 @@ def _record_from_json(data: dict) -> Record:
     return Record(author_metadata=am, **record_kwargs)
 
 
-def _load_jsonl(path: Path) -> tuple[list[Record], int]:
-    """Reads a JSONL file, returning (valid_records, parse_quarantine_count).
-    Lines that fail JSON parsing or Record reconstruction are counted as
-    parse_quarantine (they can't produce a harmonized row) but are not
-    physically dropped — this script only reads, never modifies the JSONL."""
+def _load_jsonl(path: Path) -> tuple[list[tuple[Record, int]], int]:
+    """Reads a JSONL file, returning (valid_records_with_lineno,
+    parse_quarantine_count). Lines that fail JSON parsing or Record
+    reconstruction are counted as parse_quarantine (they can't produce a
+    harmonized row) but are not physically dropped — this script only
+    reads, never modifies the JSONL.
+
+    2026-08-14 (decision_log.md): each record is paired with its 1-based
+    line number (record, lineno) instead of returned bare. YouTube's
+    backfill needs this — together with path.name — to derive a stable
+    record_uid for legacy rows that have no native content_id (see
+    youtube_extract.record_to_raw_harmonized_row's docstring). Reddit/X
+    don't need it (their bridges always produce a real content_id), so
+    their call sites just discard the lineno half of the pair."""
     if not path.exists():
         print(f"  [warn] {path} does not exist — skipping.")
         return [], 0
 
-    records: list[Record] = []
+    records: list[tuple[Record, int]] = []
     quarantined = 0
     with path.open("r", encoding="utf-8") as fh:
         for lineno, raw_line in enumerate(fh, start=1):
@@ -115,7 +124,7 @@ def _load_jsonl(path: Path) -> tuple[list[Record], int]:
                 continue
             try:
                 data = json.loads(line)
-                records.append(_record_from_json(data))
+                records.append((_record_from_json(data), lineno))
             except Exception as exc:  # noqa: BLE001
                 quarantined += 1
                 print(f"  [parse_quarantine] line {lineno}: {exc!r}")
@@ -148,10 +157,17 @@ def _print_reconciliation(platform: str, input_rows: int,
 # per-platform backfill logic
 # ---------------------------------------------------------------------------
 
-def _backfill_youtube(records: list[Record]) -> int:
+def _backfill_youtube(records: list[tuple[Record, str, int]]) -> int:
     """Groups YouTube records by collection_run_id and calls
     youtube_extract.export_to_raw_harmonized() for each group.
-    Returns total harmonized rows written."""
+    Returns total harmonized rows written.
+
+    2026-08-14 (decision_log.md): records now arrive as
+    (Record, original_file_name, original_row_number) triples instead of
+    bare Records, so record_to_raw_harmonized_row() can derive a
+    record_uid for legacy rows with no native content_id (see that
+    function's docstring) - file_name/lineno are passed straight through,
+    a no-op for any record that already has a real content_id."""
     # Import here to avoid heavy YouTube API deps at module level (same
     # reason backfill_author_hash_v05.py uses a sys.path insert rather than
     # a top-level import of the full collector module).
@@ -168,14 +184,17 @@ def _backfill_youtube(records: list[Record]) -> int:
         print("          Ensure Google API client and all YouTube deps are installed.")
         return 0
 
-    by_run: dict[str, list[Record]] = defaultdict(list)
-    for r in records:
+    by_run: dict[str, list[tuple[Record, str, int]]] = defaultdict(list)
+    for r, file_name, lineno in records:
         key = r.collection_run_id or "backfill_youtube_orphan"
-        by_run[key].append(r)
+        by_run[key].append((r, file_name, lineno))
 
     total_written = 0
     for run_id, run_records in sorted(by_run.items()):
-        rows = [record_to_raw_harmonized_row(r) for r in run_records]
+        rows = [
+            record_to_raw_harmonized_row(r, original_file_name=file_name, original_row_number=lineno)
+            for r, file_name, lineno in run_records
+        ]
         df = pd.DataFrame(rows, columns=RAW_SCHEMA_V05_COLUMNS)
         for col in _V05_BOOL_COLUMNS:
             df[col] = df[col].astype("boolean")
@@ -195,17 +214,21 @@ def _backfill_youtube(records: list[Record]) -> int:
     return total_written
 
 
-def _backfill_reddit(records: list[Record]) -> int:
-    """Calls reddit_to_record.export_to_raw_harmonized() with all records."""
+def _backfill_reddit(records: list[tuple[Record, str, int]]) -> int:
+    """Calls reddit_to_record.export_to_raw_harmonized() with all records.
+    Reddit's bridge always produces a real content_id, so the file_name/
+    lineno half of each triple (see _load_jsonl's docstring) is unused
+    here - only the Record itself is passed on."""
     from reddit_to_record import export_to_raw_harmonized  # noqa: PLC0415
-    df = export_to_raw_harmonized(records, run_id="backfill_reddit_v1")
+    df = export_to_raw_harmonized([r for r, _, _ in records], run_id="backfill_reddit_v1")
     return len(df)
 
 
-def _backfill_x(records: list[Record]) -> int:
-    """Calls x_to_record.export_to_raw_harmonized() with all records."""
+def _backfill_x(records: list[tuple[Record, str, int]]) -> int:
+    """Calls x_to_record.export_to_raw_harmonized() with all records. Same
+    file_name/lineno-unused reasoning as _backfill_reddit above."""
     from x_to_record import export_to_raw_harmonized  # noqa: PLC0415
-    df = export_to_raw_harmonized(records, run_id="backfill_x_v1")
+    df = export_to_raw_harmonized([r for r, _, _ in records], run_id="backfill_x_v1")
     return len(df)
 
 
@@ -228,12 +251,12 @@ def run(platforms: list[str]) -> bool:
         print(f"Platform: {platform.upper()}  ({', '.join(p.name for p in jsonl_paths) or 'NO FILES FOUND'})")
         print("=" * 60)
 
-        records: list[Record] = []
+        records: list[tuple[Record, str, int]] = []
         quarantined = 0
         for jsonl_path in jsonl_paths:
             file_records, file_quarantined = _load_jsonl(jsonl_path)
             print(f"  {jsonl_path.name}: {len(file_records)} record(s), {file_quarantined} parse_quarantine")
-            records.extend(file_records)
+            records.extend((r, jsonl_path.name, lineno) for r, lineno in file_records)
             quarantined += file_quarantined
         input_rows = len(records) + quarantined
         print(f"  Loaded total: {len(records)} record(s), {quarantined} parse_quarantine")

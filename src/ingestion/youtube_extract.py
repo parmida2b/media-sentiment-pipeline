@@ -602,18 +602,87 @@ def _empty_to_none(value):
     return value
 
 
-def record_to_raw_harmonized_row(r: Record) -> dict:
+def _derive_legacy_record_uid(platform: str, original_file_name: str, original_row_number: int) -> str:
+    """docs/raw_schema_v05.md §3 (line 62): when a source record has no
+    native platform_content_id, build a deterministic record_uid from
+    platform + file name + row number instead of dropping the record.
+    Deterministic so re-running the backfill on the same file produces the
+    same record_uid (idempotency, per backfill_raw_harmonized_v05.py's
+    module docstring)."""
+    digest_input = f"{platform}:{original_file_name}:{original_row_number}"
+    return hashlib.sha256(digest_input.encode("utf-8")).hexdigest()
+
+
+def record_to_raw_harmonized_row(
+    r: Record,
+    original_file_name: str | None = None,
+    original_row_number: int | None = None,
+) -> dict:
     """One row of the raw_harmonized export, keyed exactly to
     RAW_SCHEMA_V05_COLUMNS (config/raw_schema_columns_v05.py). Mirrors
     record_to_csv_row()'s v03 mapping but retyped/renulled for v05 - see
     docs/schema_mapping_template.csv rows for "youtube" for the source of
-    each decision below (row numbers refer to that file)."""
+    each decision below (row numbers refer to that file).
+
+    original_file_name/original_row_number (2026-08-14, decision_log.md):
+    only used when r.content_id is missing - i.e. legacy v1 intake
+    (youtube_comments_1404-*.jsonl, collected before content_id existed on
+    Record), never the live collector (which always has a real comment id
+    from the API, same as the "record_uid fallback path never triggers"
+    comment below used to assume for ALL YouTube data). When both content_id
+    and these two args are absent, behavior is unchanged from before this
+    change: record_uid=None, id_origin="observed" is NOT assumed - callers
+    that can't supply file/row provenance for a content_id-less record get
+    id_origin=None, matching the prior no-signal state rather than a false
+    "observed"."""
     am = r.author_metadata
+    has_native_id = bool(r.content_id)
+    if has_native_id:
+        record_uid = None
+        id_origin = "observed"
+    elif original_file_name is not None and original_row_number is not None:
+        record_uid = _derive_legacy_record_uid(r.platform, original_file_name, original_row_number)
+        id_origin = "derived_row_key"
+    else:
+        record_uid = None
+        id_origin = None
+
+    # author_hash: v1 records were collected before author_hash existed on
+    # AuthorMetadata (raw author_display_name was stored instead - see
+    # docs/youtube_data_pipeline_fa.md's "still open" PII note). Since v1
+    # DOES carry author_channel_id, hash it the same way the live collector
+    # does rather than leaving the harmonized layer's author_hash null (and
+    # rather than ever reading author_display_name here - the raw file
+    # itself still needs separate remediation, out of scope for this
+    # function, which only controls what flows into raw_harmonized).
+    author_hash_value = am.author_hash
+    author_id_status = am.author_id_status
+    if not author_hash_value:
+        if am.author_channel_id:
+            author_hash_value = author_hash.hash_author("youtube", am.author_channel_id)
+            author_id_status = author_id_status or "available"
+        else:
+            author_id_status = author_id_status or "unavailable"
+
+    # content_type: v1 records were collected before this field existed on
+    # Record (same era as the missing content_id above), so it's always
+    # None for them - apply_eligibility.py's stage_text_availability
+    # quarantines any row whose content_type isn't one of its known values
+    # (raw_schema_v05.md §8), which silently caught every v1 row as
+    # "invalid_content_type" (2026-08-14, decision_log.md). v1 DOES carry
+    # is_reply, and the live collector already derives content_type from
+    # exactly that boolean at record-creation time (see the
+    # content_type="reply" if c["is_reply"] else "comment" call below in
+    # this same module) - reusing that identical rule here for legacy rows
+    # is applying a known fact already on the record, not guessing a new
+    # one.
+    content_type_value = r.content_type or ("reply" if r.is_reply else "comment")
+
     return {
         # --- §3 Core ------------------------------------------------------
         "platform": r.platform,
         "platform_content_id": _empty_to_none(r.content_id),
-        "content_type": _empty_to_none(r.content_type),
+        "content_type": _empty_to_none(content_type_value),
         "created_at_utc": _parse_rfc3339(r.date) if r.date else None,
         "collected_at_utc": _parse_rfc3339(r.collected_at_utc) if r.collected_at_utc else None,
         "text_raw": r.text,
@@ -659,20 +728,27 @@ def record_to_raw_harmonized_row(r: Record) -> dict:
         "permalink_hash": _empty_to_none(r.permalink_hash),
 
         # --- §4.1 Historical-data audit fields ------------------------------
-        # mapping rows 28-33: all not_applicable - this is a live API
-        # collector, not a legacy-file intake (no delivered file to hash/
-        # index), and the record_uid fallback path never triggers because
-        # the YouTube API always returns a real comment id for
-        # platform_content_id.
-        "original_file_name": None,
+        # mapping rows 28-33: not_applicable for the live collector (real
+        # API comment id every time, has_native_id above is True, these stay
+        # None). 2026-08-14 (decision_log.md): NOT not_applicable for legacy
+        # v1 intake (youtube_comments_1404-*.jsonl, collected before
+        # content_id existed) - those calls pass original_file_name/
+        # original_row_number in, which is what populates record_uid/
+        # id_origin below instead of leaving every v1 row with no id at all
+        # (previously silently routed to apply_eligibility.py's
+        # missing_content_id quarantine - ~74,924 records, see
+        # docs/decision_log.md 2026-08-14).
+        "original_file_name": _empty_to_none(original_file_name),
         "original_file_sha256": None,
-        "original_row_number": None,
+        "original_row_number": original_row_number,
         "source_schema_version": None,
         "source_query_registry_version": None,
-        "record_uid": None,
-        # mapping row 34: platform_content_id always comes from a real API
-        # response for this collector, never a derived row key.
-        "id_origin": "observed",
+        "record_uid": record_uid,
+        # mapping row 34: "observed" when platform_content_id is a real API
+        # response (has_native_id), "derived_row_key" for legacy rows keyed
+        # by file+row instead (docs/raw_schema_v05.md line 62), None when
+        # neither a native id nor file/row provenance is available.
+        "id_origin": id_origin,
         # mapping row 35: created_at_utc always comes straight from the
         # API's publishedAt field, never parsed from a nonstandard format.
         "timestamp_origin": "observed",
@@ -684,12 +760,14 @@ def record_to_raw_harmonized_row(r: Record) -> dict:
         "missing_reason": None,
 
         # --- §5 Author and privacy ---------------------------------------
-        "author_hash": _empty_to_none(am.author_hash),
-        # mapping row 40: AuthorMetadata carries this field (config/schema.py
-        # v4), but youtube_extract.py never sets it when building Record -
-        # always None today, referenced directly (not hardcoded) so it
-        # starts flowing automatically if that ever changes.
-        "author_id_status": _empty_to_none(am.author_id_status),
+        # author_hash_value/author_id_status computed above: passes am's own
+        # values through unchanged when already set (live collector always
+        # sets author_hash itself), otherwise hashes am.author_channel_id
+        # the same way the live collector does (2026-08-14 fix for legacy
+        # v1 rows, which never had author_hash - only raw author_channel_id
+        # - see this function's docstring). Never reads author_display_name.
+        "author_hash": _empty_to_none(author_hash_value),
+        "author_id_status": _empty_to_none(author_id_status),
         # mapping row 41: no author-type classification logic exists.
         "author_type": None,
         # mapping row 42: never returned by the YouTube Comment API.
