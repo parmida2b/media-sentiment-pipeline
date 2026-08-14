@@ -60,6 +60,21 @@ NUM_PERM = 64
 LSH_THRESHOLD = 0.8
 
 
+def _row_key(df: pd.DataFrame) -> pd.Series:
+    """A unique per-row identifier for LSH/grouping purposes: the real
+    platform_content_id when present, otherwise a record_uid-based fallback
+    ("uid::<record_uid>") -- same platform_content_id-or-record_uid pattern
+    apply_eligibility.py's stage_dedup already uses for legacy rows that
+    have no native content_id (2026-08-14 fix, docs/decision_log.md).
+    Before that fix, no such row ever reached this script (it was
+    quarantined earlier); this script never had to handle a missing id and
+    used platform_content_id bare, which raised in cluster_near_duplicates()
+    (datasketch's LSH.insert rejects a duplicate key, and every content_id-
+    less row collided on the same None key) the first time it saw one."""
+    has_id = df["platform_content_id"].notna() & (df["platform_content_id"] != "")
+    return df["platform_content_id"].where(has_id, "uid::" + df["record_uid"].astype(str))
+
+
 def _load_kept() -> pd.DataFrame:
     frames = []
     for target in KEPT_TARGETS:
@@ -67,10 +82,11 @@ def _load_kept() -> pd.DataFrame:
         if not path.exists():
             print(f"skip {target}: {path} not found")
             continue
-        df = pd.read_parquet(path, columns=["platform_content_id", "platform", "project_week", "text_normalized"])
+        df = pd.read_parquet(path, columns=["platform_content_id", "record_uid", "platform", "project_week", "text_normalized"])
         if not len(df):
             continue
-        df = df.rename(columns={"platform_content_id": "content_id"})
+        df["content_id"] = _row_key(df)
+        df = df.drop(columns=["platform_content_id", "record_uid"])
         df["dataset_target"] = target
         frames.append(df)
     if not frames:
@@ -218,12 +234,13 @@ def run(dry_run: bool) -> None:
             continue
         base = pd.read_parquet(path)
         n_before = len(base)
+        base["_row_key"] = _row_key(base)
         merge_cols = df[df["dataset_target"] == target][
             ["content_id", "duplicate_text_diff_id", "duplicate_text_group_id", "near_duplicate_cluster_id"]
-        ].rename(columns={"content_id": "platform_content_id"})
+        ].rename(columns={"content_id": "_row_key"})
         merged = base.drop(
             columns=[c for c in ("duplicate_text_diff_id", "duplicate_text_group_id", "near_duplicate_cluster_id") if c in base.columns]
-        ).merge(merge_cols, on="platform_content_id", how="left")
+        ).merge(merge_cols, on="_row_key", how="left").drop(columns=["_row_key"])
         merged["duplicate_text_diff_id"] = merged["duplicate_text_diff_id"].fillna(False)
         assert len(merged) == n_before, f"row count changed for {target}: {n_before} -> {len(merged)}"
         print(f"  {target:16s} rows={n_before:8d}  duplicate_text_diff_id={int(merged['duplicate_text_diff_id'].sum()):6d}  "
