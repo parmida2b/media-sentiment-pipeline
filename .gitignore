@@ -25,6 +25,10 @@ data/interim/*
 # items 7/8 and item 4), not raw scraped data — track them.
 !docs/collection_coverage.csv
 !docs/query_execution_audit.csv
+# 62 new Gold Sample rows handed to annotators for manual labeling
+# (checklist.md item 17, 2026-08-14) — same category as
+# sample_sentiment_labels.csv itself, which is already tracked.
+!data/annotated/gold_sample_replacement_delta_2026-08-14.csv
 
 !data/raw/.gitkeep
 !data/processed/.gitkeep
