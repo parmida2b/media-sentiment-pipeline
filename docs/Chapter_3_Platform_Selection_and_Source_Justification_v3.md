@@ -31,23 +31,23 @@
 
 ## ۳. مسیر جمع‌آوری
 
-مسیرهای زیر طرح مرجع پروژه‌اند. مسیر واقعاً اجراشده برای هر همکار فقط پس از بررسی فایل، کد و Log در `observed_collection_manifest` ثبت می‌شود.
+مسیرهای زیر طرح مرجع پروژه‌اند. مسیر واقعاً اجراشده برای هر همکار فقط پس از بررسی فایل، کد و Log در `observed_collection_manifest` ثبت می‌شود.  
 نبود مدرک با `unknown` ثبت می‌شود و با مسیر مرجع جایگزین نمی‌شود.
 
 ### ۳.۱ X
 
-مسیر اصلی Query-first است. Queryهای متنی و هشتگ‌های مکمل با مرتب‌سازی زمانی یا Recent اجرا می‌شوند.
+مسیر اصلی Query-first است. Queryهای متنی و هشتگ‌های مکمل با مرتب‌سازی زمانی یا Recent اجرا می‌شوند.  
 Timeline حساب‌های رسانه‌ای یا رسمی فقط برای کشف واژگان و رویداد استفاده می‌شود و به‌تنهایی جامعه Opinion نیست.
 
 ### ۳.۲ Reddit
 
-Submission با Query یا Source ثبت‌شده کشف می‌شود و سپس Comment/Reply همان Thread دریافت می‌شود.
+Submission با Query یا Source ثبت‌شده کشف می‌شود و سپس Comment/Reply همان Thread دریافت می‌شود.  
 مسیر سراسری و Source-scoped با `discovery_route` جدا می‌شوند.
 
 ### ۳.۳ YouTube
 
-Video از Query و Channelهای ثبت‌شده کشف می‌شود؛ سپس Comment و Reply دریافت می‌شود
-. خود Video واحد Opinion نیست و تاریخ Comment، نه تاریخ Video، مبنای هفته تحلیل است.
+Video از Query و Channelهای ثبت‌شده کشف می‌شود؛ سپس Comment و Reply دریافت می‌شود.  
+خود Video واحد Opinion نیست و تاریخ Comment، نه تاریخ Video، مبنای هفته تحلیل است.
 
 ## ۴. منابع و Registry
 
@@ -57,27 +57,33 @@ Video از Query و Channelهای ثبت‌شده کشف می‌شود؛ سپس 
 | Reddit | Subreddit و Submission | `source_id`, `source_parent_id` |
 | YouTube | Channel و Video | `source_id`, `source_parent_id` |
 
-هر Source باید نام/ID پلتفرمی، دسته، زبان اصلی، وضعیت، ریسک انتخاب و `verified_at_utc` داشته باشد.
+هر Source باید نام/ID پلتفرمی، دسته، زبان اصلی، وضعیت، ریسک انتخاب و `verified_at_utc` داشته باشد.  
 Source حذف‌شده از Registry پاک نمی‌شود؛ Status آن تغییر می‌کند.
 
 ## ۵. محدودیت‌ها و کنترل‌ها
 
-| محدودیت | پلتفرم | کنترل |
+روش جمع‌آوری در هر پلتفرم می‌تواند باعث شود نمونه بازیابی‌شده فقط بخشی از محتوای عمومی موجود را پوشش دهد یا ترکیب آن تحت تأثیر Query، Source، نحوه نمایش نتایج و محدودیت‌های دسترسی قرار گیرد. محدودیت‌های اصلی و روش کنترل یا گزارش آن‌ها در جدول زیر مشخص شده‌اند.
+
+| محدودیت | پلتفرم | معنی محدودیت و روش کنترل |
 |---|---|---|
-| Search/Keyword bias | همه | Query familyهای متوازن و Precision audit |
-| Ranking bias | همه | Recent/New/Date/Time و ثبت Sort واقعی |
-| Power-user bias | X، Reddit | Author-balanced و Cluster Bootstrap |
-| Channel selection | YouTube | تنوع رسانه‌ای و سهم هفتگی Channel |
-| Subreddit selection | Reddit | مسیر کشف سراسری و Source-scoped جدا |
-| Hashtag bias | X | هشتگ فقط مسیر مکمل |
-| Moderation/deletion | Reddit، YouTube | ثبت Missing و Data Gap |
-| Quota/rate limit | همه | Run Manifest و Coverage زمانی |
-| Language imbalance | همه | ارزیابی مدل به تفکیک زبان |
-| Viral parent content | Reddit، YouTube | Leave-one-parent-out |
+| Search/Keyword bias | همه | نتیجه‌ها به Queryها و Keywordهای انتخاب‌شده وابسته‌اند. برای کاهش این Bias، چند Query family با پوشش موضوعی متفاوت استفاده و Precision آن‌ها Audit می‌شود. |
+| Ranking bias | همه | ترتیب نمایش نتایج توسط پلتفرم می‌تواند روی داده بازیابی‌شده اثر بگذارد. بنابراین Sort واقعی هر Run مانند `Recent`، `New`، `Date` یا `Time` ثبت می‌شود. |
+| Power-user bias | X، Reddit | ممکن است تعداد زیادی از محتواها توسط تعداد کمی نویسنده پرتکرار تولید شده باشد. برای بررسی اثر آن‌ها، تحلیل Author-balanced و Bootstrap خوشه‌ای در سطح Author اجرا می‌شود. |
+| Channel selection bias | YouTube | انتخاب چند Channel مشخص می‌تواند ترکیب داده را به سمت همان رسانه‌ها متمایل کند. بنابراین تنوع Channelها و سهم هر Channel در داده هفتگی گزارش می‌شود. |
+| Subreddit selection bias | Reddit | انتخاب Subredditهای خاص ممکن است دیدگاه‌های موجود در نمونه را محدود کند. بنابراین مسیر کشف عمومی و مسیر محدود به Source/Subreddit به‌صورت جداگانه ثبت و گزارش می‌شوند. |
+| Hashtag bias | X | استفاده صرف از Hashtag ممکن است فقط بخشی از گفت‌وگو را بازیابی کند. بنابراین Hashtag مسیر مکمل است و جایگزین Query متنی اصلی نمی‌شود. |
+| Moderation/deletion | Reddit، YouTube | برخی Commentها ممکن است حذف، غیرفعال یا دیگر قابل بازیابی نباشند. این موارد به‌صورت Missing یا Data Gap ثبت می‌شوند. |
+| Access/collection limits | همه | محدودیت دسترسی، Pagination، Rate limit، Cap یا محدودیت Scraper می‌تواند باعث ناقص شدن Coverage شود. تنظیمات واقعی Run و بازه زمانی داده بازیابی‌شده در Manifest ثبت می‌شود. |
+| Language imbalance | همه | ممکن است یک زبان سهم بسیار بیشتری از Dataset داشته باشد. بنابراین حجم نمونه و عملکرد Annotation/Model برای هر زبان جداگانه بررسی می‌شود. |
+| Viral parent content | Reddit، YouTube | ممکن است حجم زیادی از Commentها فقط زیر یک Thread یا Video بسیار پربازدید جمع شده باشد. برای بررسی وابستگی نتیجه به آن Parent، تحلیل با حذف هر Parent بزرگ به‌صورت جداگانه انجام می‌شود (`Leave-one-parent-out`). |
+
+`Leave-one-parent-out` یعنی تحلیل یک‌بار با داده کامل و سپس با حذف Parentهای بسیار بزرگ یا اثرگذار تکرار می‌شود. برای مثال، اگر یک Video یا Reddit Thread بخش بزرگی از Commentهای یک بازه را تشکیل دهد، تحلیل بدون آن Parent نیز اجرا می‌شود تا مشخص شود نتیجه اصلی فقط ناشی از همان محتوای وایرال نبوده است.
+
+`Author-balanced` نیز یک تحلیل حساسیت است که اثر نویسندگان بسیار پرتکرار را محدود می‌کند تا یک کاربر با تعداد زیاد Post یا Comment نتواند به‌تنهایی سهم نامتناسبی در نتیجه داشته باشد.
 
 ## ۶. Engagement
 
-متریک‌های تعامل بین پلتفرم‌ها هم‌مقیاس نیستند.
+متریک‌های تعامل بین پلتفرم‌ها هم‌مقیاس نیستند.  
 Like، Score، Reply و Share به‌عنوان موافقت تفسیر نمی‌شوند.
 
 تحلیل اصلی Unweighted است. تحلیل Engagement-weighted فقط درون همان پلتفرم، با `log1p` و Cap از پیش تعیین‌شده، به‌عنوان حساسیت اجرا می‌شود.
