@@ -7,14 +7,17 @@ component=weekly_social_financial_alignment, required_input).
 
 Like descriptive_stats.py / weekly_trend.py, this reads the one file
 Pipeline B is allowed to depend on (docs/pipeline_b_input_contract.md) via
-src.temporal_analysis.common.load_annotated_dataset, and defaults to the
-synthetic fixture (DEFAULT_INPUT_PATH = data/processed/annotated_dataset.
-sample.parquet) so the financial-alignment notebook can be wired and tested
-end-to-end *now*, before real annotation exists. Once Pipeline A produces
-data/processed/annotated_dataset.parquet, re-run with
+src.temporal_analysis.common.load_annotated_dataset. --input is required
+(no default — see docs/decision_log.md 2026-08-14: a synthetic-fixture
+default meant forgetting the flag silently computed everything on 800 fake
+rows instead of erroring). Once Pipeline A produces
+data/processed/annotated_dataset.parquet, run with
     python -m src.temporal_analysis.build_social_weekly_outcomes --input data/processed/annotated_dataset.parquet
 and the output overwrites in place with the exact same schema — nothing else
-downstream (notebook 02) needs to change.
+downstream (notebook 02) needs to change. For local testing before real
+annotation exists, point --input at a fixture from
+scripts/make_synthetic_annotated_dataset.py instead; load_annotated_dataset()
+will warn loudly that it's synthetic rather than accept it silently.
 
 Output schema matches outputs/audits/financial/financial_social_input_template_v1.csv
 exactly:
@@ -57,7 +60,6 @@ from pathlib import Path
 import pandas as pd
 
 from src.temporal_analysis.common import (
-    DEFAULT_INPUT_PATH,
     PLATFORMS,
     ROOT,
     WEEKS,
@@ -121,7 +123,11 @@ def build_social_weekly_outcomes(df: pd.DataFrame, source_file: str) -> pd.DataF
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
+    parser.add_argument(
+        "--input", type=Path, required=True,
+        help="path to data/processed/annotated_dataset.parquet (real) - required, no default; "
+             "see docs/decision_log.md 2026-08-14 on why there is no synthetic fallback",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_PATH)
     args = parser.parse_args()
 

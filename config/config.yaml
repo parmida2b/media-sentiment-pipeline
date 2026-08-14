@@ -107,47 +107,54 @@ youtube:
     - financial
     - regional_gulf
 
-  x:
-    collector_version: "x-selenium-v4.5"
-    query_version: "v3.0"
-    sort_mode: "live"
+# Was nested under youtube: (config.yaml lines ~110-153) even though
+# platforms: [...] above already lists "x" as a sibling of "youtube" —
+# config_loader.load_config().x resolved to {} and x_scraper.py's own
+# `if not X_CONFIG: raise ValueError(...)` would fire on any real run.
+# Hoisted to top-level per docs/decision_log.md 2026-08-13/2026-08-14 (see
+# src/ingestion/x_to_record.py's _x_runtime_config() docstring, which has a
+# fallback to the old nested path and can be left as-is now that this is fixed).
+x:
+  collector_version: "x-selenium-v4.5"
+  query_version: "v3.0"
+  sort_mode: "live"
 
-    max_workers: 3
-    max_scrolls_per_slice: 4
-    max_scrolls_min_day: 9
-    no_new_scroll_limit: 2
+  max_workers: 3
+  max_scrolls_per_slice: 4
+  max_scrolls_min_day: 9
+  no_new_scroll_limit: 2
 
-    slice_split:
-      last_scroll_new_threshold: 4
-      total_seen_threshold: 45
-      minimum_slice_days: 1
+  slice_split:
+    last_scroll_new_threshold: 4
+    total_seen_threshold: 45
+    minimum_slice_days: 1
 
-    navigation:
-      page_load_timeout_seconds: 45
-      ready_timeout_seconds: 28
-      startup_stagger_seconds: 8
-      startup_max_attempts: 3
-      startup_retry_seconds: 12
-      scroll_min_delay_seconds: 1.8
-      scroll_max_delay_seconds: 3.8
-      job_backoff_seconds: 30
-      max_job_attempts: 3
+  navigation:
+    page_load_timeout_seconds: 45
+    ready_timeout_seconds: 28
+    startup_stagger_seconds: 8
+    startup_max_attempts: 3
+    startup_retry_seconds: 12
+    scroll_min_delay_seconds: 1.8
+    scroll_max_delay_seconds: 3.8
+    job_backoff_seconds: 30
+    max_job_attempts: 3
 
-    backfill:
-      min_delay_seconds: 3.0
-      max_delay_seconds: 6.0
-      ready_timeout_seconds: 20
+  backfill:
+    min_delay_seconds: 3.0
+    max_delay_seconds: 6.0
+    ready_timeout_seconds: 20
 
-    persistence:
-      operational_target: 30000
-      dashboard_refresh_seconds: 2.0
-      backup_interval_seconds: 600
-      recovery_fsync_every: 1
+  persistence:
+    operational_target: 30000
+    dashboard_refresh_seconds: 2.0
+    backup_interval_seconds: 600
+    recovery_fsync_every: 1
 
-    runtime:
-      accounts_env_var: "X_ACCOUNTS_JSON"
-      author_salt_env_var: "PROJECT_AUTHOR_SALT"
-      output_root_env_var: "X_OUTPUT_ROOT"
-      default_local_output_root: "./Twitter_Scraper_Data_v4"
-      default_colab_output_root: "/content/drive/MyDrive/Twitter_Scraper_Data_v4"
-      salt_filename: "project_author_salt.txt"
+  runtime:
+    accounts_env_var: "X_ACCOUNTS_JSON"
+    author_salt_env_var: "PROJECT_AUTHOR_SALT"
+    output_root_env_var: "X_OUTPUT_ROOT"
+    default_local_output_root: "./Twitter_Scraper_Data_v4"
+    default_colab_output_root: "/content/drive/MyDrive/Twitter_Scraper_Data_v4"
+    salt_filename: "project_author_salt.txt"

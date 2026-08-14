@@ -1,7 +1,7 @@
 # Claim Registry
 
-**آخرین به‌روزرسانی:** ۲۰۲۶-۰۸-۱۴
-**وضعیت پایه‌ی داده:** `data/processed/annotated_dataset.parquet` — annotation فقط **۳.۷٪** (۸,۵۹۸ از ۲۳۳,۰۰۶ رکورد Eligible) پوشش واقعی دارد؛ بقیه `pending_annotation`اند (`docs/handoff_notes_fa.md`).
+**آخرین به‌روزرسانی:** ۲۰۲۶-۰۸-۱۴ (شب — بعد از رفع نهایی Agreement)
+**وضعیت پایه‌ی داده:** `data/processed/annotated_dataset.parquet` — annotation فقط **۴.۰٪** (۹,۴۰۵ از ۲۳۴,۸۵۵ ردیف؛ ۷,۶۹۰ `api_failure`، ۲۱۷,۷۳۰ `pending_annotation`) پوشش واقعی دارد. **به تصمیم صریح تیم، ادامه‌ی Full Annotation فعلاً متوقفه و فقط با دستور صریح ادامه پیدا می‌کنه** — این فایل تا اون موقع rebuild نمی‌شه.
 
 ## اصل بنیادین (به هر ادعای زیر اعمال می‌شود)
 
@@ -22,10 +22,10 @@
 | ۷ | Record Flow | 🟡 ضمنی | همون Reconciliation equation (`apply_eligibility.py`)؛ نمودار/سند جدا نیست |
 | ۸ | Eligibility Audit | ✅ | `data/audits/eligibility_audit.{parquet,csv}` |
 | ۹ | Relevance Audit | ✅ | `data/audits/relevance_audit_*.csv`, `docs/relevance_audit/*_labeled.csv` |
-| ۱۰ | Gold Sample | ⚠️ | `data/annotated/sample_sentiment_labels.csv` — **مشکل باز: خرابی content_id (Excel Scientific Notation) روی ردیف‌های X، هنوز رفع نشده** |
-| ۱۱ | Agreement Report | ⚠️ | `outputs/audits/annotator_agreement.json` — روی n=۵۱ (نه ۱۲۰) چون annotator دوم هنوز ۲۲ ردیف جدید رو لیبل نزده؛ عدد فعلی موقتیه |
+| ۱۰ | Gold Sample | ✅ | `data/annotated/sample_sentiment_labels.csv` — خرابی content_id (Excel Scientific Notation) دو بار رخ داد و هر دو بار رفع شد (آخرین بار: ۲۰۲۶-۰۸-۱۴ شب، `fix_gold_sample_content_id_corruption.py`)؛ فایل اصلی ۳۰۰تایی الان ۰ خرابی دارد |
+| ۱۱ | Agreement Report | ✅ | `outputs/audits/annotator_agreement.json` — روی n=۱۲۰ کامل (skipped=۰): sentiment=۰.۵۸۴، stance=۰.۵۲۱، emotion=۰.۴۵۸، content_type=۰.۶۴۸ (همه moderate+). عدد قبلی emotion=۰.۱۸ مصنوعی بود (ناشی از خرابی content_id، نه اختلاف واقعی annotatorها) |
 | ۱۲ | Model Evaluation Report | ✅ | `outputs/model_evaluation/sentiment_accuracy_summary.json` |
-| ۱۳ | Annotated Dataset | 🟡 جزئی | `data/processed/annotated_dataset.parquet` — ۳.۷٪ پوشش (بالا) |
+| ۱۳ | Annotated Dataset | 🟡 جزئی | `data/processed/annotated_dataset.parquet` — ۴.۰٪ پوشش (بالا)؛ Full Annotation عمداً متوقف، منتظر دستور صریح تیم |
 | ۱۴ | جدول‌های توصیفی | ✅ | `outputs/tables/descriptive_stats_*.csv` |
 | ۱۵ | روندهای هفتگی با n و CI | ✅ | `outputs/tables/weekly_trend_*.csv` |
 | ۱۶ | Composition Shift | ✅ | `outputs/tables/composition_shift_*.csv` |
@@ -36,7 +36,7 @@
 | ۲۱ | Notebook نهایی قابل‌اجرای کامل | ❌ | فقط `05_descriptive_and_temporal_analysis.ipynb` و `06_event_and_financial_analysis.ipynb` هستن؛ `01`-`04` و `07` ساخته نشدن |
 | ۲۲ | گزارش/ارائه حداکثر ده‌دقیقه‌ای | ❌ | ساخته نشده |
 
-**خلاصه:** ۱۵ کامل، ۴ جزئی/موقت (نیازمند annotation بیشتر یا رفع باگ Gold Sample)، ۳ باز (Raw Validation/Record Flow مستقل، Notebook یکپارچه، گزارش نهایی).
+**خلاصه:** ۱۷ کامل، ۲ جزئی/موقت (نیازمند ادامه‌ی Full Annotation — عمداً متوقف)، ۳ باز (Raw Validation/Record Flow مستقل، Notebook یکپارچه، گزارش نهایی).
 
 ---
 
@@ -56,8 +56,9 @@
 
 ## بخش ۳ — موارد باز (Open Items)
 
-1. **خرابی content_id در Gold Sample (X)** — نیاز به تعمیر با بک‌آپ‌های تمیز موجود، قبل از اعتماد به هر عدد Agreement/Model-Evaluation جدید.
-2. **Agreement روی نمونه‌ی کامل** — annotator دوم باید ۲۲ ردیف باقی‌مانده در `sample_sentiment_labels_agreement_subset.csv` را لیبل بزند.
-3. **۴۷ ردیف Orphan در `agreement_subset`** — عدم تطابق content_id با فایل اصلی، هنوز بررسی/تصمیم تیمی نشده.
-4. **Full Annotation** — فعلاً متوقف (سهمیه‌ی Groq/OpenRouter)؛ به تصمیم صریح کاربر، آخر کار دنبال می‌شود.
+1. ~~خرابی content_id در Gold Sample (X)~~ — ✅ رفع شد (۲۰۲۶-۰۸-۱۴، دو بار رخ داد چون فایل بین دو رفع دوباره در اکسل باز/ذخیره شد؛ هر دو بار با `fix_gold_sample_content_id_corruption.py` رفع شد).
+2. ~~Agreement روی نمونه‌ی کامل~~ — ✅ رفع شد؛ n=۱۲۰ کامل، همه محورها moderate+.
+3. ~~۴۷ ردیف Orphan در `agreement_subset`~~ — ✅ رفع شد (همون رفع بند ۱).
+4. **Full Annotation** — فعلاً **عمداً متوقف** به تصمیم صریح تیم؛ فقط با دستور صریح ادامه پیدا می‌کند (نه به‌صورت خودکار/پیش‌فرض).
 5. **Notebook یکپارچه (۰۱-۰۷)** و **گزارش نهایی/ارائه** — هنوز ساخته نشده‌اند.
+6. **`annotated_dataset.parquet` باید rebuild شود** — بعد از ادامه‌ی Full Annotation (بند ۴)، نه قبلش.
