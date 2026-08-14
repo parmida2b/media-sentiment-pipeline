@@ -1,0 +1,9 @@
+{% macro proc(snapshot,name,label,desc,href) %}{% set p=snapshot.processes[name] %}
+<div class="mon" data-process-card="{{name}}">
+  <div class="h"><b>{{label}}</b><span class="bdg {{'g' if p.running else ('r' if p.last_status=='failed' else 'n')}}" data-process-status>{{'RUNNING' if p.running else p.last_status|upper}}</span></div>
+  <div class="mr"><span class="k">PID</span><span class="v" data-process-pid>{{p.pid or '—'}}</span></div>
+  <div class="mr"><span class="k">آخرین Exit</span><span class="v" data-process-exit>{{p.exit_code if p.exit_code is not none else '—'}}</span></div>
+  <p class="muted-small mt-12">{{desc}}</p>
+  <a class="btn g sm mt-12" href="{{href}}">تنظیم و اجرا</a>
+</div>
+{% endmacro %}

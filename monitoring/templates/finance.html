@@ -1,0 +1,27 @@
+{% extends 'base.html' %}{% block content %}
+<div class="card fade"><div class="hd"><h2>Finance Runtime Config</h2><span class="bdg {{'g' if fred_configured else 'r'}}">{{'FRED configured' if fred_configured else 'FRED key missing'}}</span></div><form method="post" action="{{url_for('finance_save')}}"><div class="fg"><div><label class="fl">FRED API Key</label><input class="inp" type="password" name="FRED_API_KEY" placeholder="خالی = حفظ کلید فعلی"></div><div><label class="fl">FINANCIAL_RUN_ID</label><input class="inp" name="FINANCIAL_RUN_ID" value="{{cfg.FINANCIAL_RUN_ID}}" placeholder="خالی = auto-generated"></div></div><button class="btn p mt-14">ذخیره تنظیمات Finance</button></form>{% if fred_configured %}<form method="post" action="/config/clear/FRED_API_KEY" class="mt-10"><button class="btn d sm">حذف FRED API Key</button></form>{% endif %}</div>
+<div class="kpis">{% for source,n in source_counts.items() %}<div class="kpi"><div><div class="v num">{{n}}</div><div class="l">{{source}} assets</div></div></div>{% endfor %}</div>
+<div class="card fade"><div class="hd"><h2>Asset Registry اصلی Pipeline</h2><span class="bdg n">Read-only native registry</span></div><table class="tbl"><thead><tr><th>Asset</th><th>Name</th><th>Role</th><th>Market</th><th>Source</th><th>Series</th></tr></thead><tbody>{% for a in assets %}<tr><td><b>{{a.asset_id}}</b></td><td>{{a.name}}</td><td>{{a.role}}</td><td>{{a.market}}</td><td><span class="bdg n">{{a.source}}</span></td><td class="num">{{a.source_series_id}}</td></tr>{% endfor %}</tbody></table><p class="muted mt-12">در pipeline گروه Asset Registry بخشی از قرارداد تحلیل و cross-check است؛ برای جلوگیری از شکستن منطق اصلی، پنل آن را نمایش می‌دهد اما تغییر نمی‌دهد.</p></div>
+<div class="card fade">
+  <div class="hd">
+    <h2> بازه زمانی سفارشی استخراج داده‌های مالی</h2>
+  </div>
+  <form method="post" action="/process/finance/custom/start">
+    <div class="fg">
+      <div>
+        <label class="fl">از تاریخ (Observation Start)</label>
+        <input class="inp" type="date" name="start_date">
+      </div>
+      <div>
+        <label class="fl">تا تاریخ (Observation End)</label>
+        <input class="inp" type="date" name="end_date">
+      </div>
+    </div>
+    <div class="badge-row mt-14">
+      <button type="submit" class="btn p">استخراج با بازه زمانی جدید</button>
+      <a class="btn g" href="/live?collector=finance">Live Log</a>
+    </div>
+  </form>
+</div>
+<div class="card fade"><div class="hd"><h2>اجرا</h2></div><form class="inline-form" method="post" action="/process/finance/start"><button class="btn p">Start Finance</button></form> <form class="inline-form" method="post" action="/process/finance/stop"><button class="btn d">Stop</button></form> <a class="btn g" href="/live?collector=finance">Live Log</a></div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% from 'partials/process_card.html' import proc %}{% block content %}
+<div class="kpis" id="dashboardKpis">
+  <div class="kpi fade"><div class="ic kpi-accent">Σ</div><div><div class="v num" id="dashTotalSocial">{{counts.total_social}}</div><div class="l">کل رکوردهای اجتماعی قابل مشاهده</div></div></div>
+  <div class="kpi fade"><div class="ic kpi-orange">P</div><div><div class="v num" id="dashRedditParents">{{counts.reddit_parent_posts}}</div><div class="l">Reddit parent posts</div></div></div>
+  <div class="kpi fade"><div class="ic kpi-blue">J</div><div><div class="v num" id="dashRedditRaw">{{counts.reddit_raw_json_files}}</div><div class="l">Reddit raw JSON files</div></div></div>
+  <div class="kpi fade"><div class="ic kpi-green">C</div><div><div class="v num" id="dashRedditComments">{{counts.reddit_live_comments}}</div><div class="l">Reddit live comments</div></div></div>
+  <div class="kpi fade"><div class="ic kpi-red">Q</div><div><div class="v num" id="dashRedditPending">{{counts.reddit_pending_json}}</div><div class="l">Reddit JSON pending</div></div></div>
+  <div class="kpi fade"><div class="ic kpi-red">Y</div><div><div class="v num" id="dashYoutube">{{counts.youtube_records}}</div><div class="l">YouTube records</div></div></div>
+  <div class="kpi fade"><div class="ic kpi-blue">X</div><div><div class="v num" id="dashX">{{counts.x_tweets}}</div><div class="l">X tweets</div></div></div>
+  <div class="kpi fade"><div class="ic kpi-green">F</div><div><div class="v num" id="dashFinance">{{counts.finance_raw}}</div><div class="l">Finance raw rows</div></div></div>
+</div>
+
+<div class="card fade"><div class="hd"><h2>معماری اتصال</h2><span class="bdg g">External Runtime Adapter</span></div><p>پنل کامل، تنظیمات را در Control DB ذخیره می‌کند. هنگام Start، wrapper بیرونی collector اصلی را import می‌کند، تنظیمات را فقط در حافظه همان process اعمال می‌کند و سپس <code>main()</code> اصلی را اجرا می‌کند. هیچ فایل داخل <code>repo/</code> نوشته یا patch نمی‌شود.</p><p class="muted mt-10">Pipeline root: <code>{{snapshot.pipeline_root}}</code></p></div>
+<div class="mgrid">{{proc(snapshot,'reddit_discovery','Reddit Discovery','Parent-post search registry','/scrapers/reddit')}}{{proc(snapshot,'reddit_comments','Reddit Comments','Raw JSON + coverage audit','/scrapers/reddit')}}{{proc(snapshot,'youtube','YouTube','Quota-aware collector','/scrapers/youtube')}}{{proc(snapshot,'x','X / Twitter','Resumable Selenium collector','/scrapers/x')}}{{proc(snapshot,'finance','Finance','Market extraction + FRED verification','/scrapers/finance')}}</div>
+{% endblock %}
+{% block scripts %}<script src="{{url_for('static',filename='js/dashboard.js')}}" defer></script>{% endblock %}

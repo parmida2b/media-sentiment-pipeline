@@ -1,0 +1,23 @@
+Build: group-overlay-reddit-observability-20260814-06
+
+Reddit observability redesign checks performed in build environment:
+- repo/ byte-for-byte SHA-256 comparison against uploaded v5 baseline: 187 files, 0 differences
+- protected-source verifier: 107 files, PIPELINE UNCHANGED: YES
+- Python syntax compile: PASS
+- JavaScript syntax (app/data/live/dashboard): PASS
+- Jinja template compile: 12 templates PASS
+- Grafana dashboard JSON parse: PASS
+- Dynamic Prometheus collector: 28 metric families generated successfully
+- Metrics HTTP server test on local test port: reddit_realtime_exporter_up 1.0 observed
+- Synthetic native Reddit pipeline output test: parent=1, raw_json=1, live_comment=1, pending=0, fetch_success=1 PASS
+
+Important architecture changes:
+- Dashboard cards poll /api/dashboard every 2 seconds.
+- reddit_realtime_* metrics are computed on every Prometheus scrape, not from a cached background snapshot.
+- Metrics server explicitly binds 0.0.0.0:8003 so Docker Desktop can scrape host.docker.internal:8003.
+- VictoriaMetrics scrape interval: 2 seconds.
+- Grafana minimum refresh interval: 2 seconds.
+- Reddit dashboard rebuilt as "Group Pipeline — Reddit Realtime Health".
+- RUN_GRAFANA.cmd recreates old containers and verifies reddit_realtime_exporter_up through VictoriaMetrics.
+
+The build environment does not provide Docker Desktop, so host.docker.internal connectivity from a real Windows Docker Desktop instance must be validated on the target machine. CHECK_REDDIT_MONITORING.cmd is included for that check.

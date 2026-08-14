@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% from 'partials/process_card.html' import proc %}{% block content %}
+<div class="card fade"><div class="hd"><h2>Scraping Control</h2><span class="bdg g">Full options restored</span></div><p>برای هر collector وارد صفحه خودش شو؛ گزینه‌های script، credentialها، query/source registry و دکمه‌های Start/Stop آنجا قرار دارند. تنظیمات فقط در لایه monitoring ذخیره می‌شوند.</p></div>
+<div class="mgrid">{{proc(snapshot,'reddit_discovery','Reddit Discovery','Query/source + scroll tuning','/scrapers/reddit')}}{{proc(snapshot,'reddit_comments','Reddit Comments','JSON timeout + max posts','/scrapers/reddit')}}{{proc(snapshot,'youtube','YouTube','API + quota + query + region','/scrapers/youtube')}}{{proc(snapshot,'x','X / Twitter','Accounts + worker/scroll/retry tuning','/scrapers/x')}}{{proc(snapshot,'finance','Finance','FRED + native asset registry','/scrapers/finance')}}</div>
+{% endblock %}

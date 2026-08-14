@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 2s
+  scrape_timeout: 1s
+
+scrape_configs:
+  - job_name: reddit-realtime
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:8003
+        labels:
+          service: group-pipeline-control-center
+          platform: reddit

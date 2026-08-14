@@ -1,3 +1,4 @@
+# Environment & Secrets
 .env
 .env.*
 !.env.example
@@ -5,29 +6,23 @@
 credentials.json
 client_secret*.json
 
-
+# Data Tracking & Exclusions
 data/raw/*
 data/processed/*
 data/interim/*
 *.jsonl
 *.csv
+
 # Allow version-controlled documentation templates
 !docs/collection_coverage_template.csv
 !docs/data_handoff_manifest_template.csv
 !docs/query_execution_audit_template.csv
 !docs/schema_mapping_template.csv
 
-# The real handoff manifest is a small, hand-maintained provenance/audit
-# deliverable (checklist.md final output #1), not raw scraped data — track it.
+# Provenance & Audit Deliverables
 !docs/data_handoff_manifest.csv
-# Same reasoning (2026-08-14): the real collection-coverage grade table and
-# query-execution audit are now hand-reasoned deliverables too (checklist.md
-# items 7/8 and item 4), not raw scraped data — track them.
 !docs/collection_coverage.csv
 !docs/query_execution_audit.csv
-# 62 new Gold Sample rows handed to annotators for manual labeling
-# (checklist.md item 17, 2026-08-14) — same category as
-# sample_sentiment_labels.csv itself, which is already tracked.
 !data/annotated/gold_sample_replacement_delta_2026-08-14.csv
 
 !data/raw/.gitkeep
@@ -36,13 +31,16 @@ data/interim/*
 !**/sample_*.csv
 !**/sample_*.jsonl
 
+# Python Virtual Environments & Builds
 __pycache__/
 *.pyc
 .venv/
 venv/
 env/
 *.egg-info/
+.deps_ready
 
+# Outputs & Reports
 outputs/*
 !outputs/.gitkeep
 !outputs/figures/
@@ -55,29 +53,38 @@ outputs/*
 !outputs/model_evaluation/.gitkeep
 .ipynb_checkpoints/
 
-# raw_original platform data — large binary/CSV files stay local, only README is tracked
+# Raw Original Platform Data
 data/raw_original/x/
 data/raw_original/reddit/
 data/raw_original/youtube/
 data/raw_original/financial/
 
-# Public, frozen financial inputs are intentionally versioned so the
-# financial notebooks can be reproduced without repeating web collection.
+# Frozen Financial Inputs
 !data/interim/financial/
 !data/interim/financial/frozen_inputs/
 !data/interim/financial/frozen_inputs/*.csv
 
-# Small, reviewable financial tables and audits are project deliverables.
+# Financial Tables & Audits
 !outputs/tables/financial/
 !outputs/tables/financial/*.csv
 !outputs/audits/financial/
 !outputs/audits/financial/*.csv
 !outputs/audits/financial/*.txt
 
-data_backup/
+# Monitoring, Docker, Prometheus & Grafana
+monitoring/.venv/
+monitoring/.deps_ready
+monitoring/grafana/data/
+monitoring/prometheus/data/
+monitoring/*.log
+group_pipeline_health.json
+group_pipeline_metrics.txt
 
+# Backups & Temp
+data_backup/
 .claude/settings.local.json
 
+# IDE & OS
 .DS_Store
 .vscode/
 .idea/
