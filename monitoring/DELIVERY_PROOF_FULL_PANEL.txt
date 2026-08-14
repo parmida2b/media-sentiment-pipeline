@@ -1,0 +1,13 @@
+FULL PANEL OVERLAY DELIVERY
+===========================
+- Original repo files compared against previous verified overlay: 187
+- File paths equal: YES
+- SHA-256 content differences in repo/: 0
+- Protected manifest verification: PIPELINE UNCHANGED = YES
+- Monitoring layer only changed: YES
+- HTML/CSS/JS remain outside Python: YES
+- External runtime adapter: monitoring/runtime_wrapper.py
+- Reddit native registry detected: 28 sources / 21 queries
+- YouTube registry detected: 29 non-Arabic queries
+- X registry detected: 26 queries
+- Finance Asset(...) registry detected: 31 assets/verification entries

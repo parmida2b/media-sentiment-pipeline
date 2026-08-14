@@ -1,0 +1,52 @@
+name: group-pipeline-monitoring
+
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    container_name: group-pipeline-victoriametrics
+    command:
+      - -promscrape.config=/etc/victoriametrics/scrape.yml
+      - -promscrape.configCheckInterval=5s
+      - -storageDataPath=/storage
+    ports:
+      - "8428:8428"
+    volumes:
+      - ./victoriametrics/scrape.yml:/etc/victoriametrics/scrape.yml:ro
+      - vm_data:/storage
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: group-pipeline-grafana-renderer
+    environment:
+      AUTH_TOKEN: "group-pipeline-render-2026"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: group-pipeline-grafana
+    ports:
+      - "8795:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_MIN_REFRESH_INTERVAL: "2s"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/reddit.json
+      GF_RENDERING_SERVER_URL: http://renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+      GF_RENDERING_RENDERER_TOKEN: "group-pipeline-render-2026"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - victoriametrics
+      - renderer
+    restart: unless-stopped
+
+volumes:
+  vm_data:
+  grafana_data:

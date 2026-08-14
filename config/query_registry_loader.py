@@ -5,7 +5,7 @@ Standalone and additive: does NOT touch config_loader.py or schema.py, so
 the v1 pipeline (youtube_extract.py), which still reads config.yaml's flat
 keywords_fa/en/ar, is unaffected either way. See docs/decision_log.md.
 """
-
+import os
 import sys
 from dataclasses import dataclass
 from datetime import date
@@ -79,9 +79,32 @@ def load_all_queries(path: Path | str = DEFAULT_REGISTRY_PATH) -> list[YouTubeQu
 def load_all_x_queries(
     path: Path | str = DEFAULT_REGISTRY_PATH,
 ) -> list[XQueryEntry]:
+    custom_topic = os.getenv("SCRAPER_CUSTOM_TOPIC")
+    if custom_topic:
+        from config import config_loader
+        cfg = config_loader.load_config()
+        lang = os.getenv("SCRAPER_LANG", "fa")
+        if lang not in {"en", "fa"}:
+            lang = "fa"
+
+        return [
+            XQueryEntry(
+                query_id="XQ-001",
+                platform="x",
+                query_text=custom_topic,
+                language=lang,
+                family="Custom User Run",
+                risk="low",
+                entity_anchor=None,
+                discovery_route="query_search",
+                active_from=cfg.date_range.start,
+                active_to=cfg.date_range.end.date(),
+                version="v3.0",
+            )
+        ]
+
     raw = _load_raw(path)
     entries = []
-
     for item in raw.get("x_queries", []):
         entries.append(
             XQueryEntry(
@@ -102,11 +125,23 @@ def load_all_x_queries(
                 version=str(item.get("version", "unknown")),
             )
         )
-
     return entries
 
 
 def load_active_queries(as_of: date | None = None, path: Path | str = DEFAULT_REGISTRY_PATH) -> list[YouTubeQueryEntry]:
+    custom_topic = os.getenv("SCRAPER_CUSTOM_TOPIC")
+    if custom_topic:
+        return [
+                YouTubeQueryEntry(
+                    query_id="q_custom_user",
+                    query_text=custom_topic,
+                    language=os.getenv("SCRAPER_LANG", "fa"),
+                    purpose="custom_run",
+                    active_from=date(2020, 1, 1),
+                    active_to=None,
+                    version="custom_v1",
+                )
+            ]
     as_of = as_of or date.today()
     return [
         q for q in load_all_queries(path)

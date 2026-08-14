@@ -1,0 +1,52 @@
+{% extends 'base.html' %}{% block content %}
+<div class="card fade"><div class="hd"><h2>YouTube API و تنظیمات Collector</h2><span class="bdg {{'g' if api_configured else 'r'}}">{{'API Key ثبت شده' if api_configured else 'API Key ثبت نشده'}}</span></div>
+<form method="post" action="{{url_for('youtube_save')}}"><div class="fg">
+<div class="full-grid"><label class="fl">YouTube API Key</label><input class="inp" type="password" name="YOUTUBE_API_KEY" autocomplete="new-password" placeholder="خالی = حفظ کلید فعلی"></div>
+<div><label class="fl">Daily quota budget</label><input class="inp" type="number" min="1" name="YOUTUBE_DAILY_QUOTA_BUDGET" value="{{cfg.YOUTUBE_DAILY_QUOTA_BUDGET}}"></div>
+<div><label class="fl">Regions per day</label><input class="inp" type="number" min="1" name="YOUTUBE_REGIONS_PER_DAY" value="{{cfg.YOUTUBE_REGIONS_PER_DAY}}"></div>
+<div><label class="fl">Max videos / query</label><input class="inp" type="number" min="1" name="YOUTUBE_MAX_VIDEOS_PER_QUERY" value="{{cfg.YOUTUBE_MAX_VIDEOS_PER_QUERY}}"></div>
+<div><label class="fl">Max comments / video</label><input class="inp" type="number" min="1" name="YOUTUBE_MAX_COMMENTS_PER_VIDEO" value="{{cfg.YOUTUBE_MAX_COMMENTS_PER_VIDEO}}"></div>
+<div><label class="fl">Comment pool multiplier</label><input class="inp" type="number" min="1" name="YOUTUBE_COMMENT_POOL_MULTIPLIER" value="{{cfg.YOUTUBE_COMMENT_POOL_MULTIPLIER}}"></div>
+<div><label class="fl">Random seed</label><input class="inp" type="number" name="YOUTUBE_RANDOM_SEED" value="{{cfg.YOUTUBE_RANDOM_SEED}}"></div>
+<div class="full-grid"><label class="fl">Region codes — هر خط <code>region,language</code></label><textarea class="inp" rows="5" name="YOUTUBE_REGION_CODES">{{regions_text}}</textarea></div>
+<div class="full-grid"><label class="fl">Explicit video IDs (comma separated)</label><input class="inp" name="YOUTUBE_EXPLICIT_VIDEO_IDS" value="{{explicit_ids_text}}"></div>
+<div class="full-grid"><label class="fl">Author hash salt (اختیاری)</label><input class="inp" type="password" name="AUTHOR_HASH_SALT" placeholder="خالی = حفظ مقدار فعلی"></div>
+</div>
+<div class="hd mt-22"><h2>Query Registry — انتخاب Queryهای این Run</h2></div><div class="checkbox-grid">{% for q in queries %}<label class="check-card"><input type="checkbox" name="query_ids" value="{{q.query_id}}" {% if q.query_id in enabled_query_ids %}checked{% endif %}><span><b>{{q.query_id}}</b><small>{{q.language}} · {{q.purpose}}<br>{{q.query_text}}</small></span></label>{% endfor %}</div>
+<button class="btn p mt-14">ذخیره تنظیمات YouTube</button></form>{% if api_configured %}<form method="post" action="/config/clear/YOUTUBE_API_KEY" class="mt-10"><button class="btn d sm">حذف API Key ذخیره‌شده</button></form>{% endif %}</div>
+<div class="card fade">
+  <div class="hd">
+    <h2>اجرای سفارشی YouTube</h2>
+    <span class="bdg b">Custom Keyword & Dates</span>
+  </div>
+  <form method="post" action="/process/youtube/custom/start">
+    <div class="fg">
+      <div class="full-grid">
+        <label class="fl">کلمه کلیدی یا عبارت جستجو (Search Query)</label>
+        <input class="inp" name="custom_topic" placeholder="مثال: AI advancements 2026" required>
+      </div>
+      <div>
+        <label class="fl">از تاریخ انتشار (Published After)</label>
+        <input class="inp" type="date" name="start_date">
+      </div>
+      <div>
+        <label class="fl">تا تاریخ انتشار (Published Before)</label>
+        <input class="inp" type="date" name="end_date">
+      </div>
+      <div>
+        <label class="fl">حداکثر ویدیو (Max Videos)</label>
+        <input class="inp" type="number" min="1" name="max_videos" placeholder="پیش‌فرض: 50">
+      </div>
+      <div>
+        <label class="fl">حداکثر کامنت هر ویدیو (Max Comments / Video)</label>
+        <input class="inp" type="number" min="1" name="max_comments" placeholder="پیش‌فرض: 100">
+      </div>
+    </div>
+    <div class="badge-row mt-14">
+      <button type="submit" class="btn p">شروع خزش سفارشی YouTube</button>
+      <a class="btn g" href="/live?collector=youtube">مشاهده لاگ زنده</a>
+    </div>
+  </form>
+</div>
+<div class="card fade"><div class="hd"><h2>اجرا و مانیتورینگ</h2><a class="btn g sm" href="http://localhost:8795/d/group-pipeline-youtube/group-pipeline-youtube" target="_blank">Grafana</a></div><form class="inline-form" method="post" action="/process/youtube/start"><button class="btn p">Start YouTube</button></form> <form class="inline-form" method="post" action="/process/youtube/stop"><button class="btn d">Stop</button></form> <a class="btn g" href="/live?collector=youtube">Live Log</a><p class="muted mt-12">تنظیمات non-native مثل max comments/query بعد از import و قبل از <code>main()</code> فقط در RAM ماژول اصلی override می‌شوند.</p></div>
+{% endblock %}

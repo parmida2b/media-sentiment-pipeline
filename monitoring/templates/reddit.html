@@ -1,0 +1,99 @@
+{% extends 'base.html' %}{% block content %}
+<div class="kpis">
+<div class="kpi"><div><div class="v num">{{handoff.parent_unique}}</div><div class="l">Unique parent URLs discovered</div></div></div>
+<div class="kpi"><div><div class="v num">{{handoff.eligible if handoff.eligible is not none else '—'}}</div><div class="l">Eligible for JSON</div></div></div>
+<div class="kpi"><div><div class="v num">{{handoff.raw_json_files}}</div><div class="l">Raw JSON files saved</div></div></div>
+<div class="kpi"><div><div class="v num">{{handoff.pending_json if handoff.pending_json is not none else '—'}}</div><div class="l">Pending JSON fetch</div></div></div>
+</div>
+<div class="card fade"><div class="hd"><h2>Stage Handoff Diagnostics</h2><span class="bdg {{'g' if handoff.parent_files else 'r'}}">{{handoff.parent_files}} parent files</span></div>
+<p class="muted">Stage 2 reads exactly <code>*_reddit_parent_posts.csv</code> from the native parent-post directory. When Stage 2 starts it regenerates <code>master_parent_posts_dedup.csv</code>, calculates eligibility, prints every queued <code>.json</code> URL, then opens the original Raw JSON collector.</p>
+<div class="diag-grid mt-12"><div><b>Parent dir</b><code>{{handoff.parent_dir}}</code></div><div><b>Audit dir</b><code>{{handoff.audit_dir}}</code></div><div><b>Fetch log rows</b><span>{{handoff.fetch_log_rows}}</span></div><div><b>Final parsed comments</b><span>{{handoff.comments_final}}</span></div></div>
+{% if handoff.master_ready and handoff.eligible == 0 %}<div class="alert err mt-12">هیچ Parent Post واجد شرایط native project window نیست؛ در این حالت Stage 2 عمداً JSON URL باز نمی‌کند. تاریخ‌های <code>master_parent_posts_dedup.csv</code> را بررسی کن.</div>{% endif %}
+{% if handoff.master_ready and handoff.pending_json == 0 and handoff.eligible and cfg.REDDIT_RESUME_EXISTING_JSON == '1' %}<div class="alert ok mt-12">تمام JSONهای واجد شرایط قبلاً وجود دارند و Resume روشن است؛ بنابراین fetch جدیدی انجام نمی‌شود.</div>{% endif %}
+</div>
+<div class="card fade"><div class="hd"><h2>Realtime Monitoring</h2><span class="bdg g">reddit_realtime_*</span></div>
+<p class="muted">Metrics جدید Reddit در لحظه‌ی هر scrape مستقیماً از خروجی‌های native Pipeline ساخته می‌شوند؛ بنابراین برای به‌روزرسانی Grafana به cache یا پایان Stage وابسته نیستند.</p>
+<div class="badge-row mt-12"><a class="btn g sm" href="http://127.0.0.1:8003/metrics" target="_blank">Prometheus Metrics :8003</a><a class="btn g sm" href="http://127.0.0.1:8428/targets" target="_blank">VictoriaMetrics Targets</a><a class="btn p sm" href="http://127.0.0.1:8795/d/group-pipeline-reddit" target="_blank">Reddit Grafana Dashboard</a></div>
+</div>
+<div class="card fade"><div class="hd"><h2>تنظیمات اجرای Reddit</h2><span class="bdg n">In-memory overrides</span></div>
+<form method="POST" action="{{url_for('reddit_save')}}"><div class="fg">
+<div><label class="fl">Firefox Profile Path</label><input class="inp" name="REDDIT_FIREFOX_PROFILE" value="{{cfg.REDDIT_FIREFOX_PROFILE}}" placeholder="C:\Users\...\Profiles\..."></div>
+<div><label class="fl">Skip completed terms</label><select class="inp" name="REDDIT_SKIP_COMPLETED_TERMS"><option value="1" {% if cfg.REDDIT_SKIP_COMPLETED_TERMS=='1' %}selected{% endif %}>فعال</option><option value="0" {% if cfg.REDDIT_SKIP_COMPLETED_TERMS!='1' %}selected{% endif %}>غیرفعال</option></select></div>
+<div><label class="fl">Max scrolls / search term</label><input class="inp" type="number" min="1" name="REDDIT_MAX_SCROLLS_PER_SEARCH_TERM" value="{{cfg.REDDIT_MAX_SCROLLS_PER_SEARCH_TERM}}"></div>
+<div><label class="fl">Max no-new rounds</label><input class="inp" type="number" min="1" name="REDDIT_MAX_NO_NEW_ROUNDS" value="{{cfg.REDDIT_MAX_NO_NEW_ROUNDS}}"></div>
+<div><label class="fl">Scroll pause (sec)</label><input class="inp" type="number" step="0.1" min="0" name="REDDIT_SCROLL_PAUSE_SECONDS" value="{{cfg.REDDIT_SCROLL_PAUSE_SECONDS}}"></div>
+<div><label class="fl">Between search-term pause (sec)</label><input class="inp" type="number" step="0.1" min="0" name="REDDIT_BETWEEN_SEARCH_TERM_PAUSE_SECONDS" value="{{cfg.REDDIT_BETWEEN_SEARCH_TERM_PAUSE_SECONDS}}"></div>
+<div><label class="fl">Between job pause (sec)</label><input class="inp" type="number" step="0.1" min="0" name="REDDIT_BETWEEN_JOB_PAUSE_SECONDS" value="{{cfg.REDDIT_BETWEEN_JOB_PAUSE_SECONDS}}"></div>
+<div><label class="fl">Initial timeout (sec)</label><input class="inp" type="number" min="1" name="REDDIT_INITIAL_TIMEOUT_SECONDS" value="{{cfg.REDDIT_INITIAL_TIMEOUT_SECONDS}}"></div>
+<div><label class="fl">JSON page pause (sec)</label><input class="inp" type="number" step="0.1" min="0" name="REDDIT_JSON_PAGE_PAUSE_SECONDS" value="{{cfg.REDDIT_JSON_PAGE_PAUSE_SECONDS}}"></div>
+<div><label class="fl">JSON page timeout (sec)</label><input class="inp" type="number" min="1" name="REDDIT_JSON_PAGE_TIMEOUT_SECONDS" value="{{cfg.REDDIT_JSON_PAGE_TIMEOUT_SECONDS}}"></div>
+<div><label class="fl">HTTP probe timeout (sec)</label><input class="inp" type="number" min="1" name="REDDIT_HTTP_PROBE_TIMEOUT_SECONDS" value="{{cfg.REDDIT_HTTP_PROBE_TIMEOUT_SECONDS}}"></div>
+<div><label class="fl">Parent lookback days</label><input class="inp" type="number" min="0" name="REDDIT_PARENT_LOOKBACK_DAYS" value="{{cfg.REDDIT_PARENT_LOOKBACK_DAYS}}"></div>
+<div><label class="fl">Resume existing JSON</label><select class="inp" name="REDDIT_RESUME_EXISTING_JSON"><option value="1" {% if cfg.REDDIT_RESUME_EXISTING_JSON=='1' %}selected{% endif %}>فعال — فایل‌های موجود skip شوند</option><option value="0" {% if cfg.REDDIT_RESUME_EXISTING_JSON!='1' %}selected{% endif %}>غیرفعال — دوباره fetch شود</option></select></div>
+<div><label class="fl">MAX_POSTS در Stage 2</label><input class="inp" type="number" min="1" name="REDDIT_MAX_POSTS" value="{{cfg.REDDIT_MAX_POSTS}}" placeholder="خالی = همه"></div>
+</div><button class="btn p mt-14">ذخیره تنظیمات Reddit</button></form></div>
+<div class="card fade">
+  <div class="hd">
+    <h2> اجرای سفارشی Reddit (موضوع و بازه زمانی دلخواه)</h2>
+    <span class="bdg b">Custom Query & Window</span>
+  </div>
+  <form method="post" action="/process/reddit/custom/start">
+    <div class="fg">
+      <div class="full-grid">
+        <label class="fl">موضوع، عبارت جستجو یا ساب‌ردیت (Topic / Search Term / Subreddit)</label>
+        <input class="inp" name="custom_topic" placeholder="مثال: artificial intelligence یا r/MachineLearning" required>
+      </div>
+      <div>
+        <label class="fl">از تاریخ (Start Date)</label>
+        <input class="inp" type="date" name="start_date">
+      </div>
+      <div>
+        <label class="fl">تا تاریخ (End Date)</label>
+        <input class="inp" type="date" name="end_date">
+      </div>
+      <div>
+        <label class="fl">مرحله اجرا (Execution Mode)</label>
+        <select class="inp" name="stage_mode">
+          <option value="full">Full Flow (Discovery → JSON → Comments)</option>
+          <option value="discovery">فقط فاز ۱: Discovery</option>
+          <option value="comments">فقط فاز ۲: Raw JSON & Comments</option>
+        </select>
+      </div>
+      <div>
+        <label class="fl">حداکثر پست (Max Posts)</label>
+        <input class="inp" type="number" min="1" name="max_posts" placeholder="پیش‌فرض = همه">
+      </div>
+    </div>
+    <div class="badge-row mt-14">
+      <button type="submit" class="btn p">شروع خزش سفارشی Reddit</button>
+      <a class="btn g" href="/live?collector=reddit_discovery">مشاهده لاگ زنده</a>
+    </div>
+  </form>
+</div>
+<div class="card fade"><div class="hd"><h2>اجرای دو مرحله‌ای Reddit</h2><span class="bdg {{'g' if snapshot.reddit_chain.running else 'n'}}">{{snapshot.reddit_chain.stage}}</span></div>
+<div class="stage-flow">
+<div class="stage-box"><b>1. Parent Post Discovery</b><small>URLهای post را checkpoint می‌کند.</small><div class="mt-12"><form class="inline-form" method="post" action="/process/reddit_discovery/start"><button class="btn p">Start Discovery</button></form> <form class="inline-form" method="post" action="/process/reddit_discovery/stop"><button class="btn d">Stop</button></form> <a class="btn g" href="/live?collector=reddit_discovery">Discovery Log</a></div></div>
+<div class="stage-arrow">←</div>
+<div class="stage-box"><b>2. Raw JSON + Comments</b><small>Parent URL → .json URL → raw file → comment parse</small><div class="mt-12"><form class="inline-form" method="post" action="/process/reddit_comments/start"><button class="btn p">Start Raw JSON + Audit</button></form> <form class="inline-form" method="post" action="/process/reddit_comments/stop"><button class="btn d">Stop</button></form> <a class="btn g" href="/live?collector=reddit_comments">Raw JSON Log</a></div></div>
+</div>
+<form method="post" action="/process/reddit/full/start" class="mt-16"><button class="btn p">Start Full Reddit Flow — Discovery → JSON → Comments</button></form>
+<p class="muted mt-12">{{snapshot.reddit_chain.message}} · دو Stage هم‌زمان اجرا نمی‌شوند تا Firefox profile lock یا handoff ناقص ایجاد نشود.</p>
+<p class="muted mt-12">Native registry: {{native_source_count}} source و {{native_query_count}} query. تغییرات فقط در Control DB ذخیره و در RAM اعمال می‌شوند.</p></div>
+
+<div class="card fade"><div class="hd"><h2>Source Registry</h2><form method="post" action="{{url_for('reddit_reset_overrides')}}"><button class="btn g sm">Reset all registry overrides</button></form></div><table class="tbl"><thead><tr><th>ID</th><th>Subreddit</th><th>Status</th><th>عملیات</th></tr></thead><tbody>
+{% for s in sources %}<tr><td><b>{{s.source_id}}</b></td><td>{{s.subreddit}}</td><td><span class="bdg {{'g' if s.status=='Active' else 'o'}}">{{s.status}}</span></td><td><button class="btn g sm" type="button" data-toggle-row="src-{{loop.index}}">ویرایش</button></td></tr>
+<tr id="src-{{loop.index}}" class="hidden-row"><td colspan="4"><form method="post" action="{{url_for('reddit_source_update',sid=s.source_id)}}"><div class="fg"><div><label class="fl">Subreddit</label><input class="inp" name="subreddit" value="{{s.subreddit}}"></div><div><label class="fl">Status</label><select class="inp" name="status"><option {% if s.status=='Active' %}selected{% endif %}>Active</option><option {% if s.status=='Restricted' %}selected{% endif %}>Restricted</option><option {% if s.status=='Inactive' %}selected{% endif %}>Inactive</option></select></div></div><button class="btn p sm mt-8">ذخیره</button></form></td></tr>{% endfor %}</tbody></table>
+<div class="hd mt-16"><h2>افزودن Source runtime-only</h2></div><form method="post" action="{{url_for('reddit_source_new')}}"><div class="fg"><div><label class="fl">source_id</label><input class="inp" name="source_id" placeholder="RD-029" required></div><div><label class="fl">subreddit</label><input class="inp" name="subreddit" required></div><div><label class="fl">status</label><select class="inp" name="status"><option>Active</option><option>Restricted</option><option>Inactive</option></select></div></div><button class="btn p mt-10">افزودن</button></form></div>
+
+<div class="card fade"><div class="hd"><h2>Query Registry / انتخاب اجرا</h2></div><form method="post" action="{{url_for('reddit_active_queries')}}"><div class="checkbox-grid">{% for q in queries %}<label class="check-card"><input type="checkbox" name="query_ids" value="{{q.query_id}}" {% if q.enabled %}checked{% endif %}><span><b>{{q.query_id}}</b><small>{{q.family}} · {{q.lang}}</small></span></label>{% endfor %}</div><button class="btn p mt-14">ذخیره Query Selection</button></form></div>
+
+{% for q in queries %}<div class="card fade"><div class="hd"><h2>{{q.query_id}} — {{q.family}}</h2><span class="bdg {{'g' if q.enabled else 'r'}}">{{'فعال' if q.enabled else 'غیرفعال'}}</span></div><form method="post" action="{{url_for('reddit_query_update',qid=q.query_id)}}"><div class="fg">
+<div><label class="fl">family</label><input class="inp" name="family" value="{{q.family}}"></div><div><label class="fl">lang</label><input class="inp" name="lang" value="{{q.lang}}"></div>
+<div class="full-grid"><label class="fl">logical_query</label><input class="inp" name="logical_query" value="{{q.logical_query}}"></div>
+<div><label class="fl">risk</label><input class="inp" name="risk" value="{{q.risk}}"></div><div><label class="fl">entity_anchor</label><input class="inp" name="entity_anchor" value="{{q.entity_anchor}}"></div>
+<div><label class="fl">discovery_route</label><select class="inp" name="discovery_route"><option value="query_search" {% if q.discovery_route=='query_search' %}selected{% endif %}>query_search</option><option value="source_scope" {% if q.discovery_route=='source_scope' %}selected{% endif %}>source_scope</option></select></div>
+<div><label class="fl">enabled</label><select class="inp" name="enabled"><option value="1" {% if q.enabled %}selected{% endif %}>فعال</option><option value="0" {% if not q.enabled %}selected{% endif %}>غیرفعال</option></select></div>
+<div class="full-grid"><label class="fl">source_ids (comma separated)</label><input class="inp" name="source_ids" value="{{q.source_ids_text}}"></div><div class="full-grid"><label class="fl">search_terms (هر خط یک عبارت)</label><textarea class="inp" rows="3" name="search_terms">{{q.search_terms_text}}</textarea></div>
+</div><button class="btn p mt-12">ذخیره Query Override</button></form></div>{% endfor %}
+<div class="card fade"><div class="hd"><h2>افزودن Query runtime-only</h2></div><form method="post" action="{{url_for('reddit_query_new')}}"><div class="fg"><div><label class="fl">query_id</label><input class="inp" name="query_id" required></div><div><label class="fl">family</label><input class="inp" name="family"></div><div><label class="fl">lang</label><input class="inp" name="lang" value="en"></div><div><label class="fl">risk</label><input class="inp" name="risk" value="low"></div><div class="full-grid"><label class="fl">logical_query</label><input class="inp" name="logical_query"></div><div><label class="fl">discovery_route</label><select class="inp" name="discovery_route"><option>query_search</option><option>source_scope</option></select></div><div><label class="fl">source_ids</label><input class="inp" name="source_ids"></div><div class="full-grid"><label class="fl">search_terms</label><textarea class="inp" rows="3" name="search_terms"></textarea></div></div><button class="btn p mt-12">افزودن Query</button></form></div>
+{% endblock %}

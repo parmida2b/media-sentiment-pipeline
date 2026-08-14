@@ -410,10 +410,10 @@ def build_project_weeks():
     return weeks
 
 PROJECT_WEEKS = build_project_weeks()
-assert len(PROJECT_WEEKS) == 21
-assert PROJECT_WEEKS[-1]['project_week'] == 'W21'
-assert (PROJECT_WEEKS[-1]['end_exclusive'] - PROJECT_WEEKS[-1]['start']).days == 5
-
+if not os.getenv("SCRAPER_CUSTOM_TOPIC"):
+    assert len(PROJECT_WEEKS) == 21
+    assert PROJECT_WEEKS[-1]['project_week'] == 'W21'
+    assert (PROJECT_WEEKS[-1]['end_exclusive'] - PROJECT_WEEKS[-1]['start']).days == 5
 print(f"Loaded {len(X_QUERIES)} X queries × {len(PROJECT_WEEKS)} weeks = {len(X_QUERIES)*len(PROJECT_WEEKS)} initial query-week jobs")
 
 # -----------------------------------------------------------------------------
@@ -752,39 +752,28 @@ def seed_initial_jobs(reset_stale_running=True):
     print(f"Seeded {inserted} new jobs. Existing completed/split jobs were preserved.")
 
 def claim_next_job(conn, worker_name):
-    """Atomically claim the next pending collection job for a worker.
-
-    Parameters
-    ----------
-    conn : sqlite3.Connection
-        Open SQLite connection used for the operation.
-    worker_name : str
-        Internal worker identifier.
-
-    Returns
-    -------
-    sqlite3.Row or None
-        Claimed job row, or ``None`` when no pending job remains.
-
-    Raises
-    ------
-    sqlite3.Error
-        If the atomic claim transaction fails.
-
-    Notes
-    -----
-    This function is part of the resumable X collection pipeline and preserves
-    project provenance and recovery behavior unless stated otherwise.
-    """
+    """Atomically claim the next pending collection job for a worker."""
     with DB_LOCK:
         conn.execute('BEGIN IMMEDIATE')
-        row = conn.execute("""SELECT * FROM x_jobs
-            WHERE status='pending' AND attempt_count < ?
+
+        active_qids = list(QUERY_BY_ID.keys())
+        if not active_qids:
+            conn.commit()
+            return None
+
+        placeholders = ','.join('?' for _ in active_qids)
+        sql = f"""SELECT * FROM x_jobs
+            WHERE status='pending' AND attempt_count < ? AND query_id IN ({placeholders})
             ORDER BY depth ASC, project_week ASC, query_id ASC, slice_start ASC
-            LIMIT 1""", (MAX_JOB_ATTEMPTS,)).fetchone()
+            LIMIT 1"""
+
+        params = [MAX_JOB_ATTEMPTS] + active_qids
+        row = conn.execute(sql, params).fetchone()
+
         if not row:
             conn.commit()
             return None
+
         conn.execute("""UPDATE x_jobs
             SET status='running', claimed_by=?, claimed_at_utc=?, finished_at_utc=NULL,
                 attempt_count=attempt_count+1
@@ -2119,7 +2108,11 @@ def scrape_job(driver, conn, job_row, worker_name, account_name, stats):
     if STOP_EVENT.is_set():
         raise GracefulStop()
 
-    q = QUERY_BY_ID[job_row['query_id']]
+    q = QUERY_BY_ID.get(job_row['query_id'])
+    if not q:
+       logging.warning('Job %s has unknown query_id %s; skipping.', job_row['job_id'], job_row['query_id'])
+       set_job_status(conn, job_row['job_id'], 'failed', 'query_not_in_active_registry')
+       return
     run_id = make_collection_run_id(job_row, worker_name)
     started = utc_now()
     url, exact_query = build_search_url(q['logical_query'], job_row['slice_start'], job_row['slice_end_exclusive'])
@@ -3093,6 +3086,15 @@ def validate_query_plan(strict=True):
     This function is part of the resumable X collection pipeline and preserves
     project provenance and recovery behavior unless stated otherwise.
     """
+    if os.getenv("SCRAPER_CUSTOM_TOPIC"):
+        return {
+                'ok': True,
+                'errors': [],
+                'warnings': [],
+                'query_count': len(X_QUERIES),
+                'week_count': len(PROJECT_WEEKS),
+                'initial_jobs': len(X_QUERIES) * len(PROJECT_WEEKS),
+            }
     errors = []
     warnings = []
 

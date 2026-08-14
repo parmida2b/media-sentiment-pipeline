@@ -1,0 +1,592 @@
+
+
+===== OVERLAY START 2026-08-14 06:28:37 | reddit_discovery =====
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — reddit_discovery
+Original pipeline files: UNCHANGED
+ACTIVE_QUERY_IDS: ALL
+SOURCES: 28
+QUERIES: 21
+MAX_SCROLLS_PER_SEARCH_TERM: 60
+MAX_NO_NEW_ROUNDS: 6
+SCROLL_PAUSE_SECONDS: 3.0
+BETWEEN_SEARCH_TERM_PAUSE_SECONDS: 8.0
+BETWEEN_JOB_PAUSE_SECONDS: 10.0
+INITIAL_TIMEOUT_SECONDS: 25
+========================================================================
+
+[REDDIT][DISCOVERY][START] Parent-post collector is running. Every new checkpointed post will be logged below.
+
+================================================================================
+REDDIT MASTER PARENT-POST URL COLLECTION
+================================================================================
+Master run ID: reddit_master_20260814T132837Z_86ff00f3
+Queries selected: 21
+Query/source jobs: 70
+Output directory: C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts
+Previously completed term-jobs found: 0
+Resume mode: ON
+
+================================================================================
+JOB 1/70
+Query: RQ-001 | Core conflict | en
+Scope: RD-001 -> r/worldnews
+Source status: Active
+Output: C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv
+================================================================================
+
+----------------------------------------------------------------------
+Term 1/3: Iran-US war
+URL: https://www.reddit.com/r/worldnews/search/?q=Iran-US+war&type=posts&sort=new&restrict_sr=1
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv existing_posts=0
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vfjc80 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-08-04T18:51:08.388000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vfjc80/qatar_says_progress_made_toward_usiran_talks_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vbuasc subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-31T15:33:55.615000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vbuasc/iran_strikes_tankers_under_us_escort_in_hormuz/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v714x1 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-26T11:20:50.767000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v714x1/oil_falls_on_report_china_pushing_for_end_usiran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v3elmb subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-22T12:22:52.904000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v3elmb/jd_vance_accuses_israel_of_manipulating_us_public/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v2pu2q subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-21T17:53:12.266000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v2pu2q/tankers_with_saudi_crude_turn_back_as_houthis/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uy6pyl subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-16T15:51:23.345000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uy6pyl/estonia_says_us_arms_delayed_over_iran_war_will/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uxbtl0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-15T17:01:18.137000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uxbtl0/iran_ramps_up_execution_of_political_prisoners/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ux53o3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-15T12:56:38.326000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ux53o3/iran_ramps_up_execution_of_political_prisoners/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1usd09i subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-10T04:13:05.065000+00:00 url=https://www.reddit.com/r/worldnews/comments/1usd09i/us_military_denies_involvement_after_explosions/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1urcjj0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-09T01:50:51.256000+00:00 url=https://www.reddit.com/r/worldnews/comments/1urcjj0/usisraeliran_war_latest_news_medvedev_warns_of/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ul4rfn subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-02T01:49:03.126000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ul4rfn/us_reportedly_mulls_pulling_troops_from_saudi/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uk8nug subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-01T02:07:59.780000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uk8nug/us_president_donald_trump_weighs_allout_war_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uholq5 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-28T05:26:24.708000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uholq5/iran_attacks_bahrain_and_kuwait_following_us/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uee6am subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-24T13:53:50.721000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uee6am/italy_rebukes_natos_rutte_over_remarks_on_us_use/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=14 total_posts=14
+Round 1/60 | Visible: 14 | New unique: 14 | Matches updated: 0 | Job total: 14 | Oldest: 2026-06-24T13:53:50.721000+00:00
+Round 2/60 | Visible: 14 | New unique: 0 | Matches updated: 0 | Job total: 14 | Oldest: 2026-06-24T13:53:50.721000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u7ebmm subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-16T13:57:28.486000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u7ebmm/iran_says_the_us_war_deal_requires_israel_to/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u6c7ou subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-15T10:01:45.292000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u6c7ou/iran_and_us_reach_a_tentative_deal_to_end_war_as/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u633xv subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-15T01:49:49.366000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u633xv/us_iran_reach_preliminary_agreement_to_end_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u4yl9l subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-13T18:37:28.159000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u4yl9l/secret_qatari_protection_deal_presented_to_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1twexmc subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-04T06:03:05.795000+00:00 url=https://www.reddit.com/r/worldnews/comments/1twexmc/iran_links_the_end_of_the_war_with_the_us_and/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1trsrsg subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-30T07:09:56.435000+00:00 url=https://www.reddit.com/r/worldnews/comments/1trsrsg/tehran_denies_us_claims_of_extension_to_iran_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tmhpc0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-24T17:00:18.406000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tmhpc0/iran_executes_person_for_sending_information_to/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=21
+Round 3/60 | Visible: 21 | New unique: 7 | Matches updated: 0 | Job total: 21 | Oldest: 2026-05-24T17:00:18.406000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tkpesv subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-22T17:15:50.732000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tkpesv/us_navy_chief_says_14bn_arms_sale_to_taiwan/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tkkjko subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-22T14:24:45.720000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tkkjko/qatari_negotiating_team_in_tehran_to_try_to_help/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tibfua subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-20T04:54:16.324000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tibfua/iran_warns_it_could_open_up_new_fronts_in_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1thsglp subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-19T16:39:38.744000+00:00 url=https://www.reddit.com/r/worldnews/comments/1thsglp/drone_strikes_uae_nuclear_plant_as_us_and_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1thgigr subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-19T08:25:35.098000+00:00 url=https://www.reddit.com/r/worldnews/comments/1thgigr/iran_says_peace_proposal_includes_reparations_for/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tc1s0i subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-13T14:44:55.801000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tc1s0i/chinese_supertanker_breaks_through_usiran_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t85jal subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-09T13:49:09.495000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t85jal/merz_says_europe_wants_a_strong_nato_and_shares/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=28
+Round 4/60 | Visible: 28 | New unique: 7 | Matches updated: 0 | Job total: 28 | Oldest: 2026-05-09T13:49:09.495000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t6wtx1 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-08T03:57:18.928000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t6wtx1/iran_considering_us_proposal_as_trump_says_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t6qsi3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-07T23:17:46.891000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t6qsi3/trump_calls_us_bombing_iran_a_love_tap_as/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t6b4lh subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-07T13:49:37.319000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t6b4lh/iran_reviewing_us_proposal_as_trump_pressures/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t624xl subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-07T06:16:43.399000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t624xl/us_fires_on_iranianflagged_oil_tanker_as_trump/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t5dz13 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T14:06:38.892000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t5dz13/pakistani_source_confirms_us_iran_closing_in_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t5bjbt subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T12:32:39.874000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t5bjbt/iran_war_to_be_over_trump_says_epic_fury_will_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t59yno subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T11:22:47.486000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t59yno/us_and_iran_close_to_onepage_memorandum_to_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=35
+Round 5/60 | Visible: 35 | New unique: 7 | Matches updated: 0 | Job total: 35 | Oldest: 2026-05-06T11:22:47.486000+00:00
+Round 6/60 | Visible: 35 | New unique: 0 | Matches updated: 0 | Job total: 35 | Oldest: 2026-05-06T11:22:47.486000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t54dt3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T06:05:05.854000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t54dt3/trump_puts_project_freedom_on_hold_saying_he/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t2zhw4 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-03T22:24:14.619000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t2zhw4/iran_war_trump_says_us_to_guide_ships_safely_from/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t2w6p6 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-03T20:13:17.615000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t2w6p6/iran_has_proposed_a_14point_plan_to_the_us_to_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t1y7yj subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-02T18:47:44.603000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t1y7yj/iran_military_official_says_war_with_with_us/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t1hp79 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-02T06:10:47.034000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t1hp79/us_warned_europeans_of_weapon_delivery_delays_due/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sz3554 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-29T16:04:11.175000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sz3554/us_war_in_iran_has_cost_25_billion_so_far_says/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sxtv4q subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-28T07:00:32.694000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sxtv4q/king_charles_arrives_in_us_for_trip_overshadowed/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=42
+Round 7/60 | Visible: 42 | New unique: 7 | Matches updated: 0 | Job total: 42 | Oldest: 2026-04-28T07:00:32.694000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sxt92h subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-28T06:25:29.087000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sxt92h/trump_not_happy_with_latest_iran_proposal_to_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sx0fdo subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-27T11:06:52.401000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sx0fdo/iran_offers_to_reopen_strait_of_hormuz_if_us/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1swuj9j subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-27T05:30:13.625000+00:00 url=https://www.reddit.com/r/worldnews/comments/1swuj9j/us_israel_iran_war_amid_irans_attacks_uae_called/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sw0ql5 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-26T07:21:38.628000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sw0ql5/iran_war_delays_us_weapons_deliveries_to_estonia/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1svqap3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-25T22:43:38.057000+00:00 url=https://www.reddit.com/r/worldnews/comments/1svqap3/trump_cancels_us_envoys_trip_after_irans_araghchi/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1svi92e subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-25T17:26:52.453000+00:00 url=https://www.reddit.com/r/worldnews/comments/1svi92e/trump_cancels_his_envoys_pakistan_trip_for_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sshfjs subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-22T10:23:40.850000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sshfjs/iran_sees_mass_redundancies_from_war_with_us_and/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\PipeLine\v_5 - Copy\group-pipeline-with-monitoring\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=49
+Round 8/60 | Visible: 49 | New unique: 7 | Matches updated: 0 | Job total: 49 | Oldest: 2026-04-22T10:23:40.850000+00:00
+===== OVERLAY END | exit=1 | duration=54.6s =====
+
+
+===== OVERLAY START 2026-08-14 10:18:02 | reddit_discovery =====
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — reddit_discovery
+Original pipeline files: UNCHANGED
+ACTIVE_QUERY_IDS: ALL
+SOURCES: 28
+QUERIES: 21
+MAX_SCROLLS_PER_SEARCH_TERM: 60
+MAX_NO_NEW_ROUNDS: 6
+SCROLL_PAUSE_SECONDS: 3.0
+BETWEEN_SEARCH_TERM_PAUSE_SECONDS: 8.0
+BETWEEN_JOB_PAUSE_SECONDS: 10.0
+INITIAL_TIMEOUT_SECONDS: 25
+========================================================================
+
+[REDDIT][DISCOVERY][START] Parent-post collector is running. Every new checkpointed post will be logged below.
+
+================================================================================
+REDDIT MASTER PARENT-POST URL COLLECTION
+================================================================================
+Master run ID: reddit_master_20260814T171803Z_56027583
+Queries selected: 21
+Query/source jobs: 70
+Output directory: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts
+Previously completed term-jobs found: 0
+Resume mode: ON
+
+================================================================================
+JOB 1/70
+Query: RQ-001 | Core conflict | en
+Scope: RD-001 -> r/worldnews
+Source status: Active
+Output: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv
+================================================================================
+
+----------------------------------------------------------------------
+Term 1/3: Iran-US war
+URL: https://www.reddit.com/r/worldnews/search/?q=Iran-US+war&type=posts&sort=new&restrict_sr=1
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv existing_posts=0
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vfjc80 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-08-04T18:51:08.388000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vfjc80/qatar_says_progress_made_toward_usiran_talks_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vbuasc subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-31T15:33:55.615000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vbuasc/iran_strikes_tankers_under_us_escort_in_hormuz/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v714x1 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-26T11:20:50.767000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v714x1/oil_falls_on_report_china_pushing_for_end_usiran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v3elmb subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-22T12:22:52.904000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v3elmb/jd_vance_accuses_israel_of_manipulating_us_public/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v2pu2q subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-21T17:53:12.266000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v2pu2q/tankers_with_saudi_crude_turn_back_as_houthis/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uy6pyl subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-16T15:51:23.345000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uy6pyl/estonia_says_us_arms_delayed_over_iran_war_will/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uxbtl0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-15T17:01:18.137000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uxbtl0/iran_ramps_up_execution_of_political_prisoners/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=7
+Round 1/60 | Visible: 7 | New unique: 7 | Matches updated: 0 | Job total: 7 | Oldest: 2026-07-15T17:01:18.137000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ux53o3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-15T12:56:38.326000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ux53o3/iran_ramps_up_execution_of_political_prisoners/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1usd09i subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-10T04:13:05.065000+00:00 url=https://www.reddit.com/r/worldnews/comments/1usd09i/us_military_denies_involvement_after_explosions/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1urcjj0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-09T01:50:51.256000+00:00 url=https://www.reddit.com/r/worldnews/comments/1urcjj0/usisraeliran_war_latest_news_medvedev_warns_of/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ul4rfn subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-02T01:49:03.126000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ul4rfn/us_reportedly_mulls_pulling_troops_from_saudi/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uk8nug subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-01T02:07:59.780000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uk8nug/us_president_donald_trump_weighs_allout_war_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uholq5 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-28T05:26:24.708000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uholq5/iran_attacks_bahrain_and_kuwait_following_us/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uee6am subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-24T13:53:50.721000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uee6am/italy_rebukes_natos_rutte_over_remarks_on_us_use/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=14
+Round 2/60 | Visible: 14 | New unique: 7 | Matches updated: 0 | Job total: 14 | Oldest: 2026-06-24T13:53:50.721000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u7ebmm subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-16T13:57:28.486000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u7ebmm/iran_says_the_us_war_deal_requires_israel_to/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u6c7ou subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-15T10:01:45.292000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u6c7ou/iran_and_us_reach_a_tentative_deal_to_end_war_as/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u633xv subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-15T01:49:49.366000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u633xv/us_iran_reach_preliminary_agreement_to_end_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1u4yl9l subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-13T18:37:28.159000+00:00 url=https://www.reddit.com/r/worldnews/comments/1u4yl9l/secret_qatari_protection_deal_presented_to_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1twexmc subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-04T06:03:05.795000+00:00 url=https://www.reddit.com/r/worldnews/comments/1twexmc/iran_links_the_end_of_the_war_with_the_us_and/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1trsrsg subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-30T07:09:56.435000+00:00 url=https://www.reddit.com/r/worldnews/comments/1trsrsg/tehran_denies_us_claims_of_extension_to_iran_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tmhpc0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-24T17:00:18.406000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tmhpc0/iran_executes_person_for_sending_information_to/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=21
+Round 3/60 | Visible: 21 | New unique: 7 | Matches updated: 0 | Job total: 21 | Oldest: 2026-05-24T17:00:18.406000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tkpesv subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-22T17:15:50.732000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tkpesv/us_navy_chief_says_14bn_arms_sale_to_taiwan/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tkkjko subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-22T14:24:45.720000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tkkjko/qatari_negotiating_team_in_tehran_to_try_to_help/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tibfua subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-20T04:54:16.324000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tibfua/iran_warns_it_could_open_up_new_fronts_in_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1thsglp subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-19T16:39:38.744000+00:00 url=https://www.reddit.com/r/worldnews/comments/1thsglp/drone_strikes_uae_nuclear_plant_as_us_and_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1thgigr subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-19T08:25:35.098000+00:00 url=https://www.reddit.com/r/worldnews/comments/1thgigr/iran_says_peace_proposal_includes_reparations_for/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1tc1s0i subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-13T14:44:55.801000+00:00 url=https://www.reddit.com/r/worldnews/comments/1tc1s0i/chinese_supertanker_breaks_through_usiran_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t85jal subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-09T13:49:09.495000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t85jal/merz_says_europe_wants_a_strong_nato_and_shares/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=28
+Round 4/60 | Visible: 28 | New unique: 7 | Matches updated: 0 | Job total: 28 | Oldest: 2026-05-09T13:49:09.495000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t6wtx1 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-08T03:57:18.928000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t6wtx1/iran_considering_us_proposal_as_trump_says_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t6qsi3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-07T23:17:46.891000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t6qsi3/trump_calls_us_bombing_iran_a_love_tap_as/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t6b4lh subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-07T13:49:37.319000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t6b4lh/iran_reviewing_us_proposal_as_trump_pressures/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t624xl subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-07T06:16:43.399000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t624xl/us_fires_on_iranianflagged_oil_tanker_as_trump/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t5dz13 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T14:06:38.892000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t5dz13/pakistani_source_confirms_us_iran_closing_in_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t5bjbt subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T12:32:39.874000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t5bjbt/iran_war_to_be_over_trump_says_epic_fury_will_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t59yno subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T11:22:47.486000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t59yno/us_and_iran_close_to_onepage_memorandum_to_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=35
+Round 5/60 | Visible: 35 | New unique: 7 | Matches updated: 0 | Job total: 35 | Oldest: 2026-05-06T11:22:47.486000+00:00
+Round 6/60 | Visible: 35 | New unique: 0 | Matches updated: 0 | Job total: 35 | Oldest: 2026-05-06T11:22:47.486000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t54dt3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-06T06:05:05.854000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t54dt3/trump_puts_project_freedom_on_hold_saying_he/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t2zhw4 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-03T22:24:14.619000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t2zhw4/iran_war_trump_says_us_to_guide_ships_safely_from/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t2w6p6 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-03T20:13:17.615000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t2w6p6/iran_has_proposed_a_14point_plan_to_the_us_to_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t1y7yj subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-02T18:47:44.603000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t1y7yj/iran_military_official_says_war_with_with_us/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t1hp79 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-02T06:10:47.034000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t1hp79/us_warned_europeans_of_weapon_delivery_delays_due/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sz3554 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-29T16:04:11.175000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sz3554/us_war_in_iran_has_cost_25_billion_so_far_says/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sxtv4q subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-28T07:00:32.694000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sxtv4q/king_charles_arrives_in_us_for_trip_overshadowed/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=42
+Round 7/60 | Visible: 42 | New unique: 7 | Matches updated: 0 | Job total: 42 | Oldest: 2026-04-28T07:00:32.694000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sxt92h subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-28T06:25:29.087000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sxt92h/trump_not_happy_with_latest_iran_proposal_to_end/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sx0fdo subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-27T11:06:52.401000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sx0fdo/iran_offers_to_reopen_strait_of_hormuz_if_us/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1swuj9j subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-27T05:30:13.625000+00:00 url=https://www.reddit.com/r/worldnews/comments/1swuj9j/us_israel_iran_war_amid_irans_attacks_uae_called/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sw0ql5 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-26T07:21:38.628000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sw0ql5/iran_war_delays_us_weapons_deliveries_to_estonia/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1svqap3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-25T22:43:38.057000+00:00 url=https://www.reddit.com/r/worldnews/comments/1svqap3/trump_cancels_us_envoys_trip_after_irans_araghchi/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1svi92e subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-25T17:26:52.453000+00:00 url=https://www.reddit.com/r/worldnews/comments/1svi92e/trump_cancels_his_envoys_pakistan_trip_for_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sshfjs subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-22T10:23:40.850000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sshfjs/iran_sees_mass_redundancies_from_war_with_us_and/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=49
+Round 8/60 | Visible: 49 | New unique: 7 | Matches updated: 0 | Job total: 49 | Oldest: 2026-04-22T10:23:40.850000+00:00
+Round 9/60 | Visible: 49 | New unique: 0 | Matches updated: 0 | Job total: 49 | Oldest: 2026-04-22T10:23:40.850000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ss921l subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-22T02:51:12.884000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ss921l/iran_sees_mass_redundancies_from_war_with_us_and/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sr65ld subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-20T23:06:46.477000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sr65ld/trump_offers_mixed_messages_about_path_ahead_for/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sr3651 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-20T21:11:05.863000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sr3651/us_spending_on_reckless_iran_war_could_have_saved/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1spdyh6 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-19T00:21:31.070000+00:00 url=https://www.reddit.com/r/worldnews/comments/1spdyh6/diplomatic_cables_show_iran_war_is_damaging_us_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1so555l subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-17T15:59:39.544000+00:00 url=https://www.reddit.com/r/worldnews/comments/1so555l/us_to_delay_weapons_deliveries_to_some_european/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1smyiz8 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-16T09:28:56.681000+00:00 url=https://www.reddit.com/r/worldnews/comments/1smyiz8/us_war_on_iran_was_a_mistake_says_uk_chancellor/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1smp1x8 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-16T01:14:44.748000+00:00 url=https://www.reddit.com/r/worldnews/comments/1smp1x8/trump_says_war_very_close_to_being_over_as_us/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=56
+Round 10/60 | Visible: 56 | New unique: 7 | Matches updated: 0 | Job total: 56 | Oldest: 2026-04-16T01:14:44.748000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1smc1z2 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-15T17:02:39.483000+00:00 url=https://www.reddit.com/r/worldnews/comments/1smc1z2/who_says_vaccinations_save_millions_in_africa_but/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1smbhw0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-15T16:42:58.819000+00:00 url=https://www.reddit.com/r/worldnews/comments/1smbhw0/chancellor_rachel_reeves_calls_usisraeli_war_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sl0fqt subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-14T06:18:27.294000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sl0fqt/us_starts_naval_blockade_of_iranian_ports_after/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sklr98 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-13T19:46:37.804000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sklr98/trump_did_not_speak_with_the_chinese_leader_but/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sklj4v subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-13T19:38:47.744000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sklj4v/turkey_also_tries_to_mediate_an_end_to_the/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1sit5bu subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-11T19:55:16.569000+00:00 url=https://www.reddit.com/r/worldnews/comments/1sit5bu/pope_leo_xiv_denounces_the_delusion_of/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1siglep subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-04-11T11:30:26.133000+00:00 url=https://www.reddit.com/r/worldnews/comments/1siglep/iran_war_us_official_denies_claims_washington/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=63
+Round 11/60 | Visible: 63 | New unique: 7 | Matches updated: 0 | Job total: 63 | Oldest: 2026-04-11T11:30:26.133000+00:00
+===== OVERLAY END | exit=1 | duration=74.3s =====
+
+
+===== OVERLAY START 2026-08-14 10:28:12 | reddit_discovery =====
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — reddit_discovery
+Original pipeline files: UNCHANGED
+ACTIVE_QUERY_IDS: ALL
+SOURCES: 28
+QUERIES: 21
+MAX_SCROLLS_PER_SEARCH_TERM: 60
+MAX_NO_NEW_ROUNDS: 6
+SCROLL_PAUSE_SECONDS: 3.0
+BETWEEN_SEARCH_TERM_PAUSE_SECONDS: 8.0
+BETWEEN_JOB_PAUSE_SECONDS: 10.0
+INITIAL_TIMEOUT_SECONDS: 25
+========================================================================
+
+[REDDIT][DISCOVERY][START] Parent-post collector is running. Every new checkpointed post will be logged below.
+
+================================================================================
+REDDIT MASTER PARENT-POST URL COLLECTION
+================================================================================
+Master run ID: reddit_master_20260814T172813Z_3dade310
+Queries selected: 21
+Query/source jobs: 70
+Output directory: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts
+Previously completed term-jobs found: 0
+Resume mode: ON
+
+================================================================================
+JOB 1/70
+Query: RQ-001 | Core conflict | en
+Scope: RD-001 -> r/worldnews
+Source status: Active
+Output: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv
+================================================================================
+
+----------------------------------------------------------------------
+Term 1/3: Iran-US war
+URL: https://www.reddit.com/r/worldnews/search/?q=Iran-US+war&type=posts&sort=new&restrict_sr=1
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv existing_posts=63
+Round 1/60 | Visible: 14 | New unique: 0 | Matches updated: 0 | Job total: 63 | Oldest: N/A
+Round 2/60 | Visible: 14 | New unique: 0 | Matches updated: 0 | Job total: 63 | Oldest: N/A
+Round 3/60 | Visible: 21 | New unique: 0 | Matches updated: 0 | Job total: 63 | Oldest: N/A
+Round 4/60 | Visible: 28 | New unique: 0 | Matches updated: 0 | Job total: 63 | Oldest: N/A
+Round 5/60 | Visible: 35 | New unique: 0 | Matches updated: 0 | Job total: 63 | Oldest: N/A
+Round 6/60 | Visible: 35 | New unique: 0 | Matches updated: 0 | Job total: 63 | Oldest: N/A
+Stopping this search term: 6 consecutive no-growth rounds.
+Pausing 8s before next term...
+
+----------------------------------------------------------------------
+Term 2/3: US-Iran tensions
+URL: https://www.reddit.com/r/worldnews/search/?q=US-Iran+tensions&type=posts&sort=new&restrict_sr=1
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv existing_posts=63
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ujpfqk subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-30T13:35:19.369000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ujpfqk/us_envoys_arrive_in_qatar_for_meetings_on_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uh1kwa subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-06-27T12:31:44.357000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uh1kwa/iran_says_it_hit_us_targets_as_tensions_over/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1t9yh7e subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-05-11T09:46:42.061000+00:00 url=https://www.reddit.com/r/worldnews/comments/1t9yh7e/iran_executes_alleged_mossad_spy_erfan/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ryc3q5 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-03-19T20:54:22.589000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ryc3q5/us_approves_165bn_arms_deal_to_gulf_states_amid/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1rgb5xk subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-02-27T16:21:52.962000+00:00 url=https://www.reddit.com/r/worldnews/comments/1rgb5xk/uk_withdraws_tehran_embassy_staff_as_usiran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1re9ate subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-02-25T10:06:01.370000+00:00 url=https://www.reddit.com/r/worldnews/comments/1re9ate/indias_modi_visits_israel_as_usiran_tensions_mount/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=6 total_posts=69
+Round 1/60 | Visible: 7 | New unique: 6 | Matches updated: 1 | Job total: 69 | Oldest: 2026-02-25T10:06:01.370000+00:00
+Reached posts older than PROJECT_START. Stopping this search term.
+Pausing 8s before next term...
+
+----------------------------------------------------------------------
+Term 3/3: Iran war
+URL: https://www.reddit.com/r/worldnews/search/?q=Iran+war&type=posts&sort=new&restrict_sr=1
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv existing_posts=69
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vnkf0x subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at= url=https://www.reddit.com/r/worldnews/comments/1vnkf0x/iran_rapidly_rebuilding_ballistic_missile_arsenal/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vn9dwp subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at= url=https://www.reddit.com/r/worldnews/comments/1vn9dwp/south_korean_airport_becomes_busiest_in_world_for/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vn66q3 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at= url=https://www.reddit.com/r/worldnews/comments/1vn66q3/saudi_arabia_turns_to_muslim_military/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vlizc1 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at= url=https://www.reddit.com/r/worldnews/comments/1vlizc1/trump_pivots_back_to_sanctions_for_iran_as_other/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vlegdf subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at= url=https://www.reddit.com/r/worldnews/comments/1vlegdf/iran_appoints_new_military_chiefs_as_usiran_war/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vkr87r subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at= url=https://www.reddit.com/r/worldnews/comments/1vkr87r/saudi_arabia_used_86_of_its_patriot_missile/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vhocq0 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at= url=https://www.reddit.com/r/worldnews/comments/1vhocq0/petrobras_profit_jumps_80_tops_estimates_on_iran/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=7 total_posts=76
+Round 1/60 | Visible: 7 | New unique: 7 | Matches updated: 0 | Job total: 76 | Oldest: N/A
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vh5gts subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-08-06T14:14:41.618000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vh5gts/irans_president_reveals_unreported_details_of/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vdcsok subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-08-02T08:42:50.692000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vdcsok/australian_electric_vehicle_sales_more_than/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vc3ruj subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-31T21:23:16.431000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vc3ruj/iran_struck_amazon_data_centers_again_amid/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vbtrss subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-31T15:14:41.634000+00:00 url=https://www.reddit.com/r/worldnews/comments/1vbtrss/uk_petrol_price_hits_iran_war_high_adding_to/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v7wnsc subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-27T10:37:45.258000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v7wnsc/mediators_see_progress_in_diplomatic_efforts_to/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=5 total_posts=81
+Round 2/60 | Visible: 14 | New unique: 5 | Matches updated: 2 | Job total: 81 | Oldest: 2026-07-27T10:37:45.258000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v6233d subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-25T07:59:53.167000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v6233d/iran_war_houthis_vow_response_to_saudi_strikes_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v5kbqa subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-24T18:50:47.759000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v5kbqa/a_new_threat_by_yemens_houthis_could_widen_the/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v5jn94 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-24T18:26:08.136000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v5jn94/yemen_teeters_towards_renewed_war_in_shadow_of/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v4hivv subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-23T15:41:11.037000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v4hivv/yemens_houthis_attack_saudi_tankers_in_red_sea/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v4dlqv subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-23T13:14:33.368000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v4dlqv/yemens_houthis_attack_saudi_tankers_in_the_red/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v44xtt subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-23T05:46:43.357000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v44xtt/houthis_say_they_attacked_saudi_tankers_in_the/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=6 total_posts=87
+Round 3/60 | Visible: 21 | New unique: 6 | Matches updated: 1 | Job total: 87 | Oldest: 2026-07-23T05:46:43.357000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v3n17q subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-22T17:32:55.122000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v3n17q/rubio_meets_chinas_wang_at_regional_gathering/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v2e0z5 subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-21T10:01:21.365000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v2e0z5/israeli_media_says_turkey_was_ready_to_intervene/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1v1tifk subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-20T18:20:41.366000+00:00 url=https://www.reddit.com/r/worldnews/comments/1v1tifk/araghchi_says_turkey_helped_prevent_kurdish/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=3 total_posts=90
+Round 4/60 | Visible: 28 | New unique: 3 | Matches updated: 4 | Job total: 90 | Oldest: 2026-07-20T18:20:41.366000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uw013m subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-14T05:54:31.192000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uw013m/war_and_economic_crisis_complicate_efforts_to/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1usl3rp subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-10T11:35:46.566000+00:00 url=https://www.reddit.com/r/worldnews/comments/1usl3rp/iran_war_20_slams_asia_back_into_the_blast_zone/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1uru3pm subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-09T15:47:22.561000+00:00 url=https://www.reddit.com/r/worldnews/comments/1uru3pm/russia_swings_to_june_budget_surplus_on_oil_rally/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1ur0mde subreddit=worldnews query_id=RQ-001 source_id=RD-001 created_at=2026-07-08T18:08:10.557000+00:00 url=https://www.reddit.com/r/worldnews/comments/1ur0mde/uaes_gargash_says_iran_unable_to_turn_the_page_on/ file=RQ-001_RD-001_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv new_posts=4 total_posts=94
+Round 5/60 | Visible: 35 | New unique: 4 | Matches updated: 3 | Job total: 94 | Oldest: 2026-07-08T18:08:10.557000+00:00
+Round 6/60 | Visible: 35 | New unique: 0 | Matches updated: 0 | Job total: 94 | Oldest: 2026-07-08T18:08:10.557000+00:00
+===== OVERLAY END | exit=1 | duration=91.8s =====
+
+
+===== OVERLAY START 2026-08-14 10:30:16 | reddit_discovery =====
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — reddit_discovery
+Original pipeline files: UNCHANGED
+ACTIVE_QUERY_IDS: ALL
+SOURCES: 28
+QUERIES: 21
+MAX_SCROLLS_PER_SEARCH_TERM: 60
+MAX_NO_NEW_ROUNDS: 6
+SCROLL_PAUSE_SECONDS: 3.0
+BETWEEN_SEARCH_TERM_PAUSE_SECONDS: 8.0
+BETWEEN_JOB_PAUSE_SECONDS: 10.0
+INITIAL_TIMEOUT_SECONDS: 25
+========================================================================
+
+[REDDIT][DISCOVERY][START] Parent-post collector is running. Every new checkpointed post will be logged below.
+
+================================================================================
+REDDIT MASTER PARENT-POST URL COLLECTION
+================================================================================
+Master run ID: reddit_master_20260814T173017Z_05530ccf
+Queries selected: 21
+Query/source jobs: 70
+Output directory: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts
+Previously completed term-jobs found: 2
+Resume mode: ON
+
+================================================================================
+JOB 1/70
+Query: RQ-001 | Core conflict | en
+Scope: RD-001 -> r/worldnews
+Source status: Active
+Output: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv
+================================================================================
+
+----------------------------------------------------------------------
+SKIP COMPLETED | RQ-001 | RD-001 | Iran-US war
+This Query × Source × Search Term was conclusively completed in a previous run.
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
+SKIP COMPLETED | RQ-001 | RD-001 | US-Iran tensions
+This Query × Source × Search Term was conclusively completed in a previous run.
+----------------------------------------------------------------------
+
+----------------------------------------------------------------------
+Term 3/3: Iran war
+URL: https://www.reddit.com/r/worldnews/search/?q=Iran+war&type=posts&sort=new&restrict_sr=1
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-001_RD-001_reddit_parent_posts.csv existing_posts=94
+Round 1/60 | Visible: 7 | New unique: 0 | Matches updated: 0 | Job total: 94 | Oldest: N/A
+Round 2/60 | Visible: 14 | New unique: 0 | Matches updated: 0 | Job total: 94 | Oldest: N/A
+Round 3/60 | Visible: 21 | New unique: 0 | Matches updated: 0 | Job total: 94 | Oldest: N/A
+Round 4/60 | Visible: 28 | New unique: 0 | Matches updated: 0 | Job total: 94 | Oldest: N/A
+===== OVERLAY END | exit=1 | duration=32.8s =====
+
+
+===== OVERLAY START 2026-08-14 10:39:58 | reddit_discovery =====
+[REDDIT][OVERRIDE] Custom Topic Detected: 'AI 2026'
+[REDDIT][OVERRIDE] Locked to single custom query: 'AI 2026'
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — reddit_discovery
+Original pipeline files: UNCHANGED
+ACTIVE_QUERY_IDS: ALL
+SOURCES: 28
+QUERIES: 1
+MAX_SCROLLS_PER_SEARCH_TERM: 60
+MAX_NO_NEW_ROUNDS: 6
+SCROLL_PAUSE_SECONDS: 3.0
+BETWEEN_SEARCH_TERM_PAUSE_SECONDS: 8.0
+BETWEEN_JOB_PAUSE_SECONDS: 10.0
+INITIAL_TIMEOUT_SECONDS: 25
+========================================================================
+
+[REDDIT][DISCOVERY][START] Parent-post collector is running. Every new checkpointed post will be logged below.
+
+================================================================================
+REDDIT MASTER PARENT-POST URL COLLECTION
+================================================================================
+Master run ID: reddit_master_20260814T173959Z_9d2abbbb
+Queries selected: 1
+Query/source jobs: 1
+Output directory: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts
+Previously completed term-jobs found: 2
+Resume mode: ON
+
+================================================================================
+JOB 1/1
+Query: RQ-CUSTOM-001 | Custom Run | en
+Scope: r/all
+Output: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+================================================================================
+
+----------------------------------------------------------------------
+Term 1/1: AI 2026
+URL: https://www.reddit.com/search/?q=AI+2026&type=posts&sort=new
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv existing_posts=0
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodz1s subreddit= query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:39:34.386000+00:00 url=https://www.reddit.com/user/smoothcriminalmeow/comments/1vodz1s/best_ai_for_coding_in_2026/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodwp8 subreddit=EverHint query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:37:07.689000+00:00 url=https://www.reddit.com/r/EverHint/comments/1vodwp8/stock_market_news_august_14_2026_midday_update/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodulg subreddit=GamingLeaksAndRumours query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:34:55.203000+00:00 url=https://www.reddit.com/r/GamingLeaksAndRumours/comments/1vodulg/perfect_worlds_investment_firms_research_meeting/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodrbf subreddit=StarWarsSplashPage query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:31:40.916000+00:00 url=https://www.reddit.com/r/StarWarsSplashPage/comments/1vodrbf/preview_for_aug_19s_star_wars_galaxys_edge_echoes/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodqyx subreddit=pennystocks query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:31:24.212000+00:00 url=https://www.reddit.com/r/pennystocks/comments/1vodqyx/nvidia_quera_bmw_partner_with_zapata_quantum/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodppk subreddit=letscodecommunity query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:30:11.112000+00:00 url=https://www.reddit.com/r/letscodecommunity/comments/1vodppk/visa_sponsorship_remote_jobs_freshly_funded/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodm8t subreddit=AskDocs query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:26:31.408000+00:00 url=https://www.reddit.com/r/AskDocs/comments/1vodm8t/should_i_be_concerned_about_cbc_results/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv new_posts=7 total_posts=7
+Round 1/60 | Visible: 7 | New unique: 7 | Matches updated: 0 | Job total: 7 | Oldest: 2026-08-14T17:26:31.408000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodlyn subreddit=options query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:26:13.538000+00:00 url=https://www.reddit.com/r/options/comments/1vodlyn/my_robinhood_1099_says_2699_the_trade_lost_542/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodk05 subreddit=jenova_ai query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:24:12.348000+00:00 url=https://www.reddit.com/r/jenova_ai/comments/1vodk05/why_do_repeated_ai_divination_readings_give/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodgea subreddit=techbootcamp query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:20:13.487000+00:00 url=https://www.reddit.com/r/techbootcamp/comments/1vodgea/what_should_a_junior_web_developer_learn_in/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodg43 subreddit=javascriptjobs query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:20:13.487000+00:00 url=https://www.reddit.com/r/javascriptjobs/comments/1vodg43/what_should_a_junior_web_developer_learn_in/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodf9i subreddit=protein_deals query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:19:19.896000+00:00 url=https://www.reddit.com/r/protein_deals/comments/1vodf9i/gnc_clearance_creatine_400g_281_update_new_code/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voddjn subreddit=Claude_reports query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:17:34.676000+00:00 url=https://www.reddit.com/r/Claude_reports/comments/1voddjn/rclaudeai_never_expected_claude_responses_to_have/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vod8zu subreddit=GolfGear query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:12:58.160000+00:00 url=https://www.reddit.com/r/GolfGear/comments/1vod8zu/witb_mid_season_2026/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv new_posts=7 total_posts=14
+Round 2/60 | Visible: 15 | New unique: 7 | Matches updated: 0 | Job total: 14 | Oldest: 2026-08-14T17:12:58.160000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vod8st subreddit= query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:12:45.649000+00:00 url=https://www.reddit.com/user/neuronux/comments/1vod8st/its_2026_why_are_basic_ux_problems_still/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vod8fx subreddit=PennyStocksCanada query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:12:23.159000+00:00 url=https://www.reddit.com/r/PennyStocksCanada/comments/1vod8fx/uncovering_under_the_radar_microcaps_with/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vod5nv subreddit=TradeVerseNetwork query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:09:33.905000+00:00 url=https://www.reddit.com/r/TradeVerseNetwork/comments/1vod5nv/mdxh_surges_125_after_strong_q2_and_capital_raise/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vod4ex subreddit=ArtificialInteligence query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:08:16.711000+00:00 url=https://www.reddit.com/r/ArtificialInteligence/comments/1vod4ex/anthropic_needs_to_bring_in_amazonstyle_earnings/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vod1um subreddit=hubspot query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:05:40.797000+00:00 url=https://www.reddit.com/r/hubspot/comments/1vod1um/quick_30day_recap_of_everything_new_in_hubspot/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vod03e subreddit=FootballForIndians query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:03:50.826000+00:00 url=https://www.reddit.com/r/FootballForIndians/comments/1vod03e/is_this_news_true_i_have_seen_this_article_but_i/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voczst subreddit=10xPennyStocks query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:03:32.299000+00:00 url=https://www.reddit.com/r/10xPennyStocks/comments/1voczst/osr_health_osrh_refused_to_reverse_split_the_ceo/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv new_posts=7 total_posts=21
+Round 3/60 | Visible: 22 | New unique: 7 | Matches updated: 0 | Job total: 21 | Oldest: 2026-08-14T17:03:32.299000+00:00
+Round 4/60 | Visible: 22 | New unique: 0 | Matches updated: 0 | Job total: 21 | Oldest: 2026-08-14T17:03:32.299000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocywj subreddit=TrustMRR_Listings query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:02:41.777000+00:00 url=https://www.reddit.com/r/TrustMRR_Listings/comments/1vocywj/for_sale_rotgenorg_ai_viral_video_generation_saas/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocyqo subreddit=AIdaily_news query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:02:33.314000+00:00 url=https://www.reddit.com/r/AIdaily_news/comments/1vocyqo/a_widely_shared_comparison_video_tracks_the/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocxsu subreddit=jenova_ai query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:01:39.004000+00:00 url=https://www.reddit.com/r/jenova_ai/comments/1vocxsu/how_can_you_prevent_an_ai_astrology_tool_from/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocx1i subreddit=davinciresolve query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:00:53.919000+00:00 url=https://www.reddit.com/r/davinciresolve/comments/1vocx1i/davinci_resolve_21_panning_not_working/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocwrn subreddit=mcp query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:00:39.793000+00:00 url=https://www.reddit.com/r/mcp/comments/1vocwrn/best_ai_gateways_in_2026_what_are_people_using_in/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocwef subreddit=CitizenWatchNews query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:00:19.428000+00:00 url=https://www.reddit.com/r/CitizenWatchNews/comments/1vocwef/poll_should_the_usa_return_to_the_gold_standard/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocwc4 subreddit=ValueInvesting query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:00:16.484000+00:00 url=https://www.reddit.com/r/ValueInvesting/comments/1vocwc4/would_tempus_ai_be_a_good_play_comparison_to/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv new_posts=7 total_posts=28
+Round 5/60 | Visible: 29 | New unique: 7 | Matches updated: 0 | Job total: 28 | Oldest: 2026-08-14T17:00:16.484000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocw9t subreddit=PlacementsPrep query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:00:13.541000+00:00 url=https://www.reddit.com/r/PlacementsPrep/comments/1vocw9t/22f_2026_cs_graduate_looking_for_serious_study/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocw1w subreddit=biotech_stocks query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:00:02.046000+00:00 url=https://www.reddit.com/r/biotech_stocks/comments/1vocw1w/osr_health_osrh_refused_to_reverse_split_the_ceo/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocuzr subreddit=Music_Playlist_YT query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T16:58:58.217000+00:00 url=https://www.reddit.com/r/Music_Playlist_YT/comments/1vocuzr/08142026_music_industry_news_universal_music/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocurr subreddit=canadadeals query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T16:58:44.528000+00:00 url=https://www.reddit.com/r/canadadeals/comments/1vocurr/mapletrack_quebec_top_grocery_deals_for_august/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voct03 subreddit= query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T16:56:50.428000+00:00 url=https://www.reddit.com/user/maciejmm/comments/1voct03/hrowiec_na_rynku_pracy_2026_pobierz_vii_edycj%C4%99/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocsvp subreddit=HaloInfinity query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T16:56:41.566000+00:00 url=https://www.reddit.com/r/HaloInfinity/comments/1vocsvp/halo_infinity_rtx_5070_gaming_pc_amd_ryzen_5/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vocsvg subreddit=GearsOfWars query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T16:56:41.248000+00:00 url=https://www.reddit.com/r/GearsOfWars/comments/1vocsvg/gears_of_wars_rtx_5070_gaming_pc_amd_ryzen_5/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv new_posts=7 total_posts=35
+Round 6/60 | Visible: 36 | New unique: 7 | Matches updated: 0 | Job total: 35 | Oldest: 2026-08-14T16:56:41.248000+00:00
+===== OVERLAY END | exit=1 | duration=45.9s =====
+
+
+===== OVERLAY START 2026-08-14 10:52:03 | reddit_discovery =====
+[REDDIT][OVERRIDE] Custom Topic Detected: 'AI 2026'
+[REDDIT][OVERRIDE] Locked to single custom query: 'AI 2026'
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — reddit_discovery
+Original pipeline files: UNCHANGED
+ACTIVE_QUERY_IDS: ALL
+SOURCES: 28
+QUERIES: 1
+MAX_SCROLLS_PER_SEARCH_TERM: 60
+MAX_NO_NEW_ROUNDS: 6
+SCROLL_PAUSE_SECONDS: 3.0
+BETWEEN_SEARCH_TERM_PAUSE_SECONDS: 8.0
+BETWEEN_JOB_PAUSE_SECONDS: 10.0
+INITIAL_TIMEOUT_SECONDS: 25
+========================================================================
+
+[REDDIT][DISCOVERY][START] Parent-post collector is running. Every new checkpointed post will be logged below.
+
+================================================================================
+REDDIT MASTER PARENT-POST URL COLLECTION
+================================================================================
+Master run ID: reddit_master_20260814T175204Z_d7b5fdae
+Queries selected: 1
+Query/source jobs: 1
+Output directory: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts
+Previously completed term-jobs found: 2
+Resume mode: ON
+
+================================================================================
+JOB 1/1
+Query: RQ-CUSTOM-001 | Custom Run | en
+Scope: r/all
+Output: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+================================================================================
+
+----------------------------------------------------------------------
+Term 1/1: AI 2026
+URL: https://www.reddit.com/search/?q=AI+2026&type=posts&sort=new
+----------------------------------------------------------------------
+[REDDIT][DISCOVERY][CHECKPOINT_LOAD] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv existing_posts=35
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe9j9 subreddit=ForteFoundation query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:50:27.502000+00:00 url=https://www.reddit.com/r/ForteFoundation/comments/1voe9j9/the_career_move_youve_been_avoiding_might_be_the/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe99b subreddit=CodetteRecursiveAI query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:50:10.535000+00:00 url=https://www.reddit.com/r/CodetteRecursiveAI/comments/1voe99b/beyond_the_next_word_inside_the_ai_architecture/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe94f subreddit=forhire query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:50:01.804000+00:00 url=https://www.reddit.com/r/forhire/comments/1voe94f/for_hire_fullstack_ai_engineer_i_build_saas_mvps/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe8b6 subreddit=luftablassen query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:49:13.408000+00:00 url=https://www.reddit.com/r/luftablassen/comments/1voe8b6/warum_habe_ich_diese_ausbildung_%C3%BCberhaupt_gemacht/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe7q8 subreddit=Dentists query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:48:37.482000+00:00 url=https://www.reddit.com/r/Dentists/comments/1voe7q8/built_something_for_open_dental_recognized_by_mit/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe6gz subreddit=7daystodie query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:47:19.391000+00:00 url=https://www.reddit.com/r/7daystodie/comments/1voe6gz/super_wierd_response_from_mod_author_on_simple/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe6gc subreddit=fotbal query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:47:18.170000+00:00 url=https://www.reddit.com/r/fotbal/comments/1voe6gc/urmeaz%C4%83/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv new_posts=7 total_posts=42
+Round 1/60 | Visible: 7 | New unique: 7 | Matches updated: 0 | Job total: 42 | Oldest: 2026-08-14T17:47:18.170000+00:00
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe5ak subreddit=TechnofluxAI query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:46:03.217000+00:00 url=https://www.reddit.com/r/TechnofluxAI/comments/1voe5ak/ai_content_watermarking_is_becoming_something/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe4xu subreddit=AppStoreOptimization query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:45:42.583000+00:00 url=https://www.reddit.com/r/AppStoreOptimization/comments/1voe4xu/what_do_you_think_of_screenshots/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe45l subreddit=HPOmen query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:44:53.845000+00:00 url=https://www.reddit.com/r/HPOmen/comments/1voe45l/just_bought_an_omen_16_ap0183ax_ryzen_ai_7_350/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1voe3xc subreddit=SimpleSwap_io query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:44:39.584000+00:00 url=https://www.reddit.com/r/SimpleSwap_io/comments/1voe3xc/crypto_data_leaks_why_a_stolen_address_is_worth/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodzxw subreddit=bankingexam query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:40:34.276000+00:00 url=https://www.reddit.com/r/bankingexam/comments/1vodzxw/gearing_up_for_22nd_august/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][POST_SAVED] post_id=1vodz0i subreddit=aigamedev query_id=RQ-CUSTOM-001 source_id= created_at=2026-08-14T17:39:32.251000+00:00 url=https://www.reddit.com/r/aigamedev/comments/1vodz0i/ai_game_that_teaches_me_how_to_make_games_without/ file=RQ-CUSTOM-001_r_all_reddit_parent_posts.csv
+[REDDIT][DISCOVERY][CHECKPOINT_SAVED] file=C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\reddit\parent_posts\RQ-CUSTOM-001_r_all_reddit_parent_posts.csv new_posts=6 total_posts=48
+Round 2/60 | Visible: 14 | New unique: 6 | Matches updated: 0 | Job total: 48 | Oldest: 2026-08-14T17:39:32.251000+00:00
+Round 3/60 | Visible: 21 | New unique: 0 | Matches updated: 0 | Job total: 48 | Oldest: 2026-08-14T17:39:32.251000+00:00
+Round 4/60 | Visible: 29 | New unique: 0 | Matches updated: 0 | Job total: 48 | Oldest: 2026-08-14T17:39:32.251000+00:00
+Round 5/60 | Visible: 29 | New unique: 0 | Matches updated: 0 | Job total: 48 | Oldest: 2026-08-14T17:39:32.251000+00:00
+===== OVERLAY END | exit=1 | duration=41.1s =====
+
+
+===== OVERLAY START 2026-08-14 10:55:37 | reddit_discovery =====
+[REDDIT][OVERRIDE] Custom Topic Detected: 'AI 2026'
+[REDDIT][OVERRIDE] Locked to single custom query: 'AI 2026'
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — reddit_discovery
+Original pipeline files: UNCHANGED
+ACTIVE_QUERY_IDS: ['RQ-CUSTOM-001']
+SOURCES: 28
+QUERIES: 1
+MAX_SCROLLS_PER_SEARCH_TERM: 60
+MAX_NO_NEW_ROUNDS: 6
+SCROLL_PAUSE_SECONDS: 3.0
+BETWEEN_SEARCH_TERM_PAUSE_SECONDS: 8.0
+BETWEEN_JOB_PAUSE_SECONDS: 10.0
+INITIAL_TIMEOUT_SECONDS: 25
+========================================================================
+
+[REDDIT][DISCOVERY][START] Parent-post collector is running. Every new checkpointed post will be logged below.
+Traceback (most recent call last):
+  File "C:\Users\hnade\OneDrive\Desktop\New folder\repo\monitoring\runtime_wrapper.py", line 401, in <module>
+    main()
+  File "C:\Users\hnade\OneDrive\Desktop\New folder\repo\monitoring\runtime_wrapper.py", line 398, in main
+    funcs[name](cfg)
+  File "C:\Users\hnade\OneDrive\Desktop\New folder\repo\monitoring\runtime_wrapper.py", line 140, in run_reddit_discovery
+    m.main()
+  File "C:\Users\hnade\OneDrive\Desktop\New folder\repo\src\ingestion\reddit_parent_post_collector.py", line 1802, in main
+    validate_registry()
+  File "C:\Users\hnade\OneDrive\Desktop\New folder\repo\src\ingestion\reddit_parent_post_collector.py", line 863, in validate_registry
+    raise ValueError(
+ValueError: RQ-CUSTOM-001: query_search must not specify source_ids
+===== OVERLAY END | exit=1 | duration=0.9s =====

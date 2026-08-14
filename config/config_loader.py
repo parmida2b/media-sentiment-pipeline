@@ -5,7 +5,7 @@ since this lives in config/ alongside schema.py).
 
 Version: v1 - Day 2
 """
-
+import os
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timezone
@@ -78,6 +78,26 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> PipelineConfig:
             f"config.yaml: date_range.end ({end.date()}) must be after "
             f"date_range.start ({start})"
         )
+    custom_topic = os.getenv("SCRAPER_CUSTOM_TOPIC")
+    custom_start = os.getenv("SCRAPER_START_DATE")
+    custom_end = os.getenv("SCRAPER_END_DATE")
+
+    keywords_fa = raw.get("keywords_fa") or []
+    keywords_en = raw.get("keywords_en") or []
+    keywords_ar = raw.get("keywords_ar") or []
+
+    if custom_topic:
+        topic = custom_topic
+        keywords_fa = [custom_topic]
+        keywords_en = [custom_topic]
+        keywords_ar = []
+
+    if custom_start:
+        start = date.fromisoformat(custom_start)
+    if custom_end:
+        end_date = date.fromisoformat(custom_end)
+        end = datetime.combine(end_date, time.max, tzinfo=timezone.utc)
+        end_is_auto = False
 
     return PipelineConfig(
         topic=topic,

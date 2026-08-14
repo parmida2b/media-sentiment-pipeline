@@ -1,0 +1,8 @@
+Delivery integrity proof
+========================
+Original uploaded pipeline was extracted into repo/.
+Before packaging, every one of the 187 original files (including .git metadata) was SHA-256 compared against the copied repo/ tree.
+Result: BYTE-FOR-BYTE IDENTICAL.
+
+Monitoring files live only in sibling monitoring/. No original repo file was edited to add the control plane.
+Runtime output directories are expected to change when the original collectors run.

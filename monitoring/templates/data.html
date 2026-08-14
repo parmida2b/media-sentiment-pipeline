@@ -1,0 +1,24 @@
+{% extends 'base.html' %}{% block content %}
+<div class="kpis">
+<div class="kpi"><div><div id="kRedditParents" class="v num">{{counts.reddit_parent_posts}}</div><div class="l">Reddit parent posts</div></div></div>
+<div class="kpi"><div><div id="kRedditRaw" class="v num">{{reddit.raw_json_files}}</div><div class="l">Reddit raw JSON files</div></div></div>
+<div class="kpi"><div><div id="kRedditComments" class="v num">{{reddit.comments_live_raw_json}}</div><div class="l">Reddit live comments</div></div></div>
+<div class="kpi"><div><div id="kRedditPending" class="v num">{{reddit.pending_json if reddit.pending_json is not none else '—'}}</div><div class="l">Reddit pending JSON</div></div></div>
+<div class="kpi"><div><div id="kYoutubeRecords" class="v num">{{counts.youtube_records}}</div><div class="l">YouTube records</div></div></div>
+<div class="kpi"><div><div id="kXTweets" class="v num">{{counts.x_tweets}}</div><div class="l">X tweets</div></div></div>
+<div class="kpi"><div><div id="kXMatches" class="v num">{{counts.x_matches}}</div><div class="l">X query matches</div></div></div>
+<div class="kpi"><div><div class="v num">{{counts.finance_raw}}</div><div class="l">Finance raw</div></div></div>
+</div>
+
+<div class="card fade"><div class="hd"><h2>Reddit Live — Parent Posts</h2><span id="redditGeneratedAt" class="bdg n">waiting…</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Post ID</th><th>Subreddit</th><th>Created</th><th>Title</th><th>Post URL</th><th>JSON URL</th></tr></thead><tbody id="redditParentBody"><tr><td colspan="6" class="empty-cell">در حال دریافت...</td></tr></tbody></table></div></div>
+
+<div class="card fade"><div class="hd"><h2>Reddit Live — JSON Fetch</h2><span id="redditFetchSummary" class="bdg n">0 events</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Status</th><th>Post ID</th><th>HTTP</th><th>Finished</th><th>JSON URL</th><th>Raw file</th></tr></thead><tbody id="redditFetchBody"><tr><td colspan="6" class="empty-cell">در حال دریافت...</td></tr></tbody></table></div></div>
+
+<div class="card fade"><div class="hd"><h2>Reddit Live — Comments</h2><span class="bdg g">Raw JSON</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Comment ID</th><th>Post</th><th>Subreddit</th><th>Created</th><th>Depth</th><th>Comment</th></tr></thead><tbody id="redditCommentBody"><tr><td colspan="6" class="empty-cell">در حال دریافت...</td></tr></tbody></table></div></div>
+
+<div class="card fade"><div class="hd"><h2>YouTube Live — Comments & Replies</h2><span id="youtubeGeneratedAt" class="bdg n">waiting…</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Content ID</th><th>Type</th><th>Created</th><th>Video</th><th>Query</th><th>Channel</th><th>Text</th></tr></thead><tbody id="youtubeBody"><tr><td colspan="7" class="empty-cell">در حال دریافت...</td></tr></tbody></table></div></div>
+
+<div class="card fade"><div class="hd"><h2>X Live — Tweets</h2><span id="xGeneratedAt" class="bdg n">waiting…</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Tweet ID</th><th>Created</th><th>Query</th><th>Week</th><th>Source</th><th>Region</th><th>Tweet</th><th>URL</th></tr></thead><tbody id="xBody"><tr><td colspan="8" class="empty-cell">در حال دریافت...</td></tr></tbody></table></div></div>
+
+<div class="card"><div class="hd"><h2>آخرین Finance Run</h2></div><code>{{counts.finance_latest_run}}</code></div>
+{% endblock %}{% block scripts %}<script src="{{url_for('static',filename='js/data.js')}}" defer></script>{% endblock %}

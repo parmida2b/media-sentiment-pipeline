@@ -1,0 +1,399 @@
+
+
+===== OVERLAY START 2026-08-14 11:13:26 | youtube =====
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — youtube
+Original pipeline files: UNCHANGED
+YOUTUBE_API_KEY: configured
+DAILY_QUOTA: 8000
+REGIONS_PER_DAY: 2
+REGION_CODES: [('IR', 'fa'), ('US', 'en'), ('GB', 'en'), ('DE', 'de'), ('FR', 'fr')]
+MAX_VIDEOS_PER_QUERY: 25
+MAX_COMMENTS_PER_VIDEO: 300
+COMMENT_POOL_MULTIPLIER: 5
+ACTIVE_QUERY_IDS: ['__NONE__']
+EXPLICIT_VIDEO_IDS: ['bQI8B93CnJg']
+========================================================================
+
+[yt_20260814T181329Z] starting YouTube collection
+Project window: 2026-02-28T00:00:00Z -> 2026-07-22T23:59:59Z (fixed, project_calendar.py)
+Outputs: youtube_comments_v2.jsonl, youtube_raw_export.csv, youtube_runs.csv, youtube_skipped_videos.csv
+
+Search watermark: 2026-02-28T00:00:00Z (quota used today: 0/8000)
+
+[warn] config/query_registry.yaml has no active non-Arabic entries — falling back to config.yaml's flat keyword lists.
+
+Region rotation: day 1/3 of cycle — today's regions: ['IR', 'US'] (all: ['IR', 'US', 'GB', 'DE', 'FR'])
+
+Discovery pass (query x region)...
+[warn] search failed for query 'Iran US war': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+war&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&regionCode=IR&relevanceLanguage=fa&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US war': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+war&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&regionCode=US&relevanceLanguage=en&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran America conflict news': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+America+conflict+news&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&regionCode=IR&relevanceLanguage=fa&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran America conflict news': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+America+conflict+news&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&regionCode=US&relevanceLanguage=en&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'جنگ ایران آمریکا': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=%D8%AC%D9%86%DA%AF+%D8%A7%DB%8C%D8%B1%D8%A7%D9%86+%D8%A2%D9%85%D8%B1%DB%8C%DA%A9%D8%A7&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&regionCode=IR&relevanceLanguage=fa&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'جنگ ایران آمریکا': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=%D8%AC%D9%86%DA%AF+%D8%A7%DB%8C%D8%B1%D8%A7%D9%86+%D8%A2%D9%85%D8%B1%DB%8C%DA%A9%D8%A7&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&regionCode=US&relevanceLanguage=en&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+
+Resolving/searching curated channels...
+  resolved channel 'BBC Persian' -> 'BBC Persian' (UCHZk9MrT3DGWmVqdsj5y0EA)
+  resolved channel 'Iran International' -> 'Iran International ايران اينترنشنال' (UCat6bC0Wrqq9Bcq7EkH_yQw)
+  resolved channel 'VOA Farsi' -> 'VOA Farsi' (UCttfDeGMwUxPjnlsKagcwKw)
+  resolved channel 'DW Persian' -> 'DW فارسی' (UC8fNUW0nHyGxjLetxvJxn9g)
+  resolved channel 'Reuters' -> 'Reuters' (UChqUTb7kYRX8-EiaN3XFrSQ)
+  resolved channel 'Associated Press' -> 'AP' (UCAb6wjEu3EOzsVihpR9N1Ug)
+  resolved channel 'CNN' -> 'CNN' (UCupvZG-5ko_eiXAupbDfxWw)
+  resolved channel 'Fox News' -> 'Fox News' (UCXIJgqnII2ZOINSWNOGFThA)
+  resolved channel 'BBC News' -> 'BBC News' (UC16niRr50-MSBwiO3YDb3RA)
+  resolved channel 'Al Jazeera English' -> 'Al Jazeera English' (UCNye-wNBqNL5ZzHSJj3l8Bg)
+  resolved channel 'Middle East Eye' -> 'Middle East Eye' (UCR0fZh5SBxxMNYdg0VzRFkg)
+  resolved channel 'TRT World' -> 'TRT World' (UC7fWeaHhqgM4Ry-RMpM2YYw)
+  resolved channel 'WION' -> 'WIOnews' (UCWEIPvoxRwn6llPOIn555rQ)
+  resolved channel 'Bloomberg Television' -> '미소 다이어리 : 미소맘 계정' (UCdK2BueKxC9VxXh7e1Ne4oQ)
+  resolved channel 'Al Arabiya English' -> 'AlArabiya العربية' (UCahpxixMCwoANAftn6IxkTg)
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCHZk9MrT3DGWmVqdsj5y0EA&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCat6bC0Wrqq9Bcq7EkH_yQw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCttfDeGMwUxPjnlsKagcwKw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UC8fNUW0nHyGxjLetxvJxn9g&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UChqUTb7kYRX8-EiaN3XFrSQ&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCAb6wjEu3EOzsVihpR9N1Ug&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCupvZG-5ko_eiXAupbDfxWw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCXIJgqnII2ZOINSWNOGFThA&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UC16niRr50-MSBwiO3YDb3RA&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCNye-wNBqNL5ZzHSJj3l8Bg&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCR0fZh5SBxxMNYdg0VzRFkg&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UC7fWeaHhqgM4Ry-RMpM2YYw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCWEIPvoxRwn6llPOIn555rQ&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCdK2BueKxC9VxXh7e1Ne4oQ&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-02-28T00%3A00%3A00Z&publishedBefore=2026-07-22T23%3A59%3A59Z&channelId=UCahpxixMCwoANAftn6IxkTg&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+
+1 known video(s) total. Fetching details + geo/relevance tags...
+
+Checking known videos for new comments...
+[warn] AUTHOR_HASH_SALT is not set in .env — using a fixed fallback salt. Set AUTHOR_HASH_SALT before collecting data you intend to keep, otherwise author hashes aren't reproducible against a real secret.
+  [1/1] bQI8B93CnJg — 'How the US & Israel Attack Iran | Inside Operation': 300 new comment(s) (pool=1500, sampling=random)
+raw_harmonized: wrote 300 row(s) to C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw_harmonized\youtube\yt_20260814T181329Z.parquet
+
+Wrote 300 new record(s) to youtube_comments_v2.jsonl + youtube_raw_export.csv
+Manifest: youtube_runs.csv (12 query x week row(s) this run)
+Skipped-video log: youtube_skipped_videos.csv (0 this run)
+Quota used today: 29/8000
+===== OVERLAY END | exit=0 | duration=24.7s =====
+
+
+===== OVERLAY START 2026-08-14 11:27:55 | youtube =====
+[YOUTUBE][OVERRIDE] Custom Topic Detected: 'AI 2026'
+[YOUTUBE][OVERRIDE] Isolated DATA_DIR: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\iran_us_war__custom
+[YOUTUBE][OVERRIDE] Window: 2026-01-13T00:00:00Z -> 2026-08-19T23:59:59Z
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — youtube
+Original pipeline files: UNCHANGED
+YOUTUBE_API_KEY: configured
+DAILY_QUOTA: 8000
+REGIONS_PER_DAY: 2
+REGION_CODES: [('IR', 'fa'), ('US', 'en'), ('GB', 'en'), ('DE', 'de'), ('FR', 'fr')]
+MAX_VIDEOS_PER_QUERY: 25
+MAX_COMMENTS_PER_VIDEO: 300
+COMMENT_POOL_MULTIPLIER: 5
+CUSTOM_TOPIC: AI 2026
+WINDOW: 2026-01-13T00:00:00Z -> 2026-08-19T23:59:59Z
+EXPLICIT_VIDEO_IDS: ['bQI8B93CnJg']
+========================================================================
+
+[yt_20260814T182757Z] starting YouTube collection
+Project window: 2026-01-13T00:00:00Z -> 2026-08-19T23:59:59Z (fixed, project_calendar.py)
+Outputs: youtube_comments_v2.jsonl, youtube_raw_export.csv, youtube_runs.csv, youtube_skipped_videos.csv
+
+Search watermark: 2026-01-13T00:00:00Z (quota used today: 0/8000)
+
+Region rotation: day 1/3 of cycle — today's regions: ['IR', 'US'] (all: ['IR', 'US', 'GB', 'DE', 'FR'])
+
+Discovery pass (query x region)...
+[warn] search failed for query 'AI 2026': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=AI+2026&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&regionCode=IR&relevanceLanguage=fa&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'AI 2026': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=AI+2026&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&regionCode=US&relevanceLanguage=en&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+
+Resolving/searching curated channels...
+  resolved channel 'BBC Persian' -> 'BBC Persian' (UCHZk9MrT3DGWmVqdsj5y0EA)
+  resolved channel 'Iran International' -> 'Iran International ايران اينترنشنال' (UCat6bC0Wrqq9Bcq7EkH_yQw)
+  resolved channel 'VOA Farsi' -> 'VOA Farsi' (UCttfDeGMwUxPjnlsKagcwKw)
+  resolved channel 'DW Persian' -> 'DW فارسی' (UC8fNUW0nHyGxjLetxvJxn9g)
+  resolved channel 'Reuters' -> 'Reuters' (UChqUTb7kYRX8-EiaN3XFrSQ)
+  resolved channel 'Associated Press' -> 'AP' (UCAb6wjEu3EOzsVihpR9N1Ug)
+  resolved channel 'CNN' -> 'CNN' (UCupvZG-5ko_eiXAupbDfxWw)
+  resolved channel 'Fox News' -> 'Fox News' (UCXIJgqnII2ZOINSWNOGFThA)
+  resolved channel 'BBC News' -> 'BBC News' (UC16niRr50-MSBwiO3YDb3RA)
+  resolved channel 'Al Jazeera English' -> 'Al Jazeera English' (UCNye-wNBqNL5ZzHSJj3l8Bg)
+  resolved channel 'Middle East Eye' -> 'Middle East Eye' (UCR0fZh5SBxxMNYdg0VzRFkg)
+  resolved channel 'TRT World' -> 'TRT World' (UC7fWeaHhqgM4Ry-RMpM2YYw)
+  resolved channel 'WION' -> 'WIOnews' (UCWEIPvoxRwn6llPOIn555rQ)
+  resolved channel 'Bloomberg Television' -> '미소 다이어리 : 미소맘 계정' (UCdK2BueKxC9VxXh7e1Ne4oQ)
+  resolved channel 'Al Arabiya English' -> 'AlArabiya العربية' (UCahpxixMCwoANAftn6IxkTg)
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCHZk9MrT3DGWmVqdsj5y0EA&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCat6bC0Wrqq9Bcq7EkH_yQw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCttfDeGMwUxPjnlsKagcwKw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UC8fNUW0nHyGxjLetxvJxn9g&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UChqUTb7kYRX8-EiaN3XFrSQ&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCAb6wjEu3EOzsVihpR9N1Ug&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCupvZG-5ko_eiXAupbDfxWw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCXIJgqnII2ZOINSWNOGFThA&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UC16niRr50-MSBwiO3YDb3RA&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCNye-wNBqNL5ZzHSJj3l8Bg&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCR0fZh5SBxxMNYdg0VzRFkg&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UC7fWeaHhqgM4Ry-RMpM2YYw&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCWEIPvoxRwn6llPOIn555rQ&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCdK2BueKxC9VxXh7e1Ne4oQ&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+[warn] search failed for query 'Iran US conflict': <HttpError 429 when requesting https://youtube.googleapis.com/youtube/v3/search?q=Iran+US+conflict&part=id&type=video&order=date&maxResults=25&publishedAfter=2026-01-13T00%3A00%3A00Z&publishedBefore=2026-08-19T23%3A59%3A59Z&channelId=UCahpxixMCwoANAftn6IxkTg&key=AIzaSyA6IV9xihzNcaNOXqoFzAPeO72Moj4jd9w&alt=json returned "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.". Details: "[{'message': "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:116805781355'.", 'domain': 'global', 'reason': 'rateLimitExceeded'}]">
+
+1 known video(s) total. Fetching details + geo/relevance tags...
+
+Checking known videos for new comments...
+[warn] AUTHOR_HASH_SALT is not set in .env — using a fixed fallback salt. Set AUTHOR_HASH_SALT before collecting data you intend to keep, otherwise author hashes aren't reproducible against a real secret.
+  [1/1] bQI8B93CnJg — 'How the US & Israel Attack Iran | Inside Operation': 300 new comment(s) (pool=1500, sampling=random)
+raw_harmonized: wrote 300 row(s) to C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw_harmonized\youtube\yt_20260814T182757Z.parquet
+
+Wrote 300 new record(s) to youtube_comments_v2.jsonl + youtube_raw_export.csv
+Manifest: youtube_runs.csv (12 query x week row(s) this run)
+Skipped-video log: youtube_skipped_videos.csv (0 this run)
+Quota used today: 29/8000
+===== OVERLAY END | exit=0 | duration=23.6s =====
+
+
+===== OVERLAY START 2026-08-14 12:04:47 | youtube =====
+[YOUTUBE][OVERRIDE] Custom Topic Detected: 'AI 2026'
+[YOUTUBE][OVERRIDE] Isolated DATA_DIR: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\iran_us_war__custom
+[YOUTUBE][OVERRIDE] Window: 2026-01-07T00:00:00Z -> 2026-07-27T23:59:59Z
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — youtube
+Original pipeline files: UNCHANGED
+YOUTUBE_API_KEY: configured
+DAILY_QUOTA: 8000
+REGIONS_PER_DAY: 2
+REGION_CODES: [('IR', 'fa'), ('US', 'en'), ('GB', 'en'), ('DE', 'de'), ('FR', 'fr')]
+MAX_VIDEOS_PER_QUERY: 25
+MAX_COMMENTS_PER_VIDEO: 300
+COMMENT_POOL_MULTIPLIER: 5
+CUSTOM_TOPIC: AI 2026
+WINDOW: 2026-01-07T00:00:00Z -> 2026-07-27T23:59:59Z
+EXPLICIT_VIDEO_IDS: ['bQI8B93CnJg']
+========================================================================
+
+[yt_20260814T190449Z] starting YouTube collection
+Project window: 2026-01-07T00:00:00Z -> 2026-07-27T23:59:59Z (fixed, project_calendar.py)
+Outputs: youtube_comments_v2.jsonl, youtube_raw_export.csv, youtube_runs.csv, youtube_skipped_videos.csv
+
+Search watermark: 2026-08-08T15:49:24Z (quota used today: 29/8000)
+
+Region rotation: day 1/3 of cycle — today's regions: ['IR', 'US'] (all: ['IR', 'US', 'GB', 'DE', 'FR'])
+
+Discovery pass (query x region)...
+  query:YQ-CUSTOM-001|region:IR: 25 video(s)
+  query:YQ-CUSTOM-001|region:US: 25 video(s)
+
+Resolving/searching curated channels...
+  channel:persian/bbcnewspersian: 22 video(s)
+  channel:persian/iranintl: 25 video(s)
+  channel:persian/voafarsi: 25 video(s)
+  channel:persian/dwpersian: 6 video(s)
+  channel:wire/reuters: 25 video(s)
+  channel:us_partisan/cnn: 25 video(s)
+  channel:us_partisan/FoxNews: 25 video(s)
+  channel:international/bbcnews: 25 video(s)
+  channel:international/aljazeeraenglish: 25 video(s)
+  channel:international/middleeasteye: 25 video(s)
+  channel:non_western/trtworld: 25 video(s)
+  channel:regional_gulf/alarabiya: 25 video(s)
+
+328 known video(s) total. Fetching details + geo/relevance tags...
+
+Checking known videos for new comments...
+[warn] could not fetch comments for video 6xYJbAC4V8I: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=6xYJbAC4V8I&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+[warn] AUTHOR_HASH_SALT is not set in .env — using a fixed fallback salt. Set AUTHOR_HASH_SALT before collecting data you intend to keep, otherwise author hashes aren't reproducible against a real secret.
+  [13/328] JWpg8lFvh14 — 'Happy Independence Day  2026 #shorts #viralvideo #': 3 new comment(s) (pool=3, sampling=none)
+[warn] could not fetch comments for video 3apNutozvsc: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=3apNutozvsc&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [19/328] r-cFW_6Ai8o — 'BGMI world cup 2026#bgmi #bgmiworld #viral #youtub': 4 new comment(s) (pool=4, sampling=none)
+[warn] could not fetch comments for video Dni7dx6zckU: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=Dni7dx6zckU&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [21/328] G5D053drKB8 — 'Best AI Video Tool for 2026 | Seedance 2.5 vs Mini': 4 new comment(s) (pool=4, sampling=none)
+  [24/328] xh-HJOzFapg — 'Top ranking AI tools of 2026 ￼': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video eN_05-GHwJA: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=eN_05-GHwJA&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [29/328] 4xalAx3sJyw — 'Sang Marshal Petir Bintang Cuplikan Drama AI 2026': 1 new comment(s) (pool=1, sampling=none)
+  [32/328] Z7oJqcV5gCk — 'INDEPENDENCE DAY SPECIAL 💖 #shorts #flag #india #n': 4 new comment(s) (pool=4, sampling=none)
+  [34/328] SMGv0xWqvjU — '#2026 #музыка #музика #русскийшансон #любовь #ai #': 2 new comment(s) (pool=2, sampling=none)
+  [36/328] PL0W0kotG5Y — 'Happy Independence day 2026#shorts#ai': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video koeHZ2quVGs: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=koeHZ2quVGs&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [40/328] joGhAdN1eAs — '🇮🇳 Happy Independence Day 2026 | Proud to Be India': 1 new comment(s) (pool=1, sampling=none)
+  [43/328] QGngPEGxtHo — '👑 OpenAI vs Google vs Meta | 2026 AI King Kaun Hai': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video FRky-6REtX4: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=FRky-6REtX4&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [46/328] 86Ih9ZlksTk — 'Metropolis Imagined 2026 #movie #ai #history #reac': 2 new comment(s) (pool=2, sampling=none)
+  [51/328] j5xpjFILZhg — 'روبیو در پاسخ به عراقچی: سیاست آمریکا «سر در برابر': 300 new comment(s) (pool=474, sampling=random)
+  [52/328] LER0Ve-aAKk — 'ایران و آمریکا در میانه نبرد جنگ و دیپلماسی؛ گفتگو': 141 new comment(s) (pool=141, sampling=none)
+  [53/328] xb67KAEHZiE — 'تجربه\u200cهایی از جنگ پس از وصل شدن اینترنت در ایران، ': 300 new comment(s) (pool=427, sampling=random)
+  [54/328] iPzS_EsAJjg — 'ترامپ در آستانه انقضای آتش\u200cبس، ویدیویی از حامیان ا': 36 new comment(s) (pool=36, sampling=none)
+  [55/328] 4SCqtIqd16A — 'جنگ آمریکا و اسرائیل با ایران - حمله به آبدانان - ': 21 new comment(s) (pool=21, sampling=none)
+  [56/328] RDg-w9l4hqI — 'آسیب به غیرنظامیان در جنگ آمریکا و اسرائیل با ایرا': 119 new comment(s) (pool=119, sampling=none)
+  [57/328] rXnLVudpW6g — 'جنگ اسرائیل و آمریکا با ایران؛ چند انفجار در ارومی': 19 new comment(s) (pool=19, sampling=none)
+  [58/328] XhTMCrJx2rI — 'جنگ آمریکا و اسرائیل با ایران؛ انفجار شدید در سنند': 74 new comment(s) (pool=74, sampling=none)
+  [59/328] Uq_b6wGcTqs — 'جنگ آمریکا و اسرائیل با ایران؛ اصابت پهپاد به برجی': 70 new comment(s) (pool=70, sampling=none)
+  [60/328] y8Z-qylKaPE — 'فرمانده نیروی هوایی ارتش: خلبانان ایرانی جلوی اسکا': 223 new comment(s) (pool=223, sampling=none)
+[warn] could not fetch comments for video LdgWI6LHNTE: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=LdgWI6LHNTE&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [67/328] NDQvJ-t8DB0 — 'Sadegh Ghotbzadeh - Son of the Revolution - Part 3': 4 new comment(s) (pool=4, sampling=none)
+[warn] could not fetch comments for video Us7o2iQFs90: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=Us7o2iQFs90&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [73/328] XLIlQ2kPjqU — 'How Iran is preparing for a domestic war against i': 14 new comment(s) (pool=14, sampling=none)
+  [74/328] EHXUaZ7T4M8 — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: تشدید رویارویی تهران و وا': 242 new comment(s) (pool=242, sampling=none)
+  [75/328] GDbVXyC51Js — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: آتش\u200cبس ایران و آمریکا در ': 120 new comment(s) (pool=120, sampling=none)
+  [76/328] wz0Zo-EXt4g — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: ترامپ: تهران مکار است. صب': 205 new comment(s) (pool=205, sampling=none)
+  [77/328] MWdCaHrWQcY — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: ترامپ: آمریکا هم از جمهور': 168 new comment(s) (pool=168, sampling=none)
+===== OVERLAY END | exit=1 | duration=68.8s =====
+
+
+===== OVERLAY START 2026-08-14 12:11:03 | youtube =====
+[YOUTUBE][OVERRIDE] Custom Topic Detected: 'AI 2026'
+[YOUTUBE][OVERRIDE] Isolated DATA_DIR: C:\Users\hnade\OneDrive\Desktop\New folder\repo\data\raw\iran_us_war__custom
+[YOUTUBE][OVERRIDE] Window: 2026-01-15T00:00:00Z -> 2026-06-18T23:59:59Z
+
+========================================================================
+CONTROL CENTER RUNTIME ADAPTER — youtube
+Original pipeline files: UNCHANGED
+YOUTUBE_API_KEY: configured
+DAILY_QUOTA: 8000
+REGIONS_PER_DAY: 2
+REGION_CODES: [('IR', 'fa'), ('US', 'en'), ('GB', 'en'), ('DE', 'de'), ('FR', 'fr')]
+MAX_VIDEOS_PER_QUERY: 25
+MAX_COMMENTS_PER_VIDEO: 300
+COMMENT_POOL_MULTIPLIER: 5
+CUSTOM_TOPIC: AI 2026
+WINDOW: 2026-01-15T00:00:00Z -> 2026-06-18T23:59:59Z
+EXPLICIT_VIDEO_IDS: []
+========================================================================
+
+[yt_20260814T191105Z] starting YouTube collection
+Project window: 2026-01-15T00:00:00Z -> 2026-06-18T23:59:59Z (fixed, project_calendar.py)
+Outputs: youtube_comments_v2.jsonl, youtube_raw_export.csv, youtube_runs.csv, youtube_skipped_videos.csv
+
+Search watermark: 2026-08-08T15:49:24Z (quota used today: 1818/8000)
+
+Region rotation: day 1/3 of cycle — today's regions: ['IR', 'US'] (all: ['IR', 'US', 'GB', 'DE', 'FR'])
+
+Discovery pass (query x region)...
+  query:YQ-CUSTOM-001|region:IR: 25 video(s)
+  query:YQ-CUSTOM-001|region:US: 25 video(s)
+
+Resolving/searching curated channels...
+
+337 known video(s) total. Fetching details + geo/relevance tags...
+
+Checking known videos for new comments...
+[warn] could not fetch comments for video 6xYJbAC4V8I: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=6xYJbAC4V8I&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+[warn] AUTHOR_HASH_SALT is not set in .env — using a fixed fallback salt. Set AUTHOR_HASH_SALT before collecting data you intend to keep, otherwise author hashes aren't reproducible against a real secret.
+  [13/337] JWpg8lFvh14 — 'Happy Independence Day  2026 #shorts #viralvideo #': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video 3apNutozvsc: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=3apNutozvsc&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [19/337] r-cFW_6Ai8o — 'BGMI world cup 2026#bgmi #bgmiworld #viral #youtub': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video Dni7dx6zckU: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=Dni7dx6zckU&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [21/337] G5D053drKB8 — 'Best AI Video Tool for 2026 | Seedance 2.5 vs Mini': 1 new comment(s) (pool=1, sampling=none)
+  [24/337] xh-HJOzFapg — 'Top ranking AI tools of 2026 ￼': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video eN_05-GHwJA: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=eN_05-GHwJA&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [29/337] 4xalAx3sJyw — 'Sang Marshal Petir Bintang Cuplikan Drama AI 2026': 1 new comment(s) (pool=1, sampling=none)
+  [32/337] Z7oJqcV5gCk — 'INDEPENDENCE DAY SPECIAL 💖 #shorts #flag #india #n': 1 new comment(s) (pool=1, sampling=none)
+  [34/337] SMGv0xWqvjU — '#2026 #музыка #музика #русскийшансон #любовь #ai #': 1 new comment(s) (pool=1, sampling=none)
+  [36/337] PL0W0kotG5Y — 'Happy Independence day 2026#shorts#ai': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video koeHZ2quVGs: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=koeHZ2quVGs&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [40/337] joGhAdN1eAs — '🇮🇳 Happy Independence Day 2026 | Proud to Be India': 1 new comment(s) (pool=1, sampling=none)
+  [43/337] QGngPEGxtHo — '👑 OpenAI vs Google vs Meta | 2026 AI King Kaun Hai': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video FRky-6REtX4: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=FRky-6REtX4&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [46/337] 86Ih9ZlksTk — 'Metropolis Imagined 2026 #movie #ai #history #reac': 1 new comment(s) (pool=1, sampling=none)
+  [51/337] j5xpjFILZhg — 'روبیو در پاسخ به عراقچی: سیاست آمریکا «سر در برابر': 1 new comment(s) (pool=1, sampling=none)
+  [53/337] xb67KAEHZiE — 'تجربه\u200cهایی از جنگ پس از وصل شدن اینترنت در ایران، ': 1 new comment(s) (pool=1, sampling=none)
+  [54/337] iPzS_EsAJjg — 'ترامپ در آستانه انقضای آتش\u200cبس، ویدیویی از حامیان ا': 1 new comment(s) (pool=1, sampling=none)
+  [55/337] 4SCqtIqd16A — 'جنگ آمریکا و اسرائیل با ایران - حمله به آبدانان - ': 1 new comment(s) (pool=1, sampling=none)
+  [56/337] RDg-w9l4hqI — 'آسیب به غیرنظامیان در جنگ آمریکا و اسرائیل با ایرا': 1 new comment(s) (pool=1, sampling=none)
+  [57/337] rXnLVudpW6g — 'جنگ اسرائیل و آمریکا با ایران؛ چند انفجار در ارومی': 1 new comment(s) (pool=1, sampling=none)
+  [58/337] XhTMCrJx2rI — 'جنگ آمریکا و اسرائیل با ایران؛ انفجار شدید در سنند': 1 new comment(s) (pool=1, sampling=none)
+  [59/337] Uq_b6wGcTqs — 'جنگ آمریکا و اسرائیل با ایران؛ اصابت پهپاد به برجی': 1 new comment(s) (pool=1, sampling=none)
+  [60/337] y8Z-qylKaPE — 'فرمانده نیروی هوایی ارتش: خلبانان ایرانی جلوی اسکا': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video LdgWI6LHNTE: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=LdgWI6LHNTE&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [67/337] NDQvJ-t8DB0 — 'Sadegh Ghotbzadeh - Son of the Revolution - Part 3': 1 new comment(s) (pool=1, sampling=none)
+[warn] could not fetch comments for video Us7o2iQFs90: <HttpError 403 when requesting https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet%2Creplies&videoId=Us7o2iQFs90&maxResults=100&textFormat=plainText&order=time&key=AIzaSyBMdfN-vCqJsbELGV-GY6yvGbj9ts23HOE&alt=json returned "The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.". Details: "[{'message': 'The video identified by the <code><a href="/youtube/v3/docs/commentThreads/list#videoId">videoId</a></code> parameter has disabled comments.', 'domain': 'youtube.commentThread', 'reason': 'commentsDisabled', 'location': 'videoId', 'locationType': 'parameter'}]">
+  [73/337] XLIlQ2kPjqU — 'How Iran is preparing for a domestic war against i': 2 new comment(s) (pool=2, sampling=none)
+  [74/337] EHXUaZ7T4M8 — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: تشدید رویارویی تهران و وا': 1 new comment(s) (pool=1, sampling=none)
+  [75/337] GDbVXyC51Js — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: آتش\u200cبس ایران و آمریکا در ': 1 new comment(s) (pool=1, sampling=none)
+  [76/337] wz0Zo-EXt4g — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: ترامپ: تهران مکار است. صب': 1 new comment(s) (pool=1, sampling=none)
+  [77/337] MWdCaHrWQcY — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: ترامپ: آمریکا هم از جمهور': 1 new comment(s) (pool=1, sampling=none)
+  [78/337] 3nw-kjGOEz0 — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: روز سرنوشت برای توافق تهر': 232 new comment(s) (pool=232, sampling=none)
+  [79/337] VoqXZDl9z3Q — "Bombs won't break Iran's regime, but money might |": 25 new comment(s) (pool=25, sampling=none)
+  [80/337] 5HYV81vGDvg — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: احتمال توافق ایران و آمری': 219 new comment(s) (pool=219, sampling=none)
+  [81/337] SWt0Rmeu10g — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: توافق هرمز تا فردا؟ آمریک': 244 new comment(s) (pool=244, sampling=none)
+  [82/337] JuwWBHfmIcQ — "Former UN prosecutor: Iran's executions are murder": 25 new comment(s) (pool=25, sampling=none)
+  [83/337] fSbTCv4Q8tM — 'ترامپ: ایران دیگر قلدر خاورمیانه نیست': 199 new comment(s) (pool=199, sampling=none)
+  [84/337] 1b9ci4PvtrU — 'حملات متقابل آمریکا و جمهوری اسلامی': 42 new comment(s) (pool=42, sampling=none)
+  [85/337] UbRggbpOBaQ — '۲۴ با فرداد فرحزاد: حملات تلافی\u200cجویانه بحرین و کوی': 300 new comment(s) (pool=616, sampling=random)
+  [86/337] EPJPUgW7qQU — 'Are US strikes laying the groundwork for a wider I': 38 new comment(s) (pool=38, sampling=none)
+  [87/337] 89D1htkqZnw — '۲۴ با فرداد فرحزاد: ترامپ به سنتکام: درهای جهنم را': 300 new comment(s) (pool=733, sampling=random)
+  [88/337] WUONVlkcAV8 — '۲۴ با فرداد فرحزاد: ادامه حملات به راه\u200cهای ارتباطی': 300 new comment(s) (pool=418, sampling=random)
+  [89/337] H7aetSmUk0w — 'Why are US strikes moving deeper into Iran? | Eye ': 25 new comment(s) (pool=25, sampling=none)
+  [90/337] JDlqH9A3ofc — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: جنوب ایران هدف حملات سنگی': 300 new comment(s) (pool=313, sampling=random)
+  [91/337] A8Fl37tE0sU — '\u200f\u200f\u200f\ufeff\ufeff۲۴ با فرداد فرحزاد: موج تازه حملات آمریکا و پ': 300 new comment(s) (pool=462, sampling=random)
+  [92/337] WBThk_FSZt0 — 'آیا ترامپ در حال مقدمه\u200cچینی برای جنگی بزرگ\u200cتر است؟': 133 new comment(s) (pool=133, sampling=none)
+  [93/337] gY0010hTzeY — 'آمریکا و جمهوری اسلامی؛ به سوی جنگ سوم': 72 new comment(s) (pool=72, sampling=none)
+  [94/337] Nnz2_8JgNPE — "Has Iran crossed Trump's red line? | Eye for Iran ": 8 new comment(s) (pool=8, sampling=none)
+  [95/337] nE3hJPW1FPs — '۲۴ با فرداد فرحزاد: از بوشهر تا اردن؛ صحنه تبادل آ': 300 new comment(s) (pool=628, sampling=random)
+  [96/337] 4R_Yy-CSxkQ — 'دور جدید حملات آمریکا به جمهوری اسلامی': 286 new comment(s) (pool=286, sampling=none)
+  [97/337] ZZgrOcFWSTI — '۲۴ با فرداد فرحزاد: سرنوشت نامشخص مذاکرات ایران و ': 101 new comment(s) (pool=101, sampling=none)
+  [99/337] g_BhLuEkv9w — 'محمد قائدی: جمهوری اسلامی می\u200cکوشد پرونده جنگ را به': 2 new comment(s) (pool=2, sampling=none)
+  [100/337] WO2olL8g8lY — 'محسن سازگارا: اسرائیل مترصد آغاز دوباره جنگ با جمه': 7 new comment(s) (pool=7, sampling=none)
+  [101/337] _3MKbpnimjo — '«۶۵۰۰» بازداشت از آغاز جنگ؛ رادان: «رها نکردیم و ه': 6 new comment(s) (pool=6, sampling=none)
+  [103/337] m8Qc20jyh9c — 'بررسی پوشش اخبار درگیری نظامی با جمهوری اسلامی  در': 3 new comment(s) (pool=3, sampling=none)
+  [104/337] pEIq-HNVgEE — 'علم صالح: جنگ باعث شد جمهوری اسلامی نفت خود را با ': 6 new comment(s) (pool=6, sampling=none)
+  [105/337] BCetU_6HqpU — 'دیدگاه\u200cهای قانون\u200cگذاران آمریکایی درباره مقابله با ': 1 new comment(s) (pool=1, sampling=none)
+  [106/337] yGkJap5-5og — 'میدان - چین چه می\u200cخواهد؟ ایرانِ در جنگ یا جمهوری ا': 35 new comment(s) (pool=35, sampling=none)
+  [107/337] EcIreryMFJs — 'تشکیل جلسه اضطراری امنیتی در کاخ سفید درباره آینده': 8 new comment(s) (pool=8, sampling=none)
+  [109/337] l-mQ_LuYzWM — 'میدان - حکمرانی زیر غبار جنگ؛ ایران را چه کسی ادار': 153 new comment(s) (pool=153, sampling=none)
+  [110/337] KQqOnTvfPZY — 'پاسخ جمهموری اسلامی به پیشنهاد آمریکا؛ جنگ یا توا': 2 new comment(s) (pool=2, sampling=none)
+  [111/337] 5WukAk5Pu9I — 'مجید گلپور: جنگ و دیپلماسی هر دو در بن بست قرار گر': 1 new comment(s) (pool=1, sampling=none)
+  [112/337] sN99uTAhsq4 — 'جمهوری اسلامی و امارات در مسیر تقابل؛ از حمله موشک': 1 new comment(s) (pool=1, sampling=none)
+  [113/337] Q6TmYsth3Wc — 'از تهدید امارات از سوی حکومت ایران تا صف جویندگان ': 8 new comment(s) (pool=8, sampling=none)
+  [114/337] e7BIo6BTU84 — 'علی جوانمردی: روی سرنگونی جمهوری اسلامی با جنگ آمر': 51 new comment(s) (pool=51, sampling=none)
+  [115/337] zmCPw1fKAkk — 'دونالد ترامپ: پیش\u200cبینی میکنم که جنگ در ایران به سر': 5 new comment(s) (pool=5, sampling=none)
+  [117/337] lbPNM5tnbSo — 'کامبیز غفوری: وقتی یک حکومتی با نیمی از دنیا در جن': 3 new comment(s) (pool=3, sampling=none)
+  [118/337] IwHYzIJBIz0 — 'ادامه محاصره دریایی ایران به\u200cجای بمباران؛ واشینگتن': 5 new comment(s) (pool=5, sampling=none)
+  [120/337] IzNUKrlCIzM — 'علی جوانمردی: جنگ نجات بخش و توافق فاجعە نیست!': 76 new comment(s) (pool=76, sampling=none)
+  [123/337] yKfx6TRzJU0 — 'تشدید درگیری ایران و آمریکا در سیزدهمین شب حملات |': 15 new comment(s) (pool=15, sampling=none)
+  [124/337] Dpw4ET_V0rk — 'آمریکا در ۷۵ دقیقه\u200c کدام نقاط ایران را هدف قرار دا': 30 new comment(s) (pool=30, sampling=none)
+  [125/337] DQy-Exsp914 — 'ترامپ: آمریکا به سرنگونی بالگرد خود توسط ایران پاس': 18 new comment(s) (pool=18, sampling=none)
+  [126/337] ou6VL_grzpM — 'ترامپ: اگر پاسخ درست نگیریم، خیلی سریع اقدام می\u200cکن': 16 new comment(s) (pool=16, sampling=none)
+  [127/337] Vwxytn_s1YM — 'تنش\u200cها بین ایران و آمریکا؛ تلاش قطر برای برپایی می': 4 new comment(s) (pool=4, sampling=none)
+  [129/337] bmWfkAPZnLg — 'How far can global oil supplies stretch if Iran wa': 125 new comment(s) (pool=125, sampling=none)
+  [132/337] XA4HPBmBsBE — "Trump says his plane faced 'greater risk' in fligh": 63 new comment(s) (pool=63, sampling=none)
+  [133/337] iwyIr4dI1Ts — 'Why have Saudi Arabia, Turkey and Pakistan pledged': 300 new comment(s) (pool=707, sampling=random)
+  [134/337] yrgFPhlO7Nc — 'The metal Trump can’t afford to lose': 10 new comment(s) (pool=10, sampling=none)
+  [135/337] IMrlgGNdfxA — 'Trump supporters divided over Iran conflict': 6 new comment(s) (pool=6, sampling=none)
+  [136/337] vzGEEnPzPwo — 'US Army nearly out of long-range missiles in Iran ': 54 new comment(s) (pool=54, sampling=none)
+  [137/337] KibDMju6zjs — "US has used 'virtually all' its long-range precisi": 229 new comment(s) (pool=229, sampling=none)
+  [138/337] KOMKQdrMu4A — 'What is going on between the US and Iran?': 20 new comment(s) (pool=20, sampling=none)
+  [139/337] kFwU_926LhQ — 'Is the US running out of the missiles it needs for': 72 new comment(s) (pool=72, sampling=none)
+  [140/337] ukUud82G8vE — 'Trump cancels Iran attack amid deal hopes': 44 new comment(s) (pool=44, sampling=none)
+  [141/337] oDyC-Dtqc3w — 'Why has Trump paused a new Iran attack? | Reuters ': 54 new comment(s) (pool=54, sampling=none)
+  [142/337] 9IpZqort5pM — 'Migrants return to Morocco after crossing to Spain': 300 new comment(s) (pool=1257, sampling=random)
+  [143/337] 6FzLyQaRXlU — 'US completes strikes on Iranian targets': 39 new comment(s) (pool=39, sampling=none)
+  [144/337] cuf8vf8S8w8 — "Trump says US will hit Iran 'hard' after Egypt att": 51 new comment(s) (pool=51, sampling=none)
+  [145/337] uaN1hIo3T-g — 'Drone hits US gas storage tanker at Egyptian port,': 45 new comment(s) (pool=45, sampling=none)
+  [146/337] RIrrEllm21g — 'US pauses Iran strikes but conflict spreads to Red': 56 new comment(s) (pool=56, sampling=none)
+  [147/337] wT7yBpDpmIg — 'US targets Iran-Iraq border crossing': 23 new comment(s) (pool=23, sampling=none)
+  [148/337] jYGEI1n4-SU — 'US investigate Iran strikes on CIA facilities for ': 300 new comment(s) (pool=1500, sampling=random)
+  [149/337] Z3LU72LlcRU — 'US completes 12th straight night of Iran strikes': 16 new comment(s) (pool=16, sampling=none)
+  [150/337] sUWd-GNQJTQ — 'Some Trump supporters urge president to end war wi': 23 new comment(s) (pool=23, sampling=none)
+  [151/337] s766OIuNVPc — 'Trump attends return of US soldiers killed in Iran': 90 new comment(s) (pool=90, sampling=none)
+  [152/337] O_5TE2xSar4 — 'Trump attends return of US soldiers killed in Iran': 7 new comment(s) (pool=7, sampling=none)
+  [153/337] Df0QwV9fIRA — 'US completes 11th straight night of strikes on Ira': 17 new comment(s) (pool=17, sampling=none)
+  [154/337] 4CWD07XsgLM — 'USS Lincoln sailors jump ship: Retired military of': 300 new comment(s) (pool=1168, sampling=random)
+  [155/337] LFLO3NYwSyo — 'Hegseth faces questions after reports of sailors g': 300 new comment(s) (pool=1500, sampling=random)
+  [156/337] GCTJIIJzEvU — 'Zelensky to CNN: Putin ‘doesn’t know how to end th': 300 new comment(s) (pool=615, sampling=random)
+  [157/337] Gl6R0I7zE2Y — "'Skepticism' over Israeli intel on Iran's threat t": 300 new comment(s) (pool=446, sampling=random)
+  [158/337] I2hCAieXFd8 — 'US sailors try to jump ship after 250+ days at sea': 300 new comment(s) (pool=1500, sampling=random)
+  [159/337] s1zM8vILmmc — 'Iran’s new strategy: “Prolong war” until Trump lea': 300 new comment(s) (pool=1288, sampling=random)
+  [160/337] KetzEtWmDZk — "Trump's sinking cabinet, data center disapproval &": 300 new comment(s) (pool=1224, sampling=random)
+  [161/337] NYnma1un3MY — 'How Trump’s secret plane switch unfolded': 300 new comment(s) (pool=794, sampling=random)
+  [162/337] Khl7diwQRA4 — 'Iran’s refreshed military, Trump’s plane tactic & ': 299 new comment(s) (pool=839, sampling=random)
+  [163/337] bPlcckdGX8s — "Security experts react to Trump's secret flight af": 300 new comment(s) (pool=1147, sampling=random)
+  [164/337] G8F7kiPGcTw — "Harry Enten shares 'shocking' finding in latest po": 297 new comment(s) (pool=598, sampling=random)
+  [165/337] IhZtYIRsUkY — 'Are Gulf countries abandoning the US? Fareed discu': 299 new comment(s) (pool=645, sampling=random)
+===== OVERLAY END | exit=1 | duration=198.9s =====

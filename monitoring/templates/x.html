@@ -1,0 +1,54 @@
+{% extends 'base.html' %}{% block content %}
+<div class="card fade"><div class="hd"><h2>X Accounts و Runtime</h2><span class="bdg {{'g' if accounts_configured else 'r'}}">{{'Accounts configured' if accounts_configured else 'Accounts missing'}}</span></div><form method="post" action="{{url_for('x_save')}}"><div class="fg">
+<div class="full-grid"><label class="fl">X_ACCOUNTS_JSON</label><textarea class="inp" rows="6" name="X_ACCOUNTS_JSON" placeholder='JSON accounts؛ خالی = حفظ secret فعلی'></textarea></div>
+<div><label class="fl">X_OUTPUT_ROOT</label><input class="inp" name="X_OUTPUT_ROOT" value="{{cfg.X_OUTPUT_ROOT}}" placeholder="خالی = native default"></div><div><label class="fl">PROJECT_AUTHOR_SALT</label><input class="inp" type="password" name="PROJECT_AUTHOR_SALT" placeholder="خالی = حفظ مقدار"></div>
+<div><label class="fl">Max workers</label><input class="inp" type="number" min="1" max="3" name="X_MAX_WORKERS" value="{{cfg.X_MAX_WORKERS}}"></div><div><label class="fl">Max scrolls / slice</label><input class="inp" type="number" min="1" name="X_MAX_SCROLLS_PER_SLICE" value="{{cfg.X_MAX_SCROLLS_PER_SLICE}}"></div>
+<div><label class="fl">Max scrolls min-day</label><input class="inp" type="number" min="1" name="X_MAX_SCROLLS_MIN_DAY" value="{{cfg.X_MAX_SCROLLS_MIN_DAY}}"></div><div><label class="fl">No-new scroll limit</label><input class="inp" type="number" min="1" name="X_NO_NEW_SCROLL_LIMIT" value="{{cfg.X_NO_NEW_SCROLL_LIMIT}}"></div>
+<div><label class="fl">Page load timeout</label><input class="inp" type="number" min="1" name="X_PAGE_LOAD_TIMEOUT_SECONDS" value="{{cfg.X_PAGE_LOAD_TIMEOUT_SECONDS}}"></div><div><label class="fl">Ready timeout</label><input class="inp" type="number" min="1" name="X_READY_TIMEOUT_SECONDS" value="{{cfg.X_READY_TIMEOUT_SECONDS}}"></div>
+<div><label class="fl">Startup stagger sec</label><input class="inp" type="number" step="0.1" min="0" name="X_STARTUP_STAGGER_SECONDS" value="{{cfg.X_STARTUP_STAGGER_SECONDS}}"></div><div><label class="fl">Startup max attempts</label><input class="inp" type="number" min="1" name="X_STARTUP_MAX_ATTEMPTS" value="{{cfg.X_STARTUP_MAX_ATTEMPTS}}"></div>
+<div><label class="fl">Startup retry sec</label><input class="inp" type="number" min="0" name="X_STARTUP_RETRY_SECONDS" value="{{cfg.X_STARTUP_RETRY_SECONDS}}"></div><div><label class="fl">Scroll min delay</label><input class="inp" type="number" step="0.1" min="0" name="X_SCROLL_MIN_DELAY_SECONDS" value="{{cfg.X_SCROLL_MIN_DELAY_SECONDS}}"></div>
+<div><label class="fl">Scroll max delay</label><input class="inp" type="number" step="0.1" min="0" name="X_SCROLL_MAX_DELAY_SECONDS" value="{{cfg.X_SCROLL_MAX_DELAY_SECONDS}}"></div><div><label class="fl">Job backoff sec</label><input class="inp" type="number" min="0" name="X_JOB_BACKOFF_SECONDS" value="{{cfg.X_JOB_BACKOFF_SECONDS}}"></div>
+<div><label class="fl">Max job attempts</label><input class="inp" type="number" min="1" name="X_MAX_JOB_ATTEMPTS" value="{{cfg.X_MAX_JOB_ATTEMPTS}}"></div><div><label class="fl">Backfill min delay</label><input class="inp" type="number" step="0.1" min="0" name="X_BACKFILL_MIN_DELAY_SECONDS" value="{{cfg.X_BACKFILL_MIN_DELAY_SECONDS}}"></div>
+<div><label class="fl">Backfill max delay</label><input class="inp" type="number" step="0.1" min="0" name="X_BACKFILL_MAX_DELAY_SECONDS" value="{{cfg.X_BACKFILL_MAX_DELAY_SECONDS}}"></div><div><label class="fl">Backfill ready timeout</label><input class="inp" type="number" min="1" name="X_BACKFILL_READY_TIMEOUT_SECONDS" value="{{cfg.X_BACKFILL_READY_TIMEOUT_SECONDS}}"></div>
+</div><button class="btn p mt-14">ذخیره تنظیمات X</button></form>{% if accounts_configured %}<form method="post" action="/config/clear/X_ACCOUNTS_JSON" class="mt-10"><button class="btn d sm">حذف X_ACCOUNTS_JSON ذخیره‌شده</button></form>{% endif %}</div>
+<div class="card fade"><div class="hd"><h2>Query Registry اصلی X</h2><span class="bdg n">Read-only — preflight protected</span></div><table class="tbl"><thead><tr><th>ID</th><th>Family</th><th>Lang</th><th>Risk</th><th>Query</th></tr></thead><tbody>{% for q in x_queries %}<tr><td><b>{{q.query_id}}</b></td><td>{{q.family}}</td><td>{{q.language}}</td><td><span class="bdg {{'r' if q.risk=='high' else 'n'}}">{{q.risk}}</span></td><td class="txt">{{q.query_text}}</td></tr>{% endfor %}</tbody></table><p class="muted mt-12">Queryهای X عمداً در پنل قابل حذف نیستند چون خود x_scraper یک preflight ثابت روی registry دارد؛ تغییر آن بدون تغییر pipeline باعث failure منطقی می‌شود.</p></div>
+<div class="card fade">
+  <div class="hd">
+    <h2> اجرای سفارشی X / Twitter</h2>
+    <span class="bdg b">Custom Query Plan</span>
+  </div>
+  <form method="post" action="/process/x/custom/start">
+    <div class="fg">
+      <div class="full-grid">
+        <label class="fl">عبارت جستجو یا هشتگ (Search Term / Hashtag)</label>
+        <input class="inp" name="custom_topic" placeholder="مثال: #crypto یا inflation" required>
+      </div>
+      <div>
+        <label class="fl">از تاریخ (Since Date)</label>
+        <input class="inp" type="date" name="start_date">
+      </div>
+      <div>
+        <label class="fl">تا تاریخ (Until Date)</label>
+        <input class="inp" type="date" name="end_date">
+      </div>
+      <div>
+        <label class="fl">تعداد اسکرول در هر بازه (Max Scrolls / Slice)</label>
+        <input class="inp" type="number" min="1" name="max_scrolls" value="30">
+      </div>
+      <div>
+        <label class="fl">زبان جستجو (Language)</label>
+        <select class="inp" name="lang">
+          <option value="en">انگلیسی (en)</option>
+          <option value="fa">فارسی (fa)</option>
+          <option value="all">همه زبان‌ها</option>
+        </select>
+      </div>
+    </div>
+    <div class="badge-row mt-14">
+      <button type="submit" class="btn p">شروع خزش سفارشی X</button>
+      <a class="btn g" href="/live?collector=x">مشاهده لاگ زنده</a>
+    </div>
+  </form>
+</div>
+<div class="card fade"><div class="hd"><h2>اجرا</h2></div><form class="inline-form" method="post" action="/process/x/start"><button class="btn p">Start X</button></form> <form class="inline-form" method="post" action="/process/x/stop"><button class="btn d">Stop</button></form> <a class="btn g" href="/live?collector=x">Live Log</a></div>
+{% endblock %}
