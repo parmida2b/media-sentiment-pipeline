@@ -60,14 +60,23 @@ CONFIG = config_loader.load_config()
 # JSONL paths
 # ---------------------------------------------------------------------------
 
-_YOUTUBE_JSONL = ROOT / "data" / "raw" / CONFIG.topic_id / "youtube_comments_v2.jsonl"
+_YOUTUBE_RAW_DIR = ROOT / "data" / "raw" / CONFIG.topic_id
 _REDDIT_JSONL = ROOT / "data" / "raw" / "reddit" / "reddit_comments_v1.jsonl"
 _X_JSONL = ROOT / "data" / "raw" / "x" / "x_comments_v1.jsonl"
 
-_PLATFORM_JSONL = {
-    "youtube": _YOUTUBE_JSONL,
-    "reddit": _REDDIT_JSONL,
-    "x": _X_JSONL,
+# YouTube: glob every youtube_comments_*.jsonl (same convention
+# join_and_clean.py's _load_all_comments() already uses — see its
+# docstring), not just youtube_comments_v2.jsonl. Fixed 2026-08-14 (see
+# docs/decision_log.md): the first backfill pass only pointed at v2.jsonl
+# (~82,550 records) and silently missed youtube_comments_1404-12-09_to_
+# ongoing.jsonl (~74,924 records, roughly half of all YouTube data) — no
+# error, just fewer harmonized rows than clean.jsonl's YouTube count, which
+# would have gone unnoticed until apply_eligibility.py's output was already
+# short by that much.
+_PLATFORM_JSONL: dict[str, list[Path]] = {
+    "youtube": sorted(_YOUTUBE_RAW_DIR.glob("youtube_comments_*.jsonl")),
+    "reddit": [_REDDIT_JSONL],
+    "x": [_X_JSONL],
 }
 
 # ---------------------------------------------------------------------------
@@ -214,14 +223,20 @@ _BACKFILL_FN = {
 def run(platforms: list[str]) -> bool:
     all_ok = True
     for platform in platforms:
-        jsonl_path = _PLATFORM_JSONL[platform]
+        jsonl_paths = _PLATFORM_JSONL[platform]
         print(f"\n{'=' * 60}")
-        print(f"Platform: {platform.upper()}  ({jsonl_path})")
+        print(f"Platform: {platform.upper()}  ({', '.join(p.name for p in jsonl_paths) or 'NO FILES FOUND'})")
         print("=" * 60)
 
-        records, quarantined = _load_jsonl(jsonl_path)
+        records: list[Record] = []
+        quarantined = 0
+        for jsonl_path in jsonl_paths:
+            file_records, file_quarantined = _load_jsonl(jsonl_path)
+            print(f"  {jsonl_path.name}: {len(file_records)} record(s), {file_quarantined} parse_quarantine")
+            records.extend(file_records)
+            quarantined += file_quarantined
         input_rows = len(records) + quarantined
-        print(f"  Loaded: {len(records)} record(s), {quarantined} parse_quarantine")
+        print(f"  Loaded total: {len(records)} record(s), {quarantined} parse_quarantine")
 
         if not records:
             print("  Nothing to harmonize.")

@@ -519,12 +519,20 @@ def _empty_to_none(value):
 
 
 def _parse_z_datetime(s: str | None) -> datetime | None:
-    """Parse a Z-format ISO string (e.g. '2026-03-05T12:00:00Z') produced
-    by reddit_to_record.py's to_z_format() into a tz-aware datetime UTC."""
+    """Parse a Z-format ISO string produced by reddit_to_record.py's
+    to_z_format() into a tz-aware datetime UTC. Handles both
+    '2026-03-05T12:00:00Z' and '2026-03-05T12:00:00.000000Z' (microseconds) —
+    found 2026-08-14 (see docs/decision_log.md): the strict no-microseconds
+    strptime format silently returned None on every row of
+    data/raw/reddit/reddit_comments_v1.jsonl (which does carry '.000000Z'),
+    which meant record_to_raw_harmonized_row() wrote created_at_utc=NaT for
+    ALL 158,959 Reddit records — apply_eligibility.py then classified nearly
+    all of them as opinion_untimed (no usable timestamp), silently dropping
+    Reddit out of every time-series/trend/event analysis."""
     if not s:
         return None
     try:
-        return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
     except ValueError:
         return None
 
