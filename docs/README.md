@@ -18,6 +18,7 @@
    [`handoff_notes_fa.md`](handoff_notes_fa.md) رو باز کن (وضعیت لحظه‌ای —
    کدوم فایل الان واقعیه، پوشش annotation چقدره)، بعد برای جزئیات ستون‌ها
    [`outputs_guide_fa.md`](outputs_guide_fa.md).
+4. اگه می‌خوای خودت Pipeline رو (دوباره) اجرا کنی: [`how_to_run_pipeline_fa.md`](how_to_run_pipeline_fa.md).
 
 ## ۱. سند روش‌شناسی فعلی (مشاور) — نسخه‌ی هدف تیم
 
