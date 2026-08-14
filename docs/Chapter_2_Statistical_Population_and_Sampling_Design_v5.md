@@ -40,7 +40,7 @@ Sampling frame عملیاتی شامل واحدهایی است که در باز�
 | پلتفرم | Sampling frame عملیاتی | واحد اصلی تحلیل | موارد خارج از Frame |
 |---|---|---|---|
 | X | محتوای عمومی برگشتی از Query، Hashtag یا Conversation واقعاً اجراشده در مسیر دسترسی تیم | Post، Reply و Quote دارای متن مستقل | محتوای خصوصی، حذف‌شده، برنگشته از Search یا خارج از دسترسی تاریخی |
-| Reddit | Submissionهای کشف‌شده با Query/Source اجراشده و Comment/Reply عمومی برگشتی از Threadهای آن‌ها | Comment و Reply؛ Submission جداگانه گزارش می‌شود | Threadهای کشف‌نشده، Comment حذف‌شده یا برنگشته از API/ابزار |
+| Reddit | Submissionهای کشف‌شده با Query/Source اجراشده و Comment/Reply عمومی برگشتی از Threadهای آن‌ها | Comment و Reply؛ Submission جداگانه گزارش می‌شود | Threadهای کشف‌نشده، Commentهای حذف‌شده یا Commentهایی که توسط Scraper بازیابی نشده‌اند |
 | YouTube | Videoهای کشف‌شده با Query/Channel اجراشده و Comment/Reply عمومی برگشتی از آن Videoها | Comment و Reply؛ Video فقط Parent context است | Videoهای کشف‌نشده، Comment غیرفعال/حذف‌شده یا برنگشته از Pagination |
 
 احتمال ورود هر محتوا به نمونه معلوم و برابر نیست. الگوریتم جست‌وجو، حذف محتوا، محدودیت تاریخی، Moderation، انتخاب Query، Channel و Subreddit بر ورود رکورد اثر دارند.
