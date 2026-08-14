@@ -321,6 +321,7 @@
     return (x * 100).toFixed(digits === undefined ? 1 : digits) + "%";
   }
   function fmtSigned(x, digits) {
+    if (x === null || x === undefined || isNaN(x)) return "—";
     var v = (x * 100).toFixed(digits === undefined ? 1 : digits);
     return (x >= 0 ? "+" : "") + v + " pp";
   }
@@ -380,9 +381,13 @@
     banner.appendChild(pill);
     var genDate = new Date(DATA.generated_at);
     var note = document.createElement("span");
+    var covPct = DATA.kpi.n_total ? DATA.kpi.n_annotation_ok / DATA.kpi.n_total : 0;
     note.textContent = isMock
       ? "همه اعداد این صفحه روی داده‌ی جایگزین (placeholder) محاسبه شده‌اند و صرفاً برای بررسی شکل داشبورد هستند — تا وقتی داده‌ی واقعی جای‌گزین نشده به آن‌ها استناد نکنید."
-      : "این صفحه از آخرین خروجی واقعی خط لوله ساخته شده است.";
+      : "این صفحه از آخرین خروجی واقعی خط لوله ساخته شده است" +
+        (covPct < 0.5
+          ? " — با این‌حال پوشش annotation فعلاً فقط " + (covPct * 100).toFixed(1) + "٪ رکوردهای واجد شرایط است (" + fmtInt(DATA.kpi.n_annotation_ok) + " از " + fmtInt(DATA.kpi.n_total) + ")؛ روندها/مقایسه‌ها را قطعی برداشت نکنید تا پوشش بالاتر برود."
+          : ".");
     banner.appendChild(note);
     var when = el("span", { class: "db-ltr", style: "margin-inline-start:auto;color:var(--text-muted)" });
     when.textContent = "ساخته‌شده: " + genDate.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " UTC";
@@ -780,9 +785,16 @@
 
     var W = 800, rowH = 34, padTop = 8, padBottom = 8, midX = 430, leftLabelW = 250, rightPad = 60;
     var H = padTop + padBottom + events.length * rowH;
-    var maxAbs = Math.max.apply(null, events.map(function (e) { return Math.max(Math.abs(e.ci_low), Math.abs(e.ci_high), Math.abs(e.share_diff)); }).concat([0.05]));
+    var absVals = [];
+    events.forEach(function (e) {
+      [e.ci_low, e.ci_high, e.share_diff].forEach(function (v) {
+        if (v !== null && v !== undefined && !isNaN(v)) absVals.push(Math.abs(v));
+      });
+    });
+    var maxAbs = Math.max.apply(null, absVals.concat([0.05]));
     var halfW = Math.min(midX - leftLabelW - 10, W - rightPad - midX);
     function xFor(v) { return midX + (v / maxAbs) * halfW; }
+    function hasValue(v) { return v !== null && v !== undefined && !isNaN(v); }
 
     var s = svg("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "اثر رویدادها" });
     s.appendChild(svg("line", { x1: midX, x2: midX, y1: padTop, y2: H - padBottom, class: "db-baseline" }));
@@ -795,6 +807,16 @@
       lbl.textContent = label;
       s.appendChild(lbl);
 
+      // Sparse annotation coverage can leave an event's before/after window
+      // with zero eligible records — render that as an explicit "no data"
+      // marker instead of a misleading zero-width bar at the baseline.
+      if (!hasValue(e.share_diff)) {
+        var naLbl = svg("text", { x: midX, y: y + rowH / 2 + 4, "text-anchor": "middle", class: "db-axis-text", "font-style": "italic" });
+        naLbl.textContent = "داده کافی نیست (n=" + e.n_before_target + "/" + e.n_after_target + ")";
+        s.appendChild(naLbl);
+        return;
+      }
+
       var color = e.share_diff >= 0 ? cssVar("--diverge-pos") : cssVar("--diverge-neg");
       var x0 = xFor(0), x1 = xFor(e.share_diff);
       var barY = y + rowH / 2 - 6;
@@ -804,11 +826,13 @@
       });
       s.appendChild(bar);
 
-      // CI whisker
-      var xLo = xFor(e.ci_low), xHi = xFor(e.ci_high);
-      s.appendChild(svg("line", { x1: xLo, x2: xHi, y1: y + rowH / 2, y2: y + rowH / 2, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
-      s.appendChild(svg("line", { x1: xLo, x2: xLo, y1: y + rowH / 2 - 4, y2: y + rowH / 2 + 4, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
-      s.appendChild(svg("line", { x1: xHi, x2: xHi, y1: y + rowH / 2 - 4, y2: y + rowH / 2 + 4, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
+      // CI whisker (only when both bounds are present)
+      if (hasValue(e.ci_low) && hasValue(e.ci_high)) {
+        var xLo = xFor(e.ci_low), xHi = xFor(e.ci_high);
+        s.appendChild(svg("line", { x1: xLo, x2: xHi, y1: y + rowH / 2, y2: y + rowH / 2, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
+        s.appendChild(svg("line", { x1: xLo, x2: xLo, y1: y + rowH / 2 - 4, y2: y + rowH / 2 + 4, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
+        s.appendChild(svg("line", { x1: xHi, x2: xHi, y1: y + rowH / 2 - 4, y2: y + rowH / 2 + 4, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
+      }
 
       var valLbl = svg("text", { x: (x1 > x0 ? x1 + 8 : x1 - 8), y: y + rowH / 2 + 4, "text-anchor": (x1 > x0 ? "start" : "end"), class: "db-axis-text", fill: color, "font-weight": "700" });
       valLbl.textContent = fmtSigned(e.share_diff, 1);
