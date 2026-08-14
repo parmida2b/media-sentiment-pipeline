@@ -264,7 +264,7 @@ reply_ratio, posts_participated← وزن پایین (به‌تنهایی سیگ
    [`raw_schema_columns.py`](../config/raw_schema_columns.py) تولید کند.
 3. در صورت نیاز به ستون جدید یا تغییر فرمت، ابتدا باید در جلسه‌ی تیم مطرح شود؛
    ویرایش مستقیم `config/schema.py` مجاز نیست (طبق
-   [`GIT_WORKFLOW.md`](../GIT_WORKFLOW.md)، مالکیت این فایل با پارمیداست).
+   [`GIT_WORKFLOW.md`](./GIT_WORKFLOW.md)، مالکیت این فایل با پارمیداست).
 4. الزامات بخش ۱۲ سند [`raw_schema_v03.md`](raw_schema_v03.md) باید رعایت شود
    (برای نمونه: مرتب‌سازی بر اساس جدیدترین رکورد، نه محبوب‌ترین؛ عدم دستکاری
    متن خام؛ و سایر موارد).

@@ -59,10 +59,10 @@
 | [`manual_labeling_guide_fa.md`](manual_labeling_guide_fa.md) | راهنمای annotator برای لیبل دستی (Gold Sample) | معتبر |
 | [`financial/README_FINANCIAL_WORKFLOW_FA.md`](financial/README_FINANCIAL_WORKFLOW_FA.md) | ترتیب اجرای بخش مالی، ورودی‌ها و خروجی‌ها | معتبر |
 
-## ۳. راهنمای عملیاتی/Git (بدون تاریخ انقضا)
+## ۳. راهنمای عملیاتی/Git (بایگانی‌شده، مخصوص فاز توسعه)
 
-[`setup.md`](setup.md) · [`git_github_guide_ali_hossein.md`](git_github_guide_ali_hossein.md) ·
-[`../GIT_WORKFLOW.md`](../GIT_WORKFLOW.md)
+[`archive/setup.md`](archive/setup.md) · [`archive/git_github_guide_ali_hossein.md`](archive/git_github_guide_ali_hossein.md) ·
+[`archive/GIT_WORKFLOW.md`](archive/GIT_WORKFLOW.md)
 
 ## ۴. هنوز خالی‌ان (TODO)
 
@@ -75,11 +75,12 @@
 
 [`archive/`](archive/) — اسنادی که دیگه هیچ کدی بهشون رفرنس نمی‌ده و کاملاً
 جایگزین شدن. هر فایل داخلش یه بنر داره که می‌گه چرا و کِی بایگانی شده.
+از جمله (۲۰۲۶-۰۸-۱۵ به اینجا منتقل شدن، قبلاً بیرون از `docs/` بودن):
 
-## ۶. سایر (بیرون از `docs/`)
-
-- [`../roadmap_pipeline.md`](../roadmap_pipeline.md) — نقشه‌راه اولیه/آرمانی
+- [`archive/roadmap_pipeline.md`](archive/roadmap_pipeline.md) — نقشه‌راه اولیه/آرمانی
   پروژه (نه وضعیت فعلی کد). **نیمه‌منسوخ**: تلگرام/توییتر رو پلتفرم فعال
   نشون می‌ده (تلگرام طبق `decision_log.md` ۲۰۲۶-۰۸-۰۴ حذف شد) و از
   `pipeline_runner.py`ای حرف می‌زنه که هیچ‌وقت ساخته نشد. بخش ۴ (مسیر تبدیل
   به ایجنت مکالمه‌ای، فاز ۲) هنوز به‌عنوان مرجع طراحی معتبره.
+- [`archive/GIT_WORKFLOW.md`](archive/GIT_WORKFLOW.md) — راهنمای داخلی کار
+  تیمی با گیت، مخصوص فاز توسعه؛ برای ارائه نهایی کاربردی نداره.

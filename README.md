@@ -20,7 +20,7 @@ cp .env.example .env   # کلیدهای API خودت رو بذار
 ```
 
 ## قبل از هر کاری
-راهنمای کار با گیت رو بخون: [`GIT_WORKFLOW.md`](./GIT_WORKFLOW.md)
+راهنمای کار با گیت (بایگانی‌شده، مخصوص فاز توسعه): [`docs/archive/GIT_WORKFLOW.md`](./docs/archive/GIT_WORKFLOW.md)
 مخصوصاً بخش استراتژی برنچ و جلوگیری از conflict.
 
 ## فرمت داده مشترک
@@ -35,7 +35,7 @@ cp .env.example .env   # کلیدهای API خودت رو بذار
 جدا از موضوع‌های قبلی ذخیره می‌شه.
 
 ## ساختار پروژه
-جزئیات کامل توی `GIT_WORKFLOW.md` هست.
+جزئیات کامل توی `docs/archive/GIT_WORKFLOW.md` هست.
 
 ## جریان مالی
 
