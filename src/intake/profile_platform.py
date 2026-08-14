@@ -803,7 +803,18 @@ def aggregate_platform(profiles: list[FileProfile]) -> dict:
     }
 
 
-def update_coverage(coverage_path: Path, platform: str, agg: dict, dry_run: bool) -> None:
+def update_coverage(coverage_path: Path, platform: str, agg: dict, dry_run: bool, regrade: bool = False) -> None:
+    """Refreshes the numeric profile columns for `platform`'s row.
+
+    quality_grade (docs/checklist.md item 8) is deliberately NOT overwritten
+    by this function's own aggregate_platform() output (which always says
+    "pending" -- it never computes a grade) when the row already carries a
+    real grade from a separate, reasoned pass (src/intake/quality_grade.py,
+    run manually/reviewed by the team). Without this, every re-run of
+    profile_platform.py (e.g. after new raw files land) would silently reset
+    a team-reviewed A-D grade back to "pending". Pass regrade=True to allow
+    it (the caller is then responsible for re-running quality_grade.py
+    afterward -- see --regrade)."""
     fieldnames, rows = read_csv_rows(coverage_path)
     if fieldnames != COVERAGE_COLUMNS:
         print(
@@ -818,7 +829,21 @@ def update_coverage(coverage_path: Path, platform: str, agg: dict, dry_run: bool
     found = False
     for row in rows:
         if row.get("platform", "").strip() == platform:
+            existing_grade = (row.get("quality_grade") or "").strip()
+            existing_notes = row.get("notes") or ""
             row.update({k: agg.get(k, row.get(k, "")) for k in fieldnames})
+            if not regrade and existing_grade and existing_grade != "pending":
+                row["quality_grade"] = existing_grade
+                grade_note = next(
+                    (part for part in existing_notes.split(" || ") if part.startswith("quality_grade.py:")),
+                    None,
+                )
+                if grade_note:
+                    row["notes"] = f"{row['notes']} || {grade_note}" if row.get("notes") else grade_note
+                print(
+                    f"  preserved existing quality_grade={existing_grade!r} for platform={platform} "
+                    "(pass --regrade to reset to 'pending' and re-run src/intake/quality_grade.py)."
+                )
             found = True
             break
     if not found:
@@ -845,6 +870,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--coverage", type=Path, default=DEFAULT_COVERAGE)
     parser.add_argument("--dry-run", action="store_true", help="Print what would change; write nothing.")
+    parser.add_argument(
+        "--regrade", action="store_true",
+        help="Allow this run to reset an existing quality_grade back to 'pending' instead of "
+             "preserving it (see update_coverage()). Re-run src/intake/quality_grade.py afterward.",
+    )
     args = parser.parse_args(argv)
 
     candidates = discover_candidate_files(args.raw_dir)
@@ -899,7 +929,7 @@ def main(argv: list[str] | None = None) -> int:
     update_manifest(args.manifest, manifest_rows, args.dry_run)
 
     agg = aggregate_platform(profiles)
-    update_coverage(args.coverage, args.platform, agg, args.dry_run)
+    update_coverage(args.coverage, args.platform, agg, args.dry_run, regrade=args.regrade)
 
     print(
         "\nNothing under data/raw/ was modified, renamed, or deleted by this script "

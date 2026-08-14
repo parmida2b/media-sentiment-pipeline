@@ -222,14 +222,27 @@ def stratified_subsample(records: pd.DataFrame, cap_per_cell: int, seed: int) ->
     untimed = records[records["project_week"].isna() | (records["project_week"] == "OUT")]
     timed = records[~records.index.isin(untimed.index)]
 
-    sampled = timed.groupby(["platform", "project_week"], group_keys=False).apply(
-        lambda g: g.sample(n=min(len(g), cap_per_cell), random_state=seed)
-    )
+    # Plain iteration over a groupby object (not .groupby(...).apply(func)):
+    # each `group` here is a real slice of `timed` and keeps every column,
+    # including the two grouping columns themselves. .groupby(...).apply()
+    # is deliberately NOT used — as of pandas 3.0 (installed here) it drops
+    # the grouping columns from what's passed into the lambda by default
+    # (the finalized form of a change pandas warned about since 2.2's
+    # "operated on the grouping columns" deprecation), which silently made
+    # every sampled row's platform/project_week come back null. Found
+    # 2026-08-14 when a real run wrote thousands of rows with
+    # platform=NaN — see docs/decision_log.md.
+    cell_sizes: dict[tuple, int] = {}
+    parts = []
+    for key, group in timed.groupby(["platform", "project_week"]):
+        cell_sizes[key] = len(group)
+        take = min(len(group), cap_per_cell)
+        parts.append(group.sample(n=take, random_state=seed))
+    sampled = pd.concat(parts, ignore_index=True) if parts else timed.iloc[0:0].copy()
     result = pd.concat([sampled, untimed], ignore_index=True)
 
-    cell_counts = timed.groupby(["platform", "project_week"]).size()
-    n_capped = int((cell_counts > cap_per_cell).sum())
-    n_short = int(((cell_counts > 0) & (cell_counts <= cap_per_cell)).sum())
+    n_capped = sum(1 for n in cell_sizes.values() if n > cap_per_cell)
+    n_short = sum(1 for n in cell_sizes.values() if 0 < n <= cap_per_cell)
     print(f"Stratified sample: cap={cap_per_cell}/cell — {n_capped} cell(s) capped, "
           f"{n_short} cell(s) kept in full (below cap), {len(untimed)} untimed row(s) kept whole.")
     return result

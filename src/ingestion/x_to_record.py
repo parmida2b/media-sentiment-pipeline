@@ -40,13 +40,24 @@ x.runtime.default_local_output_root, x_scraper.py lines ~145-167) is
 replicated below instead of imported, same reasoning reddit_to_record.py
 gives for not importing reddit_parent_post_collector.py.)
 
+automation_risk.score_batch() (docs/checklist.md item 15) is now wired in
+(2026-08-14, see docs/decision_log.md) - Reddit/YouTube already had it, X was
+the last gap. Unlike YouTube (batched per video) and Reddit (batched per
+submission/post_id), X has no parent/thread structure at all (every tweet is
+its own top-level item, per the "Judgment calls" section below) - there is
+no meaningful sub-grouping to batch by, so compute_automation_risk_scores()
+below scores the WHOLE loaded x_raw.csv in one batch (~16K rows as of
+2026-08-14, well within score_batch()'s O(n) duplicate/rapid-fire scan).
+Pass --skip-automation-risk to skip it (faster iteration, matches Reddit's
+bridge). The author identity signal used is x_raw.csv's own author_hash
+column, read BEFORE author_hash_and_status()'s filtering: a resolved handle
+gets its real per-author hash (correct rapid-fire/duplicate-per-author
+grouping); an unresolved handle gets parse_article()'s unique
+per-content_id fallback hash (never accidentally grouped with another
+tweet as "the same unknown author").
+
 Deliberately NOT done in this pass (see docs/decision_log.md, dated entry
 for this change):
-  - automation_risk.score_batch() is NOT called here. x_raw.csv's
-    automation_risk_score column is already always empty (parse_article()
-    in x_scraper.py never computes it) and this script leaves it exactly
-    that way - wiring Tier A scoring for X is a separate, team-reviewed
-    decision, not something to add unilaterally in a schema-bridging pass.
   - geo_tagger's LLM relevance/perspective tagging ("Tier 0") is NOT called
     here either, for the same reason - x_raw.csv's geo_method/
     country_or_region/geo_confidence/geo_granularity/geo_limitations
@@ -128,6 +139,8 @@ from config.schema import AuthorMetadata, Record  # noqa: E402
 from config.raw_schema_columns import RAW_SCHEMA_COLUMNS  # noqa: E402
 from config.raw_schema_columns_v05 import RAW_SCHEMA_V05_COLUMNS  # noqa: E402
 from config import config_loader  # noqa: E402
+
+import automation_risk  # noqa: E402 - sibling module in src/ingestion/, same import convention as reddit_to_record.py
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "data" / "raw" / "x"
@@ -260,14 +273,39 @@ def load_rows(path: Path, limit: int | None) -> list[dict[str, str]]:
 
 
 # ---------------------------------------------------------------------------
+# automation_risk (Tier A) — one batch over the whole loaded file, see
+# module docstring for why X has no per-thread grouping to batch by.
+# ---------------------------------------------------------------------------
+
+def compute_automation_risk_scores(rows: list[dict[str, str]]) -> dict[str, float]:
+    """automation_risk.score_batch() is platform-agnostic (just wants
+    content_id/text/date/author_channel_id per item) - reused verbatim.
+    x_raw.csv's created_at_utc is already in the "...Z" format score_batch()
+    expects (see module docstring - no to_z_format() conversion needed,
+    unlike Reddit's bridge)."""
+    comments = [
+        {
+            "content_id": row.get("platform_content_id", ""),
+            "text": row.get("text_raw", ""),
+            "date": row.get("created_at_utc", ""),
+            "author_channel_id": row.get("author_hash", ""),
+        }
+        for row in rows
+        if row.get("platform_content_id")
+    ]
+    return automation_risk.score_batch(comments)
+
+
+# ---------------------------------------------------------------------------
 # build one Record
 # ---------------------------------------------------------------------------
 
-def build_record(row: dict[str, str]) -> Record:
+def build_record(row: dict[str, str], risk_scores: dict[str, float] | None = None) -> Record:
     platform = row.get("platform") or "x"
     content_type = s_or_none(row.get("content_type"))
     content_id = s_or_none(row.get("platform_content_id"))
     a_hash, a_status = author_hash_and_status(row)
+    risk_score = (risk_scores or {}).get(content_id or "")
 
     author_metadata = AuthorMetadata(
         author_channel_id=None,  # no stable numeric X user id captured; author_username/display_name are raw PII this bridge must not carry (see module docstring)
@@ -292,7 +330,7 @@ def build_record(row: dict[str, str]) -> Record:
         collected_at_utc=s_or_none(row.get("collected_at_utc")),
         collection_run_id=s_or_none(row.get("collection_run_id")),
         query_id=s_or_none(row.get("query_id")),
-        automation_risk_score=parse_float(row.get("automation_risk_score")),
+        automation_risk_score=risk_score if risk_score is not None else parse_float(row.get("automation_risk_score")),
         content_type=content_type,
         matched_query_ids=s_or_none(row.get("matched_query_ids")),
         query_version=s_or_none(row.get("query_version")),
@@ -582,6 +620,7 @@ def main() -> None:
         help=f"Override the x_raw.csv path (default: resolved the same way x_scraper.py resolves "
              f"X_OUTPUT_ROOT - currently {DEFAULT_INPUT_CSV}).",
     )
+    parser.add_argument("--skip-automation-risk", action="store_true", help="Skip automation_risk.score_batch (faster iteration).")
     args = parser.parse_args()
 
     input_csv = args.input_csv or DEFAULT_INPUT_CSV
@@ -590,7 +629,13 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    records = [build_record(row) for row in rows]
+    if args.skip_automation_risk:
+        risk_scores: dict[str, float] = {}
+    else:
+        risk_scores = compute_automation_risk_scores(rows)
+        print(f"automation_risk_score computed for {len(risk_scores)} row(s).")
+
+    records = [build_record(row, risk_scores) for row in rows]
 
     with JSONL_OUTPUT.open("w", encoding="utf-8") as fh:
         for record in records:
@@ -604,12 +649,14 @@ def main() -> None:
 
     hashed = sum(1 for r in records if r.author_metadata.author_hash)
     not_active = sum(1 for r in records if r.content_status != "active")
+    high_risk = sum(1 for r in records if (r.automation_risk_score or 0.0) >= 0.7)
 
     print(f"\nWrote {len(records)} record(s):")
     print(f"  JSONL: {JSONL_OUTPUT}")
     print(f"  CSV:   {CSV_OUTPUT}")
     print(f"  author_hash populated (handle resolved): {hashed}/{len(records)}")
     print(f"  content_status != active: {not_active}/{len(records)}")
+    print(f"  automation_risk_score >= 0.7 (high risk, flagged not removed): {high_risk}/{len(records)}")
 
 
 if __name__ == "__main__":

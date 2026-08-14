@@ -51,9 +51,45 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from config.raw_schema_columns import RAW_SCHEMA_COLUMNS  # noqa: E402
 from src.ingestion.x_to_record import build_record, record_to_raw_schema_row  # noqa: E402
+import automation_risk  # noqa: E402 - sibling module in src/ingestion/
 import geo_tagger  # noqa: E402 - reuse the exact same lightweight script-detection heuristic reddit_to_record.py already uses (_detect_text_language), so a record that goes through THIS bridge gets the same language value it would have gotten going through that one
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def compute_automation_risk_scores_for_raw_schema_rows(rows: list[dict[str, str]]) -> dict[str, float]:
+    """docs/checklist.md item 15 (2026-08-14): both real-data platforms that
+    go through THIS bridge (X and Reddit -- see decision_log.md, this was
+    found to be the actual path the real production data took, not
+    x_to_record.py's/reddit_to_record.py's own main()) had
+    automation_risk_score=None for every single record, because neither of
+    those scripts' own batching logic was ever invoked here.
+
+    Batches by source_parent_id when it's populated (Reddit: one batch per
+    submission, the same "per parent container" scope
+    reddit_to_record.py's own compute_automation_risk_scores() and
+    youtube_extract.py use) -- falls back to one single whole-file batch for
+    rows where it's empty (X: every tweet is a standalone top-level item,
+    per x_to_record.py's module docstring, so there is no parent to group
+    by). automation_risk.score_batch() itself is platform-agnostic (just
+    wants content_id/text/date/author_channel_id per item)."""
+    by_group: dict[str, list[dict]] = {}
+    for row in rows:
+        content_id = row.get("platform_content_id") or ""
+        if not content_id:
+            continue
+        group_key = row.get("source_parent_id") or "__no_parent__"
+        by_group.setdefault(group_key, []).append({
+            "content_id": content_id,
+            "text": row.get("text_raw", ""),
+            "date": row.get("created_at_utc", ""),
+            "author_channel_id": row.get("author_hash", ""),
+        })
+
+    scores: dict[str, float] = {}
+    for group_rows in by_group.values():
+        scores.update(automation_risk.score_batch(group_rows))
+    return scores
 
 
 def load_rows(path: Path, sheet: str | None) -> list[dict[str, str]]:
@@ -83,6 +119,7 @@ def main() -> None:
     parser.add_argument("--sheet", type=str, default="Raw_Tweets", help="Worksheet name, only used for .xlsx input.")
     parser.add_argument("--platform", type=str, required=True, choices=["x", "reddit"], help="Output directory / filename prefix.")
     parser.add_argument("--limit", type=int, default=None, help="Only process the first N rows (smoke-testing).")
+    parser.add_argument("--skip-automation-risk", action="store_true", help="Skip automation_risk.score_batch (faster iteration).")
     args = parser.parse_args()
 
     rows = load_rows(args.input, args.sheet)
@@ -142,7 +179,13 @@ def main() -> None:
     jsonl_output = output_dir / f"{args.platform}_comments_v1.jsonl"
     csv_output = output_dir / f"{args.platform}_raw_export.csv"
 
-    records = [build_record(row) for row in rows]
+    if args.skip_automation_risk:
+        risk_scores: dict[str, float] = {}
+    else:
+        risk_scores = compute_automation_risk_scores_for_raw_schema_rows(rows)
+        print(f"automation_risk_score computed for {len(risk_scores)} row(s).")
+
+    records = [build_record(row, risk_scores) for row in rows]
 
     with jsonl_output.open("w", encoding="utf-8") as fh:
         for record in records:
@@ -156,10 +199,12 @@ def main() -> None:
 
     hashed = sum(1 for r in records if r.author_metadata.author_hash)
     not_active = sum(1 for r in records if r.content_status != "active")
+    high_risk = sum(1 for r in records if (r.automation_risk_score or 0.0) >= 0.7)
     print(f"Wrote {len(records)} record(s) -> {jsonl_output}")
     print(f"Wrote {len(records)} record(s) -> {csv_output}")
     print(f"  author_hash present: {hashed}/{len(records)}")
     print(f"  content_status != active: {not_active}/{len(records)}")
+    print(f"  automation_risk_score >= 0.7 (high risk, flagged not removed): {high_risk}/{len(records)}")
 
 
 if __name__ == "__main__":

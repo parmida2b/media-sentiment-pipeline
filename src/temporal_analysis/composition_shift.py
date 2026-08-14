@@ -73,9 +73,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import pandas as pd
+
+sys.stdout.reconfigure(encoding="utf-8")  # Persian notes/arrows in print() below
 
 from src.temporal_analysis.common import (
     DEFAULT_INPUT_PATH,

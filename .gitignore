@@ -20,6 +20,11 @@ data/interim/*
 # The real handoff manifest is a small, hand-maintained provenance/audit
 # deliverable (checklist.md final output #1), not raw scraped data — track it.
 !docs/data_handoff_manifest.csv
+# Same reasoning (2026-08-14): the real collection-coverage grade table and
+# query-execution audit are now hand-reasoned deliverables too (checklist.md
+# items 7/8 and item 4), not raw scraped data — track them.
+!docs/collection_coverage.csv
+!docs/query_execution_audit.csv
 
 !data/raw/.gitkeep
 !data/processed/.gitkeep
