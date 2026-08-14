@@ -1,26 +1,26 @@
 {
   "sentiment_label": {
-    "n_compared": 120,
-    "n_skipped_incomplete": 0,
-    "cohens_kappa": 0.5169946332737029,
-    "percent_agreement": 0.7
+    "n_compared": 98,
+    "n_skipped_incomplete": 22,
+    "cohens_kappa": 0.5153478854024557,
+    "percent_agreement": 0.7040816326530612
   },
   "stance_label": {
-    "n_compared": 120,
-    "n_skipped_incomplete": 0,
-    "cohens_kappa": 0.47106817968676723,
-    "percent_agreement": 0.6083333333333333
+    "n_compared": 98,
+    "n_skipped_incomplete": 22,
+    "cohens_kappa": 0.41815097540288376,
+    "percent_agreement": 0.5714285714285714
   },
   "emotion_label": {
-    "n_compared": 120,
-    "n_skipped_incomplete": 0,
-    "cohens_kappa": 0.2622950819672131,
-    "percent_agreement": 0.575
+    "n_compared": 98,
+    "n_skipped_incomplete": 22,
+    "cohens_kappa": 0.17717976318622194,
+    "percent_agreement": 0.6020408163265306
   },
   "content_type_label": {
-    "n_compared": 120,
-    "n_skipped_incomplete": 0,
-    "cohens_kappa": 0.661670871049117,
-    "percent_agreement": 0.8416666666666667
+    "n_compared": 98,
+    "n_skipped_incomplete": 22,
+    "cohens_kappa": 0.6300417246175244,
+    "percent_agreement": 0.8061224489795918
   }
 }
