@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,6 +35,32 @@ from pathlib import Path
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _num(x) -> float | None:
+    """Cast to float, mapping NaN/inf to None (JSON has no NaN/Infinity literal).
+
+    With sparse real annotation coverage, before/after-event windows can have
+    zero eligible records, which makes pandas produce NaN for derived shares
+    and CIs. ``json.dumps`` happily emits a bare ``NaN`` token for that by
+    default, which is invalid JSON and makes the browser's ``JSON.parse``
+    throw — silently breaking every chart on the page, not just the one with
+    missing data. Route every float through here before it reaches the
+    payload so that can't happen again.
+    """
+    v = float(x)
+    return v if math.isfinite(v) else None
+
+
+def _sanitize(obj):
+    """Recursively replace any stray NaN/inf float with None (defense in depth)."""
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else None
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize(v) for v in obj]
+    return obj
 
 # Fixed platform order used everywhere in the dashboard so a given platform
 # always gets the same categorical color slot (blue / orange / aqua).
@@ -204,16 +231,18 @@ def load_event_study(tables_dir: Path) -> list[dict]:
                 "platform": r["platform"],
                 "expected_direction_fa": r["expected_direction_fa"],
                 "window_days": int(r["window_days"]),
-                "p_before": float(r["p_before"]),
-                "p_after": float(r["p_after"]),
-                "share_diff": float(r["share_diff"]),
-                "ci_low": float(r["ci_low"]),
-                "ci_high": float(r["ci_high"]),
+                "p_before": _num(r["p_before"]),
+                "p_after": _num(r["p_after"]),
+                "share_diff": _num(r["share_diff"]),
+                "ci_low": _num(r["ci_low"]),
+                "ci_high": _num(r["ci_high"]),
                 "n_before_target": int(r["n_before_target"]),
                 "n_after_target": int(r["n_after_target"]),
             }
         )
-    events.sort(key=lambda e: e["share_diff"])
+    # Events with no eligible before/after records (share_diff is None, e.g.
+    # a sparsely-annotated window) sort last rather than crashing the compare.
+    events.sort(key=lambda e: (e["share_diff"] is None, e["share_diff"] or 0))
     return events
 
 
@@ -268,7 +297,11 @@ def build_payload(tables_dir: Path, model_eval_dir: Path, data_status: str) -> d
 
 def render(payload: dict, template_path: Path) -> str:
     template = template_path.read_text(encoding="utf-8")
-    data_json = json.dumps(payload, ensure_ascii=False, indent=None)
+    payload = _sanitize(payload)
+    # allow_nan=False: fail loudly at build time if a NaN/inf slipped through
+    # _sanitize, instead of shipping a page whose embedded JSON.parse throws
+    # in the browser (which silently kills every chart, not just the bad one).
+    data_json = json.dumps(payload, ensure_ascii=False, indent=None, allow_nan=False)
     # Guard against a stray "</script>" inside string data breaking the
     # inline <script> block the JSON is embedded in.
     data_json = data_json.replace("</script", "<\\/script")
