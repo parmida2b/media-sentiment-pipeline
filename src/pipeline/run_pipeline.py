@@ -190,6 +190,8 @@ def _annotation_argv(args: argparse.Namespace) -> list[str]:
         argv += ["--limit", str(args.annotation_limit)]
     if args.annotation_stratify_cap is not None:
         argv += ["--stratify-cap", str(args.annotation_stratify_cap)]
+    if args.annotation_platform:
+        argv += ["--platform", args.annotation_platform]
     return _step_argv("src/annotation/run_full_annotation.py", argv)
 
 
@@ -424,6 +426,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--annotation-workers", type=int, default=20, metavar="N",
         help="Passed through to run_full_annotation.py --workers (concurrent threads). Default 20.",
+    )
+    parser.add_argument(
+        "--annotation-platform", default=None, metavar="p1[,p2,...]",
+        help="Passed through to run_full_annotation.py --platform, e.g. 'youtube,x' to skip reddit "
+             "for a scoped run/smoke-test. Omit for all eligible platforms.",
     )
     parser.add_argument(
         "--skip", default="", metavar="NAME[,NAME...]",

@@ -155,6 +155,13 @@ def parse_args() -> argparse.Namespace:
              "cap each (platform, project_week) cell at this many records instead "
              "of annotating all eligible records. Omit for the full eligible set.",
     )
+    parser.add_argument(
+        "--platform", type=str, default=None, metavar="p1[,p2,...]",
+        help="Comma-separated platform(s) to restrict this run to, e.g. 'youtube,x' "
+             "(default: all eligible platforms — youtube, reddit, x). Combine with "
+             "--limit for a cheap scoped smoke-test, or use to split real work by "
+             "platform instead of only by --shard-id.",
+    )
     return parser.parse_args()
 
 
@@ -316,6 +323,17 @@ def main() -> None:
     print(f"Shard: {args.shard_id} of {args.num_shards}")
 
     records = load_eligible_records()
+    if args.platform:
+        wanted_platforms = {p.strip() for p in args.platform.split(",") if p.strip()}
+        known_platforms = set(records["platform"].dropna().unique())
+        unknown_platforms = wanted_platforms - known_platforms
+        if unknown_platforms:
+            raise ValueError(
+                f"--platform contains unknown platform(s) {sorted(unknown_platforms)} — "
+                f"eligible records only have {sorted(known_platforms)}."
+            )
+        records = records[records["platform"].isin(wanted_platforms)]
+        print(f"--platform filter: {sorted(wanted_platforms)} -> {len(records):,} eligible record(s).")
     if args.stratify_cap:
         records = stratified_subsample(records, args.stratify_cap, seed=1405)
     shard_records = records[records["content_id"].apply(lambda c: assign_shard(c, args.num_shards) == args.shard_id)]
