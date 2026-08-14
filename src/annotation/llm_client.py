@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -68,19 +69,35 @@ class AnnotationCache:
         return self._data.get(cache_key)
 
     def set(self, cache_key: str, value: dict) -> None:
+        # dict.__setitem__ is atomic under the GIL, so concurrent set() calls
+        # from different threads (run_full_annotation.py's ThreadPoolExecutor,
+        # 2026-08-14) can't corrupt _data itself — the caller still owns
+        # deciding *when* to call save() (see save()'s own docstring).
         self._data[cache_key] = value
 
     def save(self) -> None:
+        """Not thread-safe by itself — two threads calling save()
+        simultaneously could interleave writes to the same file. Callers
+        that annotate from multiple threads (run_full_annotation.py) must
+        serialize their own save() calls (e.g. one dedicated thread/lock),
+        not call this directly from worker threads."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 # --- usage / cost logging (§39 Observability) --------------------------------
 
+_usage_log_lock = threading.Lock()
+
+
 def _append_usage_log(entry: dict) -> None:
+    # Locked (2026-08-14): run_full_annotation.py calls annotate() from
+    # multiple threads — unlocked concurrent appends to the same file handle
+    # could interleave partial lines on some platforms/buffering modes.
     USAGE_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(USAGE_LOG_PATH, "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    with _usage_log_lock:
+        with open(USAGE_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
 # --- raw provider callers -----------------------------------------------------

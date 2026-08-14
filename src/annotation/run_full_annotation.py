@@ -1,55 +1,87 @@
 """
-run_full_annotation.py — SKELETON: Full-dataset annotation run (Parmida)
+run_full_annotation.py — Full-dataset annotation run (Parmida, Day 6)
 
-NOT YET IMPLEMENTED. This file only exists to hold the two safety checks the
-Gate in docs/pre_analysis_decision_table_v1.md requires before anyone runs
-annotation over the whole dataset (~155k records across youtube + reddit as
-of this writing — recount before relying on that number, it is not read from
-disk here):
+Runs the locked model route (src/annotation/model_routes.py's
+LOCKED_ROUTE_NAME) over every eligible record (data/interim/{opinion_main,
+opinion_limited,opinion_untimed}.parquet — the apply_eligibility.py output,
+233,006 records as of 2026-08-14, see docs/decision_log.md) with real
+concurrency, since sequential calls at the Pilot's observed ~4.2s median
+latency would take ~272 hours for one pass.
 
-  1. Model lock — row "مدل و Provider LLM": "... انتخاب مدل پس از Pilot روی
-     ۱۰۰ رکورد و پیش از Full run قفل می‌شود". Enforced by calling
-     get_locked_route() (src/annotation/model_routes.py), which raises
-     RuntimeError until someone has run
-     src/validation/evaluate_sentiment_accuracy.py on the full Gold Sample
-     and set MODEL_ROUTES.LOCKED_ROUTE_NAME accordingly.
-  2. Cost cap — row "سقف هزینه و زمان اجرا": "پیش از Full run، سقف عددی
-     هزینه و زمان بر اساس حجم داده و Pilot در Decision Log تأیید می‌شود؛ تا
-     آن زمان Full run مجاز نیست". Enforced by requiring --confirm-cost-cap,
-     which must equal APPROVED_COST_CAP_USD below — a constant that itself
-     must be filled in from a dated docs/decision_log.md entry before this
-     script can do anything. This is deliberately a *second*, independent
-     gate from the model lock: locking a model does not by itself authorize
-     spending money on the full dataset.
+Two independent safety Gates (docs/pre_analysis_decision_table_v1.md) must
+both pass before any annotation happens:
+  1. Model lock — get_locked_route() raises RuntimeError until
+     model_routes.LOCKED_ROUTE_NAME is set (done 2026-08-14).
+  2. Cost cap — --confirm-cost-cap must equal APPROVED_COST_CAP_USD below,
+     which itself must be backed by a dated docs/decision_log.md entry
+     (done 2026-08-14, $100).
 
-Both gates fail loudly and early (before any data is touched) rather than
-silently defaulting to "proceed" — the whole point is that nobody should be
-able to trigger a full, real-money run by accident.
+Team-parallel by design (docs/decision_log.md 2026-08-14): --shard-id/
+--num-shards lets several teammates each own a disjoint slice of the
+eligible records and run independently (their own machine, their own API
+keys) — sharding is a deterministic hash of content_id, so re-running the
+same --shard-id always gets the same slice. --workers controls in-process
+concurrency (a ThreadPoolExecutor — llm_client.annotate() is a blocking
+requests/SDK call, not async) on top of that.
 
-The actual annotation logic (reading the full clean dataset, batching calls
-through llm_client.annotate() with the locked route, writing results,
-resumability/checkpointing for a ~155k-record run, retry/failure handling,
-progress + running-cost reporting against the confirmed cap) is intentionally
-NOT implemented yet. That comes only after LOCKED_ROUTE_NAME is actually set
-and a real cost cap has been approved and logged.
+--targets controls how many of the 3 primary Targets (schema.
+PRIMARY_TARGET_IDS) each record is scored against for stance — 1 (cheap,
+fast, only the first target) up to 3 (full per-Target stance coverage, 3x
+the cost/time). Default is 1 so the team can start now and expand later
+without touching code (see decision_log.md's reasoning).
 
-Usage (once both gates above are actually satisfied):
-    python src/annotation/run_full_annotation.py --confirm-cost-cap 42.00
+Resumable: output is one JSONL file per shard
+(outputs/full_annotation/shard_{id}of{n}.jsonl); on startup this script
+reads its own shard file (if it exists) and skips any (content_id,
+target_id) pair already present, so a killed/interrupted run picks up where
+it left off for free — no separate checkpoint format needed.
+
+Usage:
+    # solo, 1 target, 20 concurrent workers, whole dataset as one shard
+    python src/annotation/run_full_annotation.py --confirm-cost-cap 100.0
+
+    # teammate 2 of 5, running their own slice in parallel with the others
+    python src/annotation/run_full_annotation.py --confirm-cost-cap 100.0 --shard-id 1 --num-shards 5
+
+    # once the team has time budget to spare: full 3-target stance coverage
+    python src/annotation/run_full_annotation.py --confirm-cost-cap 100.0 --targets T01,T02,T03
 """
 
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import sys
+import threading
+import time
+import zlib
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 from pathlib import Path
+
+import pandas as pd
+from dotenv import load_dotenv
 
 sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
+load_dotenv(ROOT / ".env")
 
 from src.annotation.decision_gate import require_decision_log_gate  # noqa: E402
+from src.annotation.llm_client import AnnotationCache, annotate  # noqa: E402
 from src.annotation.model_routes import get_locked_route  # noqa: E402
+from src.annotation.schema import PRIMARY_TARGET_IDS  # noqa: E402
+
+ELIGIBLE_PARQUETS = [
+    ROOT / "data" / "interim" / "opinion_main.parquet",
+    ROOT / "data" / "interim" / "opinion_limited.parquet",
+    ROOT / "data" / "interim" / "opinion_untimed.parquet",
+]
+OUTPUT_DIR = ROOT / "outputs" / "full_annotation"
+CACHE_SAVE_EVERY = 200  # rows between periodic AnnotationCache.save() flushes
+PROGRESS_EVERY = 100
 
 DECISION_LOG_PATH = ROOT / "docs" / "decision_log.md"
 
@@ -59,7 +91,11 @@ DECISION_LOG_PATH = ROOT / "docs" / "decision_log.md"
 # written down as a dated entry in docs/decision_log.md. When that happens,
 # set this to the approved number and reference the decision_log.md date in a
 # comment here, the same way LOCKED_ROUTE_NAME is documented in model_routes.py.
-APPROVED_COST_CAP_USD: float | None = None
+APPROVED_COST_CAP_USD: float | None = 100.0
+# Approved 2026-08-14 — see docs/decision_log.md's dated entry for the
+# Pilot-based math this is derived from (locked route's cost/1000 from
+# evaluate_sentiment_accuracy.py's n=300 run, times eligible record count
+# times up to 3 primary targets, plus margin).
 
 
 def parse_args() -> argparse.Namespace:
@@ -83,6 +119,35 @@ def parse_args() -> argparse.Namespace:
             "full, real-money run can't be triggered by accident (e.g. by a default "
             "flag value, or by copy-pasting a command without reading it)."
         ),
+    )
+    parser.add_argument(
+        "--shard-id", type=int, default=0,
+        help="This process's shard index (0-based). Combine with --num-shards "
+             "so teammates can each run a disjoint slice in parallel.",
+    )
+    parser.add_argument(
+        "--num-shards", type=int, default=1,
+        help="Total number of shards the eligible dataset is split into. "
+             "Sharding is a deterministic hash of content_id, so the same "
+             "--shard-id always gets the same records across re-runs/people.",
+    )
+    parser.add_argument(
+        "--workers", type=int, default=20,
+        help="In-process concurrent threads (llm_client.annotate() is a "
+             "blocking call, so this is a ThreadPoolExecutor, not asyncio). "
+             "Start conservative (~15-20) — too high risks tripping the "
+             "route's own rate limits, which just burns retries/time.",
+    )
+    parser.add_argument(
+        "--targets", type=str, default="T01",
+        help="Comma-separated Target IDs to score stance against, e.g. "
+             "'T01' (default, cheapest) or 'T01,T02,T03' (full primary-"
+             "Target coverage, ~3x the cost/time). Must be a subset of "
+             f"PRIMARY_TARGET_IDS ({PRIMARY_TARGET_IDS}).",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=None,
+        help="Only process the first N tasks of this shard (smoke-testing).",
     )
     return parser.parse_args()
 
@@ -113,6 +178,58 @@ def check_cost_cap(confirmed_cap: float) -> None:
         )
 
 
+def load_eligible_records() -> pd.DataFrame:
+    """Reads the three apply_eligibility.py output buckets that get
+    annotated (opinion_main/opinion_limited/opinion_untimed — context_only/
+    audit_only/quarantine never do, per docs/checklist.md §13). Returns one
+    row per record with just the columns this script needs, deduplicated by
+    content_id (the three buckets are mutually exclusive by construction,
+    but this guards against re-running apply_eligibility.py with overlap)."""
+    frames = []
+    for path in ELIGIBLE_PARQUETS:
+        if not path.exists():
+            raise FileNotFoundError(
+                f"{path} not found — run src/preprocessing/apply_eligibility.py first."
+            )
+        df = pd.read_parquet(path, columns=["platform_content_id", "text_raw", "platform", "dataset_target"])
+        frames.append(df)
+    combined = pd.concat(frames, ignore_index=True)
+    combined = combined.rename(columns={"platform_content_id": "content_id", "text_raw": "text"})
+    combined = combined.dropna(subset=["content_id", "text"])
+    combined = combined[combined["text"].str.strip() != ""]
+    combined = combined.drop_duplicates(subset=["content_id"])
+    return combined
+
+
+def assign_shard(content_id: str, num_shards: int) -> int:
+    """Deterministic (content_id, num_shards) -> shard index, so the same
+    --shard-id always gets the same records across re-runs and across
+    different teammates' machines (no coordination needed beyond agreeing
+    on --num-shards)."""
+    return zlib.crc32(content_id.encode("utf-8")) % num_shards
+
+
+def load_done_keys(output_path: Path) -> set[tuple[str, str]]:
+    """Reads this shard's own output file (if any) and returns the set of
+    (content_id, target_id) pairs already written — resume support. A
+    corrupt/partial last line (e.g. process killed mid-write) is skipped,
+    not fatal — that row is simply re-annotated."""
+    done: set[tuple[str, str]] = set()
+    if not output_path.exists():
+        return done
+    with output_path.open("r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+                done.add((row["content_id"], row["target_id"]))
+            except (json.JSONDecodeError, KeyError):
+                continue
+    return done
+
+
 def main() -> None:
     args = parse_args()
 
@@ -122,24 +239,132 @@ def main() -> None:
     # Gate 2: cost cap must be explicitly confirmed and match decision_log.md.
     check_cost_cap(args.confirm_cost_cap)
 
-    print(f"[skeleton] Both gates passed — route={route.route_name!r}, "
-          f"confirmed cost cap=${args.confirm_cost_cap}")
+    targets = [t.strip() for t in args.targets.split(",") if t.strip()]
+    unknown = [t for t in targets if t not in PRIMARY_TARGET_IDS]
+    if unknown:
+        raise ValueError(f"--targets contains non-primary target(s) {unknown} — must be a subset of {PRIMARY_TARGET_IDS}.")
+    if args.shard_id < 0 or args.shard_id >= args.num_shards:
+        raise ValueError(f"--shard-id must be in [0, {args.num_shards}).")
 
-    # TODO (after the model is actually locked and the cap actually approved):
-    #   - load the full clean dataset (data/interim/clean.jsonl + raw jsonl fallback,
-    #     same pattern as run_model_comparison.load_sample, but without sampling)
-    #   - resumability/checkpointing so a ~155k-record run can be interrupted and
-    #     resumed without re-annotating (re-use src.annotation.llm_client.AnnotationCache)
-    #   - batch calls through llm_client.annotate() using `route`
-    #   - track running cost against args.confirm_cost_cap and stop if exceeded
-    #   - write results to outputs/ (path TBD) with the same §22 structured contract
-    #     used by run_model_comparison.py / evaluate_sentiment_accuracy.py
-    #   - progress reporting (this is a long-running job)
-    raise NotImplementedError(
-        "run_full_annotation.py is still a skeleton — the actual annotation loop "
-        "is not implemented yet. Both safety gates above ran successfully; the "
-        "TODOs in main() are what's left."
-    )
+    api_keys = {
+        "GROQ_API_KEY": os.getenv("GROQ_API_KEY", ""),
+        "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY", ""),
+        "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY", ""),
+    }
+
+    print(f"Route: {route.route_name} ({route.model_name})")
+    print(f"Cost cap: ${args.confirm_cost_cap}  |  Targets: {targets}  |  Workers: {args.workers}")
+    print(f"Shard: {args.shard_id} of {args.num_shards}")
+
+    records = load_eligible_records()
+    shard_records = records[records["content_id"].apply(lambda c: assign_shard(c, args.num_shards) == args.shard_id)]
+    print(f"Eligible records total: {len(records):,}  |  This shard: {len(shard_records):,}")
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_path = OUTPUT_DIR / f"shard_{args.shard_id}of{args.num_shards}.jsonl"
+    done_keys = load_done_keys(output_path)
+    if done_keys:
+        print(f"Resuming: {len(done_keys):,} (content_id, target_id) pair(s) already done in {output_path.name}.")
+
+    tasks = [
+        (row.content_id, row.text, row.platform, target_id)
+        for row in shard_records.itertuples(index=False)
+        for target_id in targets
+        if (row.content_id, target_id) not in done_keys
+    ]
+    if args.limit:
+        tasks = tasks[: args.limit]
+    print(f"Tasks to run this session: {len(tasks):,}")
+    if not tasks:
+        print("Nothing to do — shard already fully annotated.")
+        return
+
+    cache = AnnotationCache()
+    output_lock = threading.Lock()
+    cache_lock = threading.Lock()
+    stop_flag = threading.Event()
+    run_id = f"full_annotation_shard{args.shard_id}of{args.num_shards}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+
+    state = {"completed": 0, "cost_usd": 0.0, "failures": 0, "started_at": time.monotonic()}
+    state_lock = threading.Lock()
+
+    def worker(task: tuple[str, str, str, str]) -> None:
+        content_id, text, platform, target_id = task
+        if stop_flag.is_set():
+            return
+        result = annotate(
+            text=text, target_id=target_id, route=route, api_keys=api_keys,
+            cache=cache, run_id=run_id, content_id=content_id,
+        )
+        row = {
+            "content_id": content_id,
+            "platform": platform,
+            "target_id": target_id,
+            "sentiment": (result.payload or {}).get("sentiment"),
+            "stance": (result.payload or {}).get("stance"),
+            "emotion": (result.payload or {}).get("emotion"),
+            "content_type": (result.payload or {}).get("content_type"),
+            "confidence": result.confidence,
+            "reason_code": (result.payload or {}).get("reason_code"),
+            "annotation_status": (
+                "ok" if result.ok
+                else "json_parse_failure" if result.parse_error
+                else "validation_failure" if result.validation_error
+                else "api_failure"
+            ),
+            "model_version": result.model_name,
+            "prompt_version": result.prompt_version,
+            "cost_usd": result.cost_usd,
+            "latency_ms": result.latency_ms,
+            "annotated_at_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        with output_lock:
+            with output_path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+        with state_lock:
+            state["completed"] += 1
+            state["cost_usd"] += result.cost_usd or 0.0
+            if not result.ok:
+                state["failures"] += 1
+            completed = state["completed"]
+            cost_so_far = state["cost_usd"]
+
+        if cost_so_far > args.confirm_cost_cap:
+            if not stop_flag.is_set():
+                print(f"\n[STOP] Cost cap ${args.confirm_cost_cap} reached (${cost_so_far:.2f} spent this "
+                      f"session) — no new tasks will start. In-flight tasks still finish.")
+            stop_flag.set()
+
+        if completed % CACHE_SAVE_EVERY == 0:
+            with cache_lock:
+                cache.save()
+
+        if completed % PROGRESS_EVERY == 0:
+            elapsed = time.monotonic() - state["started_at"]
+            rate = completed / elapsed if elapsed > 0 else 0
+            remaining = len(tasks) - completed
+            eta_min = (remaining / rate / 60) if rate > 0 else float("nan")
+            print(f"  [{completed:,}/{len(tasks):,}] cost=${cost_so_far:.2f} "
+                  f"failures={state['failures']} rate={rate:.1f}/s eta={eta_min:.0f}min")
+
+    print(f"\nStarting {args.workers} worker(s)...\n")
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = [executor.submit(worker, t) for t in tasks]
+        for _ in as_completed(futures):
+            if stop_flag.is_set():
+                # Don't cancel in-flight requests (already billed); just stop
+                # draining new ones from the queue — as_completed still needs
+                # every future resolved before this loop returns.
+                pass
+
+    cache.save()  # final flush — guaranteed to run even if the cap was hit mid-run
+    print(f"\nDone this session: {state['completed']:,} task(s), "
+          f"${state['cost_usd']:.2f} spent, {state['failures']} failure(s).")
+    print(f"Output: {output_path}")
+    if args.num_shards > 1:
+        print(f"Once every shard finishes, merge with: "
+              f"cat outputs/full_annotation/shard_*of{args.num_shards}.jsonl > outputs/full_annotation/merged.jsonl")
 
 
 if __name__ == "__main__":
