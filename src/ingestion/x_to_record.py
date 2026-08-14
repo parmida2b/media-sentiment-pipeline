@@ -118,15 +118,20 @@ import csv
 import importlib.util
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
+
+import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from config.schema import AuthorMetadata, Record  # noqa: E402
 from config.raw_schema_columns import RAW_SCHEMA_COLUMNS  # noqa: E402
+from config.raw_schema_columns_v05 import RAW_SCHEMA_V05_COLUMNS  # noqa: E402
 from config import config_loader  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "data" / "raw" / "x"
+RAW_HARMONIZED_DIR = PROJECT_ROOT / "data" / "raw_harmonized" / "x"
 JSONL_OUTPUT = OUTPUT_DIR / "x_comments_v1.jsonl"
 CSV_OUTPUT = OUTPUT_DIR / "x_raw_export.csv"
 
@@ -380,6 +385,189 @@ def record_to_raw_schema_row(record: Record, row: dict[str, str]) -> dict[str, s
         "geo_granularity": record.geo_granularity or "",
         "geo_limitations": record.geo_limitations or "",
     }
+
+
+# ---------------------------------------------------------------------------
+# raw_harmonized export (raw_schema_v05.md)
+# Mirrors youtube_extract.py's record_to_raw_harmonized_row() /
+# export_to_raw_harmonized() — same pattern, X-specific mappings.
+# See docs/schema_mapping_template.csv rows for "x" for each decision.
+# ---------------------------------------------------------------------------
+
+_RAW_HARMONIZED_BOOL_COLUMNS = ["in_window", "is_partial_week", "author_is_verified"]
+_RAW_HARMONIZED_INT_COLUMNS = [
+    "engagement_replies", "engagement_shares", "engagement_quotes",
+    "engagement_views", "author_account_age_days", "original_row_number",
+]
+_RAW_HARMONIZED_FLOAT_COLUMNS = ["engagement_score", "language_confidence"]
+_RAW_HARMONIZED_DATETIME_COLUMNS = ["created_at_utc", "collected_at_utc", "engagement_collected_at_utc"]
+
+
+def _empty_to_none(value):
+    """raw_schema_v05.md §1.1 point 5: missing field stays null, not "".
+    Mirrors youtube_extract.py's _empty_to_none() helper."""
+    if value in (None, ""):
+        return None
+    return value
+
+
+def _parse_z_datetime(s: str | None) -> datetime | None:
+    """Parse a Z-format ISO string (e.g. '2026-03-05T12:00:00Z') produced
+    by x_scraper.py's iso_z()/utc_now() into a tz-aware datetime UTC."""
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def record_to_raw_harmonized_row(r: Record) -> dict:
+    """One row of the raw_harmonized export, keyed exactly to
+    RAW_SCHEMA_V05_COLUMNS (config/raw_schema_columns_v05.py). Mirrors
+    youtube_extract.py's record_to_raw_harmonized_row() but with X-specific
+    field sources — see docs/schema_mapping_template.csv rows for 'x' for
+    the decision behind each mapping.
+
+    Fields that live in x_raw.csv (x_scraper.py's parse_article()) but NOT
+    in Record — engagement_score/replies/shares/quotes/views,
+    language_reported, author_is_verified, collector_version — are left
+    None here. The full v03 export (record_to_raw_schema_row(record, row))
+    reads them from the source CSV row; this v05 harmonization function has
+    no source_row parameter (matching youtube_extract.py's pattern) so
+    those fields are null when reconstructing from JSONL in the backfill."""
+    am = r.author_metadata
+    return {
+        # --- §3 Core ----------------------------------------------------------
+        "platform": r.platform or "x",
+        "platform_content_id": _empty_to_none(r.content_id),
+        # content_type values from x_scraper.py are already v05-compatible:
+        # original_post/reply/quote/repost (§8).
+        "content_type": _empty_to_none(r.content_type),
+        "created_at_utc": _parse_z_datetime(r.date) if r.date else None,
+        "collected_at_utc": _parse_z_datetime(r.collected_at_utc) if r.collected_at_utc else None,
+        "text_raw": r.text,
+        "collection_run_id": _empty_to_none(r.collection_run_id),
+        # collector_version is per-row in x_raw.csv but not in Record; None here.
+        "collector_version": None,
+        "schema_version": "5.0",
+        "project_week": _empty_to_none(r.project_week),
+        "in_window": r.in_window,
+        "is_partial_week": r.is_partial_week,
+
+        # --- §4 Provenance and parent structure --------------------------------
+        "query_id": _empty_to_none(r.query_id),
+        "matched_query_ids": _empty_to_none(r.matched_query_ids),
+        "query_version": _empty_to_none(r.query_version),
+        "source_id": _empty_to_none(r.source_id),
+        "source_registry_version": None,
+        "discovery_route": _empty_to_none(r.discovery_route),
+        "source_container": _empty_to_none(r.source_container),
+        "source_container_id": _empty_to_none(r.source_container_id),
+        # x_scraper.py does not capture conversation_id (v05 §9's source_parent_id
+        # for X); every collected tweet is a standalone item.
+        "source_parent_id": None,
+        "source_parent_title": None,
+        "parent_id": _empty_to_none(r.parent_id),
+        "permalink_hash": _empty_to_none(r.permalink_hash),
+
+        # --- §4.1 Historical-data audit fields --------------------------------
+        # not_applicable: x_to_record.py is a live-collector bridge, same
+        # reasoning as youtube_extract.py and reddit_to_record.py.
+        "original_file_name": None,
+        "original_file_sha256": None,
+        "original_row_number": None,
+        "source_schema_version": None,
+        "source_query_registry_version": None,
+        "record_uid": None,
+        "id_origin": "observed",
+        "timestamp_origin": "observed",
+        "provenance_quality": None,
+        "field_origin": None,
+        "missing_reason": None,
+
+        # --- §5 Author and privacy -------------------------------------------
+        "author_hash": _empty_to_none(am.author_hash),
+        "author_id_status": _empty_to_none(am.author_id_status),
+        "author_type": None,
+        # author_is_verified is in x_raw.csv but not in Record.
+        "author_is_verified": None,
+        "author_account_age_days": am.account_age_days,
+
+        # --- §6 Engagement snapshot -------------------------------------------
+        # engagement_* fields are in x_raw.csv (x_scraper.py's parse_article())
+        # but are not on Record (config/schema.py has no engagement_* fields).
+        # All None here when reconstructing from JSONL.
+        "engagement_score": None,
+        "engagement_replies": None,
+        "engagement_shares": None,
+        "engagement_quotes": None,
+        "engagement_views": None,
+        "engagement_collected_at_utc": _parse_z_datetime(r.collected_at_utc) if r.collected_at_utc else None,
+
+        # --- §7 Language, status and location --------------------------------
+        # language_reported is in x_raw.csv but not in Record.
+        "language_reported": None,
+        "language_detected": _empty_to_none(r.language),
+        "language_confidence": r.language_confidence,
+        "content_status": _empty_to_none(r.content_status),
+        # geo_method/country_or_region/geo_confidence: always empty for X
+        # (x_scraper.py's geo Tier-0 was never wired in) but passed through
+        # rather than hardcoded to None, for forward compatibility.
+        "geo_method": _empty_to_none(r.geo_method),
+        "country_or_region": _empty_to_none(r.country_or_region),
+        "geo_confidence": _empty_to_none(r.geo_confidence),
+    }
+
+
+def export_to_raw_harmonized(records: list[Record], run_id: str | None = None) -> pd.DataFrame:
+    """Builds the raw_harmonized/x output: exactly the column set of
+    docs/raw_schema_v05.md §3-§7 (RAW_SCHEMA_V05_COLUMNS), written as
+    Parquet to data/raw_harmonized/x/{run_id}.parquet.
+
+    Mirrors youtube_extract.py's export_to_raw_harmonized() — same dtype
+    coercions and Parquet-write logic, X-specific output path.
+
+    `run_id` names the output file. When omitted, the function attempts to
+    derive it from a single non-None collection_run_id shared by all records.
+    X records from the handoff CSV may have collection_run_id=None; in that
+    case pass run_id='backfill_x_v1' or similar."""
+    if not records:
+        raise ValueError("export_to_raw_harmonized: no records given — nothing to export.")
+
+    if run_id is None:
+        non_null_runs = {r.collection_run_id for r in records if r.collection_run_id}
+        if len(non_null_runs) == 1:
+            run_id = non_null_runs.pop()
+        elif len(non_null_runs) > 1:
+            raise ValueError(
+                f"export_to_raw_harmonized: records span {len(non_null_runs)} distinct "
+                "collection_run_id values; call this once per run or pass run_id explicitly."
+            )
+        else:
+            raise ValueError(
+                "export_to_raw_harmonized: records have no collection_run_id set and "
+                "run_id was not provided. Pass run_id='backfill_x_v1' or similar."
+            )
+
+    rows = [record_to_raw_harmonized_row(r) for r in records]
+    df = pd.DataFrame(rows, columns=RAW_SCHEMA_V05_COLUMNS)
+
+    for col in _RAW_HARMONIZED_BOOL_COLUMNS:
+        df[col] = df[col].astype("boolean")
+    for col in _RAW_HARMONIZED_INT_COLUMNS:
+        df[col] = df[col].astype("Int64")
+    for col in _RAW_HARMONIZED_FLOAT_COLUMNS:
+        df[col] = df[col].astype("float64")
+    for col in _RAW_HARMONIZED_DATETIME_COLUMNS:
+        df[col] = pd.to_datetime(df[col], utc=True)
+
+    output_path = RAW_HARMONIZED_DIR / f"{run_id}.parquet"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(output_path, index=False)
+    print(f"raw_harmonized: wrote {len(df)} row(s) to {output_path}")
+
+    return df
 
 
 # ---------------------------------------------------------------------------
