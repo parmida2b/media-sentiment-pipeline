@@ -131,10 +131,15 @@ def get_route(route_name: str) -> ModelRoute:
 
 # --- Model lock (Gate per docs/pre_analysis_decision_table_v1.md) ---------
 
-LOCKED_ROUTE_NAME: str | None = "openrouter_gemini_flash_lite"
-# Locked 2026-08-14 — see docs/decision_log.md's dated entry for the full
-# Macro-F1/coverage/failure/cost numbers this decision is based on
-# (evaluate_sentiment_accuracy.py, n=300 gold rows, all 3 available routes).
+LOCKED_ROUTE_NAME: str | None = "groq_cheap_fast"
+# Originally locked 2026-08-14 to "openrouter_gemini_flash_lite" (best F1 of
+# the 3 evaluated routes — see decision_log.md's model-lock entry). Switched
+# same day, mid Full-run, to "groq_cheap_fast": the OpenRouter account backing
+# that route ran out of real credit ("HTTP 402: Insufficient credits. This
+# account never purchased credits") ~7,000 rows into shard_0of2, an 84%
+# failure rate. See docs/decision_log.md's dated entry for the full
+# reasoning — this is a forced fallback due to a real payment/account
+# problem, not a quality-driven re-pick.
 """route_name (from MODEL_ROUTES above) locked in for the Full run — or None.
 
 This MUST stay None until:
