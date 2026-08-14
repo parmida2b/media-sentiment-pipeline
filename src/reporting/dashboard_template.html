@@ -1,0 +1,881 @@
+<title>داشبورد پایش احساسات رسانه‌ای</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --good-text:      #006300;
+
+    --series-1: #2a78d6; /* blue    */
+    --series-2: #eb6834; /* orange  */
+    --series-3: #1baf7a; /* aqua    */
+    --series-4: #eda100; /* yellow  */
+    --series-5: #e87ba4; /* magenta */
+    --series-6: #008300; /* green   */
+
+    --diverge-pos: #2a78d6;
+    --diverge-neg: #e34948;
+    --diverge-mid: #d8d7d1;
+
+    --seq-200: #9ec5f4;
+    --seq-350: #5598e7;
+    --seq-500: #256abf;
+    --seq-650: #104281;
+
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-serious:  #ec835a;
+    --status-critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --good-text:      #0ca30c;
+
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #199e70;
+      --series-4: #c98500;
+      --series-5: #d55181;
+      --series-6: #008300;
+
+      --diverge-pos: #3987e5;
+      --diverge-neg: #e66767;
+      --diverge-mid: #383835;
+
+      --seq-200: #184f95;
+      --seq-350: #256abf;
+      --seq-500: #5598e7;
+      --seq-650: #9ec5f4;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --good-text:      #0ca30c;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+
+    --diverge-pos: #3987e5;
+    --diverge-neg: #e66767;
+    --diverge-mid: #383835;
+
+    --seq-200: #184f95;
+    --seq-350: #256abf;
+    --seq-500: #5598e7;
+    --seq-650: #9ec5f4;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--page); }
+  .db-root {
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+    direction: rtl;
+    padding: 24px 16px 64px;
+    max-width: 1180px;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+  .db-root ltr, .db-ltr { direction: ltr; }
+
+  .db-header { margin-bottom: 20px; }
+  .db-title { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+  .db-subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 12px; }
+
+  .db-banner {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-secondary);
+  }
+  .db-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+    color: var(--text-primary);
+  }
+  .db-pill.mock { background: color-mix(in srgb, var(--status-warning) 22%, transparent); }
+  .db-pill.real { background: color-mix(in srgb, var(--status-good) 20%, transparent); }
+  .db-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .db-pill.mock .dot { background: var(--status-warning); }
+  .db-pill.real .dot { background: var(--status-good); }
+
+  .db-section { margin-top: 30px; }
+  .db-section-title { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+  .db-section-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; }
+
+  .db-kpi-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .db-card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .db-stat-label { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 6px; }
+  .db-stat-value { font-size: 26px; font-weight: 700; margin: 0; direction: ltr; text-align: right; }
+  .db-stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; direction: ltr; text-align: right; }
+
+  .db-chart-card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 18px 14px; margin-bottom: 16px;
+  }
+  .db-chart-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+  }
+  .db-chart-title { font-size: 14.5px; font-weight: 700; margin: 0 0 2px; }
+  .db-chart-caption { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+  .db-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .db-tab, .db-btn {
+    font: inherit; font-size: 12.5px; cursor: pointer;
+    background: transparent; color: var(--text-secondary);
+    border: 1px solid var(--border); border-radius: 8px; padding: 5px 11px;
+  }
+  .db-tab.active { background: var(--series-1); color: #fff; border-color: transparent; font-weight: 600; }
+  .db-select {
+    font: inherit; font-size: 12.5px; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 8px;
+  }
+  .db-controls-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+
+  .db-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; }
+  .db-legend-item { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary); user-select: none; }
+  .db-legend-item.off { opacity: 0.35; }
+  .db-legend-swatch-line { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+  .db-legend-swatch-rect { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .db-svg-wrap { position: relative; direction: ltr; }
+  .db-svg-wrap svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .db-axis-text { fill: var(--text-muted); font-size: 10.5px; }
+  .db-grid-line { stroke: var(--grid); stroke-width: 1; }
+  .db-baseline { stroke: var(--axis); stroke-width: 1; }
+
+  .db-tooltip {
+    position: absolute; pointer-events: none; z-index: 5;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    direction: ltr; text-align: left; min-width: 130px;
+    opacity: 0; transition: opacity 0.08s ease;
+    color: var(--text-primary);
+  }
+  .db-tooltip.show { opacity: 1; }
+  .db-tooltip .tt-title { font-weight: 700; margin-bottom: 4px; color: var(--text-secondary); font-size: 11px; }
+  .db-tooltip .tt-row { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+  .db-tooltip .tt-key { width: 12px; height: 2px; border-radius: 1px; flex: none; }
+  .db-tooltip .tt-name { color: var(--text-secondary); flex: 1; }
+  .db-tooltip .tt-val { font-weight: 700; }
+  .db-tooltip .tt-note { color: var(--status-warning); font-size: 10.5px; margin-top: 3px; }
+
+  .db-table-toggle-wrap { margin-top: 8px; }
+  table.db-table { width: 100%; border-collapse: collapse; font-size: 12.5px; direction: ltr; }
+  table.db-table caption { caption-side: top; text-align: left; font-size: 11px; color: var(--text-muted); padding-bottom: 6px; }
+  table.db-table th, table.db-table td {
+    padding: 6px 8px; border-bottom: 1px solid var(--grid); text-align: left;
+    font-variant-numeric: tabular-nums;
+  }
+  table.db-table th { color: var(--text-secondary); font-weight: 600; font-size: 11.5px; }
+  table.db-table td.num { text-align: right; }
+  .db-hidden { display: none !important; }
+
+  .db-flags-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .db-flag {
+    display: flex; align-items: center; gap: 6px; font-size: 12px;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 11px; color: var(--text-secondary);
+  }
+  .db-flag .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-warning); flex: none; }
+
+  .db-cov-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .db-cov-bar-track { background: var(--grid); border-radius: 999px; height: 6px; margin-top: 8px; overflow: hidden; }
+  .db-cov-bar-fill { height: 100%; border-radius: 999px; background: var(--series-1); }
+
+  .db-footer {
+    margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-muted);
+  }
+  .db-footer code {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 5px; padding: 1px 6px; font-size: 11.5px; direction: ltr; unicode-bidi: embed;
+  }
+</style>
+
+<div class="db-root" id="db-root" lang="fa">
+  <div class="db-header">
+    <h1 class="db-title">داشبورد پایش احساسات رسانه‌ای</h1>
+    <p class="db-subtitle">خروجی زنده‌ی خط لوله (pipeline) — از فایل‌های <code class="db-ltr" style="direction:ltr">outputs/tables/*.csv</code> ساخته می‌شود.</p>
+    <div class="db-banner" id="db-banner"></div>
+  </div>
+
+  <div class="db-section">
+    <h2 class="db-section-title">شاخص‌های کلی</h2>
+    <div class="db-kpi-row" id="db-kpi-row"></div>
+  </div>
+
+  <div class="db-section">
+    <h2 class="db-section-title">پوشش و کیفیت داده</h2>
+    <p class="db-section-desc">نرخ کدگذاری موفق به‌تفکیک پلتفرم و ستون‌هایی با بیشترین نرخ مقدار خالی.</p>
+    <div class="db-cov-row" id="db-coverage-row"></div>
+    <div class="db-chart-card">
+      <div class="db-chart-head">
+        <div>
+          <p class="db-chart-title">بیشترین نرخ مقدار خالی (Missing Rate) در بین ستون‌ها</p>
+          <p class="db-chart-caption">هرچه میله پررنگ‌تر و بلندتر باشد، آن ستون خالی‌های بیشتری دارد.</p>
+        </div>
+      </div>
+      <div class="db-svg-wrap" id="db-missing-chart"></div>
+    </div>
+    <div class="db-flags-row" id="db-flags-row"></div>
+  </div>
+
+  <div class="db-section">
+    <h2 class="db-section-title">روند هفتگی احساسات</h2>
+    <p class="db-section-desc">سهم یک برچسب از میان تمام برچسب‌های همان بُعد، به‌تفکیک هفته و پلتفرم (بازه‌ی رنگی = فاصله اطمینان ۹۵٪ ویلسون).</p>
+    <div class="db-chart-card">
+      <div class="db-controls-row">
+        <div class="db-tabs" id="db-dim-tabs"></div>
+        <select class="db-select" id="db-class-select"></select>
+        <button class="db-btn" id="db-trend-table-toggle" type="button">نمایش به‌صورت جدول</button>
+      </div>
+      <div class="db-svg-wrap" id="db-trend-chart"></div>
+      <div class="db-legend" id="db-trend-legend"></div>
+      <div class="db-table-toggle-wrap db-hidden" id="db-trend-table-wrap"></div>
+    </div>
+  </div>
+
+  <div class="db-section">
+    <h2 class="db-section-title">ترکیب محتوا</h2>
+    <p class="db-section-desc">سهم هر دسته از کل محتوای هر پلتفرم (۱۰۰٪ = کل محتوای آن پلتفرم).</p>
+    <div id="db-category-charts"></div>
+  </div>
+
+  <div class="db-section">
+    <h2 class="db-section-title">اثر رویدادها بر موضع‌گیری</h2>
+    <p class="db-section-desc">تغییر سهم موضع هدف، بلافاصله پیش و پس از هر رویداد (میله‌ی آبی = افزایش، قرمز = کاهش؛ خط نازک = فاصله اطمینان ۹۵٪).</p>
+    <div class="db-chart-card">
+      <div class="db-svg-wrap" id="db-event-chart"></div>
+    </div>
+  </div>
+
+  <div class="db-section">
+    <h2 class="db-section-title">همبستگی احساسات و بازارهای مالی</h2>
+    <p class="db-section-desc" id="db-fin-desc"></p>
+    <div class="db-chart-card">
+      <div id="db-fin-table"></div>
+    </div>
+  </div>
+
+  <div class="db-footer" id="db-footer"></div>
+</div>
+
+<script type="application/json" id="db-data">__DASHBOARD_DATA_JSON__</script>
+<script>
+(function () {
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("db-data").textContent);
+
+  var SERIES_VARS = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5", "--series-6"];
+  var root = document.getElementById("db-root");
+  function cssVar(name) { return getComputedStyle(root).getPropertyValue(name).trim(); }
+
+  var PLATFORM_LABEL = { x: "X", reddit: "Reddit", youtube: "YouTube" };
+  function platformColor(i) { return cssVar(SERIES_VARS[i % SERIES_VARS.length]); }
+  function platformColorFor(platform) {
+    var idx = DATA.platforms.indexOf(platform);
+    return platformColor(idx < 0 ? 0 : idx);
+  }
+  function categoryColor(i) { return cssVar(SERIES_VARS[i % SERIES_VARS.length]); }
+
+  function fmtInt(n) { return Number(n).toLocaleString("en-US"); }
+  function fmtPct(x, digits) {
+    if (x === null || x === undefined || isNaN(x)) return "—";
+    return (x * 100).toFixed(digits === undefined ? 1 : digits) + "%";
+  }
+  function fmtSigned(x, digits) {
+    var v = (x * 100).toFixed(digits === undefined ? 1 : digits);
+    return (x >= 0 ? "+" : "") + v + " pp";
+  }
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === "class") e.className = attrs[k];
+      else if (k === "html") e.innerHTML = attrs[k];
+      else e.setAttribute(k, attrs[k]);
+    }
+    (children || []).forEach(function (c) { if (c) e.appendChild(c); });
+    return e;
+  }
+  function text(tag, content, attrs) {
+    var e = el(tag, attrs);
+    e.textContent = content;
+    return e;
+  }
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function svg(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // ---------- Tooltip (single shared instance) ----------
+  var tooltip = el("div", { class: "db-tooltip" });
+  document.body.appendChild(tooltip);
+  function showTooltip(wrapEl, x, y, buildFn) {
+    tooltip.innerHTML = "";
+    buildFn(tooltip);
+    var rect = wrapEl.getBoundingClientRect();
+    tooltip.style.left = (rect.left + window.scrollX + x + 14) + "px";
+    tooltip.style.top = (rect.top + window.scrollY + y - 10) + "px";
+    tooltip.classList.add("show");
+  }
+  function hideTooltip() { tooltip.classList.remove("show"); }
+  function ttRow(container, colorHex, name, value) {
+    var row = el("div", { class: "tt-row" }, [
+      el("span", { class: "tt-key", style: "background:" + colorHex }),
+      el("span", { class: "tt-name" }),
+      el("span", { class: "tt-val" })
+    ]);
+    row.children[1].textContent = name;
+    row.children[2].textContent = value;
+    container.appendChild(row);
+  }
+
+  // ================= Header =================
+  (function renderBanner() {
+    var banner = document.getElementById("db-banner");
+    var isMock = DATA.data_status !== "real";
+    var pill = el("span", { class: "db-pill " + (isMock ? "mock" : "real") }, [
+      el("span", { class: "dot" })
+    ]);
+    pill.appendChild(document.createTextNode(isMock ? "داده‌های آزمایشی (Mock)" : "داده‌های واقعی"));
+    banner.appendChild(pill);
+    var genDate = new Date(DATA.generated_at);
+    var note = document.createElement("span");
+    note.textContent = isMock
+      ? "همه اعداد این صفحه روی داده‌ی جایگزین (placeholder) محاسبه شده‌اند و صرفاً برای بررسی شکل داشبورد هستند — تا وقتی داده‌ی واقعی جای‌گزین نشده به آن‌ها استناد نکنید."
+      : "این صفحه از آخرین خروجی واقعی خط لوله ساخته شده است.";
+    banner.appendChild(note);
+    var when = el("span", { class: "db-ltr", style: "margin-inline-start:auto;color:var(--text-muted)" });
+    when.textContent = "ساخته‌شده: " + genDate.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " UTC";
+    banner.appendChild(when);
+  })();
+
+  // ================= KPI row =================
+  (function renderKpis() {
+    var row = document.getElementById("db-kpi-row");
+    var k = DATA.kpi;
+    var covPct = k.n_total ? k.n_annotation_ok / k.n_total : 0;
+    var tiles = [
+      { label: "کل رکوردهای جمع‌آوری‌شده", value: fmtInt(k.n_total), sub: DATA.platforms.length + " پلتفرم" },
+      { label: "کدگذاری موفق (annotation OK)", value: fmtPct(covPct, 1), sub: fmtInt(k.n_annotation_ok) + " / " + fmtInt(k.n_total) },
+      { label: "هفته‌های پوشش‌داده‌شده", value: fmtInt(k.n_weeks), sub: "W01 – W" + String(k.n_weeks).padStart(2, "0") }
+    ];
+    if (k.llm_accuracy !== undefined) {
+      tiles.push({
+        label: "دقت مدل LLM (" + k.llm_route + ")",
+        value: fmtPct(k.llm_accuracy, 0),
+        sub: "macro F1 " + k.llm_macro_f1.toFixed(2) + " · روی " + fmtInt(k.llm_n_gold) + " رکورد طلایی"
+      });
+    }
+    tiles.forEach(function (t) {
+      row.appendChild(el("div", { class: "db-card" }, [
+        text("p", t.label, { class: "db-stat-label" }),
+        text("p", t.value, { class: "db-stat-value" }),
+        text("p", t.sub, { class: "db-stat-sub" })
+      ]));
+    });
+  })();
+
+  // ================= Coverage by platform =================
+  (function renderCoverage() {
+    var row = document.getElementById("db-coverage-row");
+    DATA.coverage_by_platform.forEach(function (c) {
+      var pct = c.n_ok / c.n_total;
+      var color = platformColorFor(c.platform);
+      var card = el("div", { class: "db-card" }, [
+        text("p", PLATFORM_LABEL[c.platform] || c.platform, { class: "db-stat-label" }),
+        text("p", fmtPct(pct, 1), { class: "db-stat-value" }),
+        text("p", fmtInt(c.n_ok) + " / " + fmtInt(c.n_total) + " رکورد", { class: "db-stat-sub" })
+      ]);
+      var track = el("div", { class: "db-cov-bar-track" }, [
+        el("div", { class: "db-cov-bar-fill", style: "width:" + (pct * 100).toFixed(1) + "%;background:" + color })
+      ]);
+      card.appendChild(track);
+      row.appendChild(card);
+    });
+  })();
+
+  // ================= Missing-rate bar chart (sequential) =================
+  (function renderMissingChart() {
+    var wrap = document.getElementById("db-missing-chart");
+    var data = DATA.missing_rates;
+    var W = 760, rowH = 30, padTop = 6, padBottom = 6, leftLabelW = 190, rightPad = 56;
+    var H = padTop + padBottom + data.length * rowH;
+    var plotW = W - leftLabelW - rightPad;
+    var maxVal = Math.max.apply(null, data.map(function (d) { return d.missing_rate; }).concat([0.05]));
+    var s = svg("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "نرخ مقدار خالی ستون‌ها" });
+    var seqSteps = ["--seq-200", "--seq-350", "--seq-500", "--seq-650"];
+    data.forEach(function (d, i) {
+      var y = padTop + i * rowH;
+      var barW = Math.max(2, (d.missing_rate / maxVal) * plotW);
+      var stepIdx = Math.min(seqSteps.length - 1, Math.floor((d.missing_rate / maxVal) * seqSteps.length));
+      var color = cssVar(seqSteps[stepIdx]);
+      s.appendChild(svg("text", { x: leftLabelW - 10, y: y + rowH / 2 + 4, "text-anchor": "end", class: "db-axis-text" })).textContent = d.column;
+      var barX = leftLabelW;
+      var bar = svg("rect", {
+        x: barX, y: y + 5, width: barW, height: rowH - 12, rx: 4,
+        fill: color, style: "cursor:pointer"
+      });
+      s.appendChild(bar);
+      var valText = svg("text", { x: barX + barW + 8, y: y + rowH / 2 + 4, class: "db-axis-text" });
+      valText.textContent = fmtPct(d.missing_rate, 1);
+      s.appendChild(valText);
+      bar.addEventListener("pointermove", function (ev) {
+        var r = wrap.getBoundingClientRect();
+        showTooltip(wrap, ev.clientX - r.left, ev.clientY - r.top, function (tt) {
+          tt.appendChild(text("div", d.column, { class: "tt-title" }));
+          ttRow(tt, color, "missing", fmtPct(d.missing_rate, 2));
+        });
+      });
+      bar.addEventListener("pointerleave", hideTooltip);
+    });
+    wrap.appendChild(s);
+  })();
+
+  // ================= Data-quality flag chips =================
+  (function renderFlags() {
+    var row = document.getElementById("db-flags-row");
+    var f = DATA.data_quality_flags;
+    var items = [
+      [f.n_data_gap_weeks, "سری هفته/برچسب با شکاف کامل داده (data gap)"],
+      [f.n_low_sample_weeks, "سری هفته/برچسب با حجم نمونه پایین (low sample)"],
+      [f.n_partial_weeks, "سری هفته/برچسب مربوط به هفته‌ی ناقص (partial week)"]
+    ];
+    items.forEach(function (it) {
+      row.appendChild(el("span", { class: "db-flag" }, [
+        el("span", { class: "dot" }),
+        text("span", fmtInt(it[0]) + " " + it[1])
+      ]));
+    });
+  })();
+
+  // ================= Weekly trend line chart =================
+  var trendState = { dim: "sentiment", cls: null, hidden: {} };
+
+  function renderTrendTabs() {
+    var tabsEl = document.getElementById("db-dim-tabs");
+    var labels = { sentiment: "احساس", emotion: "هیجان", stance: "موضع" };
+    tabsEl.innerHTML = "";
+    Object.keys(DATA.weekly_trends).forEach(function (dim) {
+      var btn = text("button", labels[dim] || dim, { class: "db-tab" + (dim === trendState.dim ? " active" : ""), type: "button" });
+      btn.addEventListener("click", function () {
+        trendState.dim = dim;
+        trendState.cls = DATA.weekly_trends[dim].classes[0];
+        trendState.hidden = {};
+        renderTrendTabs();
+        renderClassSelect();
+        renderTrendChart();
+      });
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function renderClassSelect() {
+    var sel = document.getElementById("db-class-select");
+    var dimData = DATA.weekly_trends[trendState.dim];
+    if (!trendState.cls) trendState.cls = dimData.classes[0];
+    sel.innerHTML = "";
+    dimData.classes.forEach(function (cls) {
+      var opt = el("option", { value: cls });
+      opt.textContent = cls;
+      if (cls === trendState.cls) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = function () { trendState.cls = sel.value; renderTrendChart(); };
+  }
+
+  function renderTrendChart() {
+    var wrap = document.getElementById("db-trend-chart");
+    var legendEl = document.getElementById("db-trend-legend");
+    wrap.innerHTML = "";
+    legendEl.innerHTML = "";
+
+    var dimData = DATA.weekly_trends[trendState.dim];
+    var weeks = dimData.weeks;
+    var cls = trendState.cls;
+
+    var W = 800, H = 300, padL = 42, padR = 14, padT = 14, padB = 26;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var s = svg("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "روند هفتگی " + cls });
+
+    function xAt(i) { return padL + (weeks.length <= 1 ? 0 : (i / (weeks.length - 1)) * plotW); }
+    function yAt(v) { return padT + (1 - v) * plotH; }
+
+    // gridlines + y ticks (0/25/50/75/100%)
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (t) {
+      var y = yAt(t);
+      s.appendChild(svg("line", { x1: padL, x2: W - padR, y1: y, y2: y, class: "db-grid-line" }));
+      var lbl = svg("text", { x: padL - 8, y: y + 3, "text-anchor": "end", class: "db-axis-text" });
+      lbl.textContent = Math.round(t * 100) + "%";
+      s.appendChild(lbl);
+    });
+    // x ticks: show every 3rd week to avoid crowding
+    weeks.forEach(function (wk, i) {
+      if (i % 3 !== 0 && i !== weeks.length - 1) return;
+      var x = xAt(i);
+      var lbl = svg("text", { x: x, y: H - padB + 16, "text-anchor": "middle", class: "db-axis-text" });
+      lbl.textContent = wk;
+      s.appendChild(lbl);
+    });
+    s.appendChild(svg("line", { x1: padL, x2: W - padR, y1: yAt(0), y2: yAt(0), class: "db-baseline" }));
+
+    DATA.platforms.forEach(function (platform, pIdx) {
+      if (trendState.hidden[platform]) return;
+      var color = platformColor(pIdx);
+      var points = dimData.series[platform][cls];
+
+      // CI band as separate contiguous runs (skip nulls)
+      var run = [];
+      function flushBand() {
+        if (run.length < 2) { run = []; return; }
+        var top = run.map(function (p) { return xAt(p.i) + "," + yAt(p.pt.ci_high); });
+        var bot = run.slice().reverse().map(function (p) { return xAt(p.i) + "," + yAt(p.pt.ci_low); });
+        s.appendChild(svg("polygon", { points: top.concat(bot).join(" "), fill: color, opacity: 0.10, stroke: "none" }));
+        run = [];
+      }
+      points.forEach(function (pt, i) {
+        if (pt) run.push({ i: i, pt: pt }); else flushBand();
+      });
+      flushBand();
+
+      // line, as contiguous runs
+      run = [];
+      function flushLine() {
+        if (run.length < 2) { run = []; return; }
+        var d = run.map(function (p, k) { return (k === 0 ? "M" : "L") + xAt(p.i) + " " + yAt(p.pt.proportion); }).join(" ");
+        s.appendChild(svg("path", { d: d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+        run = [];
+      }
+      points.forEach(function (pt, i) {
+        if (pt) run.push({ i: i, pt: pt }); else flushLine();
+      });
+      flushLine();
+
+      // markers
+      points.forEach(function (pt, i) {
+        if (!pt) return;
+        var cx = xAt(i), cy = yAt(pt.proportion);
+        var flagged = pt.is_low_sample || pt.is_partial_week || pt.is_data_gap;
+        var dot = svg("circle", { cx: cx, cy: cy, r: 4, fill: color, opacity: flagged ? 0.45 : 1, stroke: cssVar("--surface-1"), "stroke-width": 2 });
+        s.appendChild(dot);
+      });
+
+      // end label
+      var lastPt = null, lastI = -1;
+      points.forEach(function (pt, i) { if (pt) { lastPt = pt; lastI = i; } });
+      if (lastPt) {
+        var lbl = svg("text", { x: xAt(lastI) + 6, y: yAt(lastPt.proportion) + 4, class: "db-axis-text", fill: color, "font-weight": "700" });
+        lbl.textContent = PLATFORM_LABEL[platform] || platform;
+        s.appendChild(lbl);
+      }
+    });
+
+    // crosshair + shared tooltip hit layer
+    var hit = svg("rect", { x: padL, y: padT, width: plotW, height: plotH, fill: "transparent" });
+    var crosshair = svg("line", { x1: 0, x2: 0, y1: padT, y2: H - padB, class: "db-grid-line", "stroke-dasharray": "3,3", visibility: "hidden" });
+    s.appendChild(crosshair);
+    s.appendChild(hit);
+
+    hit.addEventListener("pointermove", function (ev) {
+      var box = wrap.querySelector("svg").getBoundingClientRect();
+      var relX = ((ev.clientX - box.left) / box.width) * W;
+      var i = Math.round(((relX - padL) / plotW) * (weeks.length - 1));
+      i = Math.max(0, Math.min(weeks.length - 1, i));
+      var x = xAt(i);
+      crosshair.setAttribute("x1", x); crosshair.setAttribute("x2", x);
+      crosshair.setAttribute("visibility", "visible");
+
+      var relY = ((ev.clientY - box.top) / box.height) * H;
+      showTooltip(wrap, (relX / W) * box.width, (relY / H) * box.height, function (tt) {
+        tt.appendChild(text("div", weeks[i] + " · " + cls, { class: "tt-title" }));
+        var anyFlag = false;
+        DATA.platforms.forEach(function (platform, pIdx) {
+          if (trendState.hidden[platform]) return;
+          var pt = dimData.series[platform][cls][i];
+          var color = platformColor(pIdx);
+          if (!pt) { ttRow(tt, color, PLATFORM_LABEL[platform], "بدون داده"); return; }
+          ttRow(tt, color, PLATFORM_LABEL[platform], fmtPct(pt.proportion, 1) + " (n=" + pt.n + ")");
+          if (pt.is_low_sample || pt.is_partial_week || pt.is_data_gap) anyFlag = true;
+        });
+        if (anyFlag) tt.appendChild(text("div", "⚠ شامل هفته با نمونه کم/ناقص/شکاف داده", { class: "tt-note" }));
+      });
+    });
+    hit.addEventListener("pointerleave", function () {
+      crosshair.setAttribute("visibility", "hidden");
+      hideTooltip();
+    });
+
+    wrap.appendChild(s);
+
+    // legend (click to isolate/toggle)
+    DATA.platforms.forEach(function (platform, pIdx) {
+      var color = platformColor(pIdx);
+      var isOff = !!trendState.hidden[platform];
+      var item = el("span", { class: "db-legend-item" + (isOff ? " off" : "") }, [
+        el("span", { class: "db-legend-swatch-line", style: "background:" + color }),
+        text("span", PLATFORM_LABEL[platform] || platform)
+      ]);
+      item.addEventListener("click", function () {
+        trendState.hidden[platform] = !trendState.hidden[platform];
+        renderTrendChart();
+      });
+      legendEl.appendChild(item);
+    });
+
+    renderTrendTable(dimData, cls);
+  }
+
+  function renderTrendTable(dimData, cls) {
+    var tableWrap = document.getElementById("db-trend-table-wrap");
+    tableWrap.innerHTML = "";
+    var table = el("table", { class: "db-table" }, [
+      el("caption", {}, [document.createTextNode("سهم برچسب «" + cls + "» به تفکیک هفته و پلتفرم")])
+    ]);
+    var thead = el("thead", {}, [el("tr", {}, [text("th", "week")].concat(DATA.platforms.map(function (p) { return text("th", PLATFORM_LABEL[p] || p); })))]);
+    var tbody = el("tbody");
+    dimData.weeks.forEach(function (wk, i) {
+      var cells = [text("td", wk)];
+      DATA.platforms.forEach(function (platform) {
+        var pt = dimData.series[platform][cls][i];
+        cells.push(text("td", pt ? fmtPct(pt.proportion, 1) + " (n=" + pt.n + ")" : "—", { class: "num" }));
+      });
+      tbody.appendChild(el("tr", {}, cells));
+    });
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+  }
+
+  document.getElementById("db-trend-table-toggle").addEventListener("click", function () {
+    var wrap = document.getElementById("db-trend-table-wrap");
+    var chart = document.getElementById("db-trend-chart");
+    var isHidden = wrap.classList.contains("db-hidden");
+    wrap.classList.toggle("db-hidden", !isHidden);
+    chart.classList.toggle("db-hidden", isHidden);
+    this.textContent = isHidden ? "نمایش نمودار" : "نمایش به‌صورت جدول";
+  });
+
+  trendState.cls = DATA.weekly_trends[trendState.dim].classes[0];
+  renderTrendTabs();
+  renderClassSelect();
+  renderTrendChart();
+
+  // ================= Category composition (stacked bars) =================
+  (function renderCategoryCharts() {
+    var host = document.getElementById("db-category-charts");
+    Object.keys(DATA.category_shares).forEach(function (dim) {
+      var byPlatform = DATA.category_shares[dim];
+      var dimLabel = (DATA.category_share_labels && DATA.category_share_labels[dim]) || dim;
+
+      // stable category order = union in first-seen order across platforms, largest overall first
+      var totals = {};
+      DATA.platforms.forEach(function (p) {
+        (byPlatform[p] || []).forEach(function (row) { totals[row.category] = (totals[row.category] || 0) + row.proportion; });
+      });
+      var categories = Object.keys(totals).sort(function (a, b) { return totals[b] - totals[a]; });
+
+      var card = el("div", { class: "db-chart-card" }, [
+        el("div", { class: "db-chart-head" }, [
+          el("div", {}, [text("p", dimLabel, { class: "db-chart-title" })])
+        ])
+      ]);
+      var wrap = el("div", { class: "db-svg-wrap" });
+      card.appendChild(wrap);
+
+      var W = 800, barH = 26, rowGap = 40, padL = 70, padR = 14, padT = 10;
+      var H = padT + DATA.platforms.length * rowGap + 10;
+      var plotW = W - padL - padR;
+      var s = svg("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": dimLabel });
+
+      DATA.platforms.forEach(function (platform, rowIdx) {
+        var y = padT + rowIdx * rowGap;
+        var rows = byPlatform[platform] || [];
+        var byCat = {};
+        rows.forEach(function (r) { byCat[r.category] = r.proportion; });
+
+        s.appendChild(svg("text", { x: padL - 10, y: y + barH / 2 + 4, "text-anchor": "end", class: "db-axis-text", "font-weight": "700" })).textContent = PLATFORM_LABEL[platform] || platform;
+
+        var cx = padL;
+        categories.forEach(function (cat, cIdx) {
+          var v = byCat[cat] || 0;
+          if (v <= 0) return;
+          var segW = Math.max(0, v * plotW - 2); // 2px surface gap between segments
+          var color = categoryColor(cIdx);
+          var rect = svg("rect", { x: cx, y: y, width: segW, height: barH, rx: 3, fill: color, style: "cursor:pointer" });
+          s.appendChild(rect);
+          if (segW > 34) {
+            var lbl = svg("text", { x: cx + segW / 2, y: y + barH / 2 + 4, "text-anchor": "middle", fill: "#fff", "font-size": "10.5" });
+            lbl.textContent = fmtPct(v, 0);
+            s.appendChild(lbl);
+          }
+          rect.addEventListener("pointermove", function (ev) {
+            var r = wrap.getBoundingClientRect();
+            showTooltip(wrap, ev.clientX - r.left, ev.clientY - r.top, function (tt) {
+              tt.appendChild(text("div", (PLATFORM_LABEL[platform] || platform), { class: "tt-title" }));
+              ttRow(tt, color, cat, fmtPct(v, 1));
+            });
+          });
+          rect.addEventListener("pointerleave", hideTooltip);
+          cx += v * plotW;
+        });
+      });
+      wrap.appendChild(s);
+
+      var legend = el("div", { class: "db-legend" });
+      categories.forEach(function (cat, i) {
+        legend.appendChild(el("span", { class: "db-legend-item" }, [
+          el("span", { class: "db-legend-swatch-rect", style: "background:" + categoryColor(i) }),
+          text("span", cat)
+        ]));
+      });
+      card.appendChild(legend);
+      host.appendChild(card);
+    });
+  })();
+
+  // ================= Event study diverging bars =================
+  (function renderEventChart() {
+    var wrap = document.getElementById("db-event-chart");
+    var events = DATA.event_study;
+    if (!events.length) { wrap.appendChild(text("p", "داده‌ای برای رویدادها یافت نشد.", { class: "db-chart-caption" })); return; }
+
+    var W = 800, rowH = 34, padTop = 8, padBottom = 8, midX = 430, leftLabelW = 250, rightPad = 60;
+    var H = padTop + padBottom + events.length * rowH;
+    var maxAbs = Math.max.apply(null, events.map(function (e) { return Math.max(Math.abs(e.ci_low), Math.abs(e.ci_high), Math.abs(e.share_diff)); }).concat([0.05]));
+    var halfW = Math.min(midX - leftLabelW - 10, W - rightPad - midX);
+    function xFor(v) { return midX + (v / maxAbs) * halfW; }
+
+    var s = svg("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "اثر رویدادها" });
+    s.appendChild(svg("line", { x1: midX, x2: midX, y1: padTop, y2: H - padBottom, class: "db-baseline" }));
+
+    events.forEach(function (e, i) {
+      var y = padTop + i * rowH;
+      var label = e.title_fa + "  ·  " + (PLATFORM_LABEL[e.platform] || e.platform);
+      var lbl = svg("text", { x: leftLabelW - 10, y: y + rowH / 2 + 4, "text-anchor": "end", class: "db-axis-text" });
+      lbl.setAttribute("direction", "rtl");
+      lbl.textContent = label;
+      s.appendChild(lbl);
+
+      var color = e.share_diff >= 0 ? cssVar("--diverge-pos") : cssVar("--diverge-neg");
+      var x0 = xFor(0), x1 = xFor(e.share_diff);
+      var barY = y + rowH / 2 - 6;
+      var bar = svg("rect", {
+        x: Math.min(x0, x1), y: barY, width: Math.max(2, Math.abs(x1 - x0)), height: 12, rx: 4,
+        fill: color, style: "cursor:pointer"
+      });
+      s.appendChild(bar);
+
+      // CI whisker
+      var xLo = xFor(e.ci_low), xHi = xFor(e.ci_high);
+      s.appendChild(svg("line", { x1: xLo, x2: xHi, y1: y + rowH / 2, y2: y + rowH / 2, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
+      s.appendChild(svg("line", { x1: xLo, x2: xLo, y1: y + rowH / 2 - 4, y2: y + rowH / 2 + 4, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
+      s.appendChild(svg("line", { x1: xHi, x2: xHi, y1: y + rowH / 2 - 4, y2: y + rowH / 2 + 4, stroke: color, "stroke-width": 1.5, opacity: 0.6 }));
+
+      var valLbl = svg("text", { x: (x1 > x0 ? x1 + 8 : x1 - 8), y: y + rowH / 2 + 4, "text-anchor": (x1 > x0 ? "start" : "end"), class: "db-axis-text", fill: color, "font-weight": "700" });
+      valLbl.textContent = fmtSigned(e.share_diff, 1);
+      s.appendChild(valLbl);
+
+      [bar].forEach(function (hitEl) {
+        hitEl.addEventListener("pointermove", function (ev) {
+          var r = wrap.getBoundingClientRect();
+          showTooltip(wrap, ev.clientX - r.left, ev.clientY - r.top, function (tt) {
+            tt.appendChild(text("div", e.title_fa, { class: "tt-title" }));
+            ttRow(tt, color, "پلتفرم", PLATFORM_LABEL[e.platform] || e.platform);
+            ttRow(tt, color, "قبل → بعد", fmtPct(e.p_before, 1) + " → " + fmtPct(e.p_after, 1));
+            ttRow(tt, color, "تغییر", fmtSigned(e.share_diff, 1));
+            ttRow(tt, color, "n (قبل/بعد)", e.n_before_target + " / " + e.n_after_target);
+            ttRow(tt, color, "بازه", "±" + e.window_days + " روز");
+          });
+        });
+        hitEl.addEventListener("pointerleave", hideTooltip);
+      });
+    });
+    wrap.appendChild(s);
+  })();
+
+  // ================= Financial correlation table =================
+  (function renderFinancial() {
+    var fc = DATA.financial_correlation;
+    document.getElementById("db-fin-desc").textContent =
+      "از میان " + fmtInt(fc.n_tested) + " آزمون همبستگی (احساس × دارایی)، " + fmtInt(fc.n_significant_fdr) +
+      " مورد پس از تصحیح چندگانه (Benjamini–Hochberg FDR) در سطح ۰.۰۵ معنادار ماند. جدول زیر ۸ مورد با کمترین p-value خام را نشان می‌دهد — این‌ها همبستگی اکتشافی هستند، نه رابطه‌ی علّی.";
+
+    var host = document.getElementById("db-fin-table");
+    var table = el("table", { class: "db-table" });
+    var thead = el("thead", {}, [el("tr", {}, [
+      text("th", "platform"), text("th", "outcome"), text("th", "asset"), text("th", "method"),
+      text("th", "coefficient"), text("th", "p (raw)"), text("th", "p (FDR)"), text("th", "n weeks")
+    ])]);
+    var tbody = el("tbody");
+    fc.top.forEach(function (r) {
+      tbody.appendChild(el("tr", {}, [
+        text("td", PLATFORM_LABEL[r.platform] || r.platform),
+        text("td", r.outcome_id),
+        text("td", r.asset_id),
+        text("td", r.method),
+        text("td", r.coefficient.toFixed(3), { class: "num" }),
+        text("td", r.p_value_raw.toFixed(3), { class: "num" }),
+        text("td", r.p_value_bh_fdr.toFixed(3), { class: "num" }),
+        text("td", String(r.n_paired_weeks), { class: "num" })
+      ]));
+    });
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    host.appendChild(table);
+  })();
+
+  // ================= Footer =================
+  (function renderFooter() {
+    var footer = document.getElementById("db-footer");
+    footer.appendChild(el("p", {}, [
+      document.createTextNode("این داشبورد به‌صورت خودکار توسط "),
+      el("code", {}, [document.createTextNode("src/reporting/build_dashboard.py")]),
+      document.createTextNode(" از فایل‌های "),
+      el("code", {}, [document.createTextNode("outputs/tables/*.csv")]),
+      document.createTextNode(" ساخته شده. برای بازسازی روی داده‌ی به‌روز (مثلاً پس از جایگزینی داده‌ی واقعی) دستور زیر را اجرا کنید:")
+    ]));
+    footer.appendChild(el("p", {}, [
+      el("code", {}, [document.createTextNode("python -m src.reporting.build_dashboard --data-status real")])
+    ]));
+  })();
+})();
+</script>
