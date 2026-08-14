@@ -104,12 +104,36 @@ MODEL_ROUTES: list[ModelRoute] = [
         "(see module docstring). §21 escalation-tier candidate given Gemini's "
         "reputation on multilingual (fa/ar) text.",
     ),
+    ModelRoute(
+        route_name="ollama_llama3_local",
+        model_name="llama3:latest",
+        provider="ollama",
+        max_batch_size=1,
+        confidence_threshold=0.55,  # same default as the other 8B-class route (groq_cheap_fast) until Gold-evaluated
+        estimated_input_cost_per_million_tokens=0.0,
+        estimated_output_cost_per_million_tokens=0.0,
+        notes="2026-08-14 — local Ollama server (localhost:11434), NOT a cloud "
+        "provider: zero cost, no rate limit, but throughput is capped by local "
+        "hardware (~0.6-0.7 req/s observed at 4-8 concurrent workers, not "
+        "scaling much past that — see docs/decision_log.md). NOT YET "
+        "Gold-evaluated (evaluate_sentiment_accuracy.py hasn't scored it) and "
+        "NOT the locked route — added so it CAN be evaluated/used, added "
+        "deliberately without touching any existing route's config or "
+        "LOCKED_ROUTE_NAME (still groq_cheap_fast, unchanged by this entry).",
+    ),
 ]
 
 PROVIDERS_REQUIRING_ENV_KEY = {
     "groq": "GROQ_API_KEY",
     "openrouter": "OPENROUTER_API_KEY",
     "deepseek": "DEEPSEEK_API_KEY",
+    # No real secret needed (local, unauthenticated server) — mapped to a
+    # var that every caller's api_keys dict can default to a non-empty
+    # value (OLLAMA_BASE_URL, default "http://localhost:11434") so the
+    # existing "route has a usable key" filter in run_model_comparison.py/
+    # evaluate_sentiment_accuracy.py/run_full_annotation.py works unchanged
+    # instead of needing a special case for this one provider.
+    "ollama": "OLLAMA_BASE_URL",
 }
 
 

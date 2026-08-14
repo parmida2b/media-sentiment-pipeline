@@ -321,6 +321,7 @@ def main():
         "GROQ_API_KEY": os.getenv("GROQ_API_KEY", ""),
         "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY", ""),
         "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY", ""),
+        "OLLAMA_BASE_URL": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
     }
     wanted = set(args.routes.split(",")) if args.routes else None
     routes = []

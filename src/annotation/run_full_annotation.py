@@ -149,6 +149,12 @@ def parse_args() -> argparse.Namespace:
         "--limit", type=int, default=None,
         help="Only process the first N tasks of this shard (smoke-testing).",
     )
+    parser.add_argument(
+        "--stratify-cap", type=int, default=None,
+        help="Rate-limit-forced scope reduction (docs/decision_log.md 2026-08-14): "
+             "cap each (platform, project_week) cell at this many records instead "
+             "of annotating all eligible records. Omit for the full eligible set.",
+    )
     return parser.parse_args()
 
 
@@ -191,7 +197,7 @@ def load_eligible_records() -> pd.DataFrame:
             raise FileNotFoundError(
                 f"{path} not found — run src/preprocessing/apply_eligibility.py first."
             )
-        df = pd.read_parquet(path, columns=["platform_content_id", "text_raw", "platform", "dataset_target"])
+        df = pd.read_parquet(path, columns=["platform_content_id", "text_raw", "platform", "dataset_target", "project_week"])
         frames.append(df)
     combined = pd.concat(frames, ignore_index=True)
     combined = combined.rename(columns={"platform_content_id": "content_id", "text_raw": "text"})
@@ -199,6 +205,34 @@ def load_eligible_records() -> pd.DataFrame:
     combined = combined[combined["text"].str.strip() != ""]
     combined = combined.drop_duplicates(subset=["content_id"])
     return combined
+
+
+def stratified_subsample(records: pd.DataFrame, cap_per_cell: int, seed: int) -> pd.DataFrame:
+    """docs/decision_log.md 2026-08-14 (rate-limit-forced scope reduction):
+    at most `cap_per_cell` records per (platform, project_week) cell, so
+    every cell that has enough data clears the checklist.md §22 n>=30
+    low-sample threshold with real margin, instead of an arbitrary first-N
+    slice that could silently empty out whole weeks/platforms. Cells with
+    fewer than cap_per_cell available records keep everything they have
+    (reported, not silently backfilled from elsewhere — a real data-gap week
+    should still look like a data-gap week, not get papered over).
+    opinion_untimed rows (project_week is null/'OUT') are kept in full —
+    there are only 6 as of 2026-08-14, and they were never going to be part
+    of the weekly-stratified cells anyway."""
+    untimed = records[records["project_week"].isna() | (records["project_week"] == "OUT")]
+    timed = records[~records.index.isin(untimed.index)]
+
+    sampled = timed.groupby(["platform", "project_week"], group_keys=False).apply(
+        lambda g: g.sample(n=min(len(g), cap_per_cell), random_state=seed)
+    )
+    result = pd.concat([sampled, untimed], ignore_index=True)
+
+    cell_counts = timed.groupby(["platform", "project_week"]).size()
+    n_capped = int((cell_counts > cap_per_cell).sum())
+    n_short = int(((cell_counts > 0) & (cell_counts <= cap_per_cell)).sum())
+    print(f"Stratified sample: cap={cap_per_cell}/cell — {n_capped} cell(s) capped, "
+          f"{n_short} cell(s) kept in full (below cap), {len(untimed)} untimed row(s) kept whole.")
+    return result
 
 
 def assign_shard(content_id: str, num_shards: int) -> int:
@@ -211,9 +245,19 @@ def assign_shard(content_id: str, num_shards: int) -> int:
 
 def load_done_keys(output_path: Path) -> set[tuple[str, str]]:
     """Reads this shard's own output file (if any) and returns the set of
-    (content_id, target_id) pairs already written — resume support. A
-    corrupt/partial last line (e.g. process killed mid-write) is skipped,
-    not fatal — that row is simply re-annotated."""
+    (content_id, target_id) pairs already SUCCESSFULLY annotated — resume
+    support. Only annotation_status=="ok" counts as done (bug fixed
+    2026-08-14: this used to count every attempted pair regardless of
+    outcome, so a row that failed — e.g. api_failure from a key hitting its
+    daily quota — looked "already done" and was never retried on the next
+    run; found when 4,954 api_failure rows from an exhausted-quota run
+    would otherwise have been skipped forever instead of retried once quota
+    reset). A corrupt/partial last line (e.g. process killed mid-write) is
+    skipped, not fatal — that row is simply re-annotated. Note: a row can
+    appear multiple times in the file across resumed attempts (once
+    failed, once ok) — the file itself is not deduplicated, only this
+    in-memory set is; downstream consumers should keep the last/best
+    attempt per (content_id, target_id)."""
     done: set[tuple[str, str]] = set()
     if not output_path.exists():
         return done
@@ -224,7 +268,8 @@ def load_done_keys(output_path: Path) -> set[tuple[str, str]]:
                 continue
             try:
                 row = json.loads(line)
-                done.add((row["content_id"], row["target_id"]))
+                if row.get("annotation_status") == "ok":
+                    done.add((row["content_id"], row["target_id"]))
             except (json.JSONDecodeError, KeyError):
                 continue
     return done
@@ -250,6 +295,7 @@ def main() -> None:
         "GROQ_API_KEY": os.getenv("GROQ_API_KEY", ""),
         "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY", ""),
         "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY", ""),
+        "OLLAMA_BASE_URL": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
     }
 
     print(f"Route: {route.route_name} ({route.model_name})")
@@ -257,6 +303,8 @@ def main() -> None:
     print(f"Shard: {args.shard_id} of {args.num_shards}")
 
     records = load_eligible_records()
+    if args.stratify_cap:
+        records = stratified_subsample(records, args.stratify_cap, seed=1405)
     shard_records = records[records["content_id"].apply(lambda c: assign_shard(c, args.num_shards) == args.shard_id)]
     print(f"Eligible records total: {len(records):,}  |  This shard: {len(shard_records):,}")
 

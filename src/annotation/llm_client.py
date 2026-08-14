@@ -134,6 +134,25 @@ def _is_daily_quota_message(message: str) -> bool:
 
 
 _groq_exhausted_keys: set[str] = set()  # keys that hit their *daily* quota this process
+_groq_rr_index = 0  # round-robin cursor across keys, protected by _groq_rr_lock
+_groq_rr_lock = threading.Lock()
+
+
+def _next_groq_key_order(keys: list[str]) -> list[str]:
+    """Round-robin the starting key across concurrent calls (2026-08-14):
+    with run_full_annotation.py's ThreadPoolExecutor, every call used to
+    start from keys[0] — under concurrency that piles every worker onto one
+    key's per-minute token limit (TPM) instead of spreading load across all
+    configured keys, defeating the point of having several. Rotating the
+    starting offset per call means N concurrent workers land on ~N/len(keys)
+    different keys instead of all N on the same one."""
+    global _groq_rr_index
+    if not keys:
+        return keys
+    with _groq_rr_lock:
+        offset = _groq_rr_index % len(keys)
+        _groq_rr_index += 1
+    return keys[offset:] + keys[:offset]
 
 
 def _load_groq_keys(api_keys: dict[str, str]) -> list[str]:
@@ -156,7 +175,7 @@ def _call_groq(api_keys: dict[str, str], route: ModelRoute, prompt: str) -> RawC
     from groq import Groq, RateLimitError
 
     keys = _load_groq_keys(api_keys)
-    usable_keys = [k for k in keys if k not in _groq_exhausted_keys]
+    usable_keys = _next_groq_key_order([k for k in keys if k not in _groq_exhausted_keys])
     if not usable_keys:
         return RawCallResult(
             None, 0.0, None, None,
@@ -191,8 +210,17 @@ def _call_groq(api_keys: dict[str, str], route: ModelRoute, prompt: str) -> RawC
                       f"rotating to next key ({len(usable_keys) - usable_keys.index(key) - 1} left to try).")
                 last_error = RawCallResult(None, (time.monotonic() - t0) * 1000, None, None, f"HTTP 429: {message[:250]}")
                 continue  # try the next key, same call, no backoff needed — different account
+            # Per-minute (TPM/RPM) limit, not a daily one — the key isn't
+            # exhausted, just busy this minute. With run_full_annotation.py's
+            # concurrent workers, several keys are usually still under their
+            # own per-minute cap right now (2026-08-14: 30 workers all on one
+            # key blew straight through Groq's 6000 TPM cap for
+            # llama-3.1-8b-instant) — so try the next key immediately instead
+            # of giving up after one. Only after every key has been tried
+            # this call does it fall through to annotate()'s outer
+            # retry/backoff loop.
             last_error = RawCallResult(None, (time.monotonic() - t0) * 1000, None, None, f"HTTP 429: {message[:250]}")
-            break  # transient (per-minute) limit — let annotate()'s outer retry/backoff handle it
+            continue
         except Exception as e:  # noqa: BLE001 — provider SDKs raise varied exception types
             last_error = RawCallResult(None, (time.monotonic() - t0) * 1000, None, None, str(e)[:300])
             break
@@ -249,6 +277,14 @@ def _call_provider(route: ModelRoute, prompt: str, api_keys: dict[str, str]) -> 
         )
     if route.provider == "deepseek":
         return _call_openai_compatible(api_keys["DEEPSEEK_API_KEY"], "https://api.deepseek.com", route, prompt)
+    if route.provider == "ollama":
+        # Local, unauthenticated server — Ollama's /v1/chat/completions is
+        # OpenAI-wire-compatible (verified 2026-08-14: proper choices[0].
+        # message.content + usage.prompt_tokens/completion_tokens), so the
+        # shared caller works unchanged; the "api_key" is a dummy string,
+        # Ollama ignores the Authorization header entirely.
+        base_url = api_keys.get("OLLAMA_BASE_URL") or "http://localhost:11434"
+        return _call_openai_compatible("ollama-local-no-auth", f"{base_url}/v1", route, prompt)
     raise ValueError(f"Unknown provider {route.provider!r} on route {route.route_name!r}")
 
 
