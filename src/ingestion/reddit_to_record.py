@@ -69,9 +69,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from config.schema import AuthorMetadata, Record  # noqa: E402
 from config.raw_schema_columns import RAW_SCHEMA_COLUMNS  # noqa: E402
+from config.raw_schema_columns_v05 import RAW_SCHEMA_V05_COLUMNS  # noqa: E402
 from config import config_loader  # noqa: E402 - CONFIG.topic, same relevance-judging topic string YouTube's collector uses
 
 import author_hash  # noqa: E402 - sibling module in src/ingestion/, see backfill_author_hash_v05.py for the same import convention
@@ -91,6 +94,7 @@ import reddit_raw_json_pipeline as reddit_pipeline  # noqa: E402 - PROJECT_START
 COLLECTOR_VERSION = "reddit_to_record.py:v1"
 
 OUTPUT_DIR = reddit_pipeline.PROJECT_ROOT / "data" / "raw" / "reddit"
+RAW_HARMONIZED_DIR = reddit_pipeline.PROJECT_ROOT / "data" / "raw_harmonized" / "reddit"
 JSONL_OUTPUT = OUTPUT_DIR / "reddit_comments_v1.jsonl"
 CSV_OUTPUT = OUTPUT_DIR / "reddit_raw_export.csv"
 
@@ -491,6 +495,191 @@ def record_to_raw_schema_row(record: Record, raw_score: str) -> dict[str, str]:
         "geo_granularity": record.geo_granularity or "",
         "geo_limitations": record.geo_limitations or "",
     }
+
+
+# ---------------------------------------------------------------------------
+# raw_harmonized export (raw_schema_v05.md)
+# Mirrors youtube_extract.py's record_to_raw_harmonized_row() /
+# export_to_raw_harmonized() — same pattern, Reddit-specific mappings.
+# See docs/schema_mapping_template.csv rows for "reddit" for the source
+# of each decision below.
+# ---------------------------------------------------------------------------
+
+# reddit_to_record.py uses "submission" for self-posts; v05 §8 calls the
+# same concept "original_post" (the enum value for Reddit's top-level post).
+_CONTENT_TYPE_V05_MAP = {"submission": "original_post"}
+
+
+def _empty_to_none(value):
+    """raw_schema_v05.md §1.1 point 5: missing field stays null, not "".
+    Mirrors youtube_extract.py's _empty_to_none() helper."""
+    if value in (None, ""):
+        return None
+    return value
+
+
+def _parse_z_datetime(s: str | None) -> datetime | None:
+    """Parse a Z-format ISO string (e.g. '2026-03-05T12:00:00Z') produced
+    by reddit_to_record.py's to_z_format() into a tz-aware datetime UTC."""
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def record_to_raw_harmonized_row(r: Record) -> dict:
+    """One row of the raw_harmonized export, keyed exactly to
+    RAW_SCHEMA_V05_COLUMNS (config/raw_schema_columns_v05.py). Mirrors
+    youtube_extract.py's record_to_raw_harmonized_row() but with
+    Reddit-specific field sources — see docs/schema_mapping_template.csv
+    rows for 'reddit' for the decision behind each mapping."""
+    am = r.author_metadata
+    ct_v05 = _CONTENT_TYPE_V05_MAP.get(r.content_type or "", r.content_type)
+    is_submission = ct_v05 == "original_post"
+    return {
+        # --- §3 Core ----------------------------------------------------------
+        "platform": r.platform,
+        "platform_content_id": _empty_to_none(r.content_id),
+        "content_type": _empty_to_none(ct_v05),
+        "created_at_utc": _parse_z_datetime(r.date) if r.date else None,
+        "collected_at_utc": _parse_z_datetime(r.collected_at_utc) if r.collected_at_utc else None,
+        "text_raw": r.text,
+        "collection_run_id": _empty_to_none(r.collection_run_id),
+        "collector_version": COLLECTOR_VERSION,
+        "schema_version": "5.0",
+        "project_week": _empty_to_none(r.project_week),
+        "in_window": r.in_window,
+        "is_partial_week": r.is_partial_week,
+
+        # --- §4 Provenance and parent structure --------------------------------
+        "query_id": _empty_to_none(r.query_id),
+        "matched_query_ids": _empty_to_none(r.matched_query_ids),
+        "query_version": _empty_to_none(r.query_version),
+        "source_id": _empty_to_none(r.source_id),
+        # No Source Registry versioning exists for Reddit yet.
+        "source_registry_version": None,
+        "discovery_route": _empty_to_none(r.discovery_route),
+        # mapping: source_container = subreddit name (§9).
+        "source_container": _empty_to_none(r.source_container),
+        "source_container_id": _empty_to_none(r.source_container_id),
+        # For original_post (submission) the content IS the root-level item;
+        # source_parent_id only makes sense for comments/replies (= submission id).
+        "source_parent_id": None if is_submission else _empty_to_none(r.post_id),
+        "source_parent_title": _empty_to_none(r.post_title),
+        "parent_id": _empty_to_none(r.parent_id),
+        "permalink_hash": _empty_to_none(r.permalink_hash),
+
+        # --- §4.1 Historical-data audit fields --------------------------------
+        # not_applicable: reddit_to_record.py is a live-collector bridge reading
+        # from Selenium-produced CSVs, not a legacy-file intake (no delivered
+        # file to hash/index), same as youtube_extract.py's live-collector path.
+        "original_file_name": None,
+        "original_file_sha256": None,
+        "original_row_number": None,
+        "source_schema_version": None,
+        "source_query_registry_version": None,
+        "record_uid": None,
+        # comment_id/post_id always come from Reddit's real API response.
+        "id_origin": "observed",
+        # timestamp always from UNIX epoch in Reddit's JSON (unix_to_iso).
+        "timestamp_origin": "observed",
+        "provenance_quality": None,
+        "field_origin": None,
+        "missing_reason": None,
+
+        # --- §5 Author and privacy -------------------------------------------
+        "author_hash": _empty_to_none(am.author_hash),
+        "author_id_status": _empty_to_none(am.author_id_status),
+        "author_type": None,
+        # Reddit API does not expose a verified-account flag.
+        "author_is_verified": None,
+        "author_account_age_days": am.account_age_days,
+
+        # --- §6 Engagement snapshot -------------------------------------------
+        # Reddit score (upvotes) is not on Record — it comes from the source CSV
+        # row in the live pipeline (record_to_raw_schema_row's `raw_score` param)
+        # but is not propagated to Record or JSONL. Left None here.
+        "engagement_score": None,
+        # Reddit API does not return reply_count for nested comments.
+        "engagement_replies": None,
+        # Reddit has no Share/Repost or Quote concept.
+        "engagement_shares": None,
+        "engagement_quotes": None,
+        "engagement_views": None,
+        "engagement_collected_at_utc": _parse_z_datetime(r.collected_at_utc) if r.collected_at_utc else None,
+
+        # --- §7 Language, status and location --------------------------------
+        # Reddit API does not report content language.
+        "language_reported": None,
+        "language_detected": _empty_to_none(r.language),
+        "language_confidence": r.language_confidence,
+        "content_status": _empty_to_none(r.content_status),
+        "geo_method": _empty_to_none(r.geo_method),
+        "country_or_region": _empty_to_none(r.country_or_region),
+        "geo_confidence": _empty_to_none(r.geo_confidence),
+    }
+
+
+_V05_BOOL_COLUMNS = ["in_window", "is_partial_week", "author_is_verified"]
+_V05_INT_COLUMNS = [
+    "engagement_replies", "engagement_shares", "engagement_quotes",
+    "engagement_views", "author_account_age_days", "original_row_number",
+]
+_V05_FLOAT_COLUMNS = ["engagement_score", "language_confidence"]
+_V05_DATETIME_COLUMNS = ["created_at_utc", "collected_at_utc", "engagement_collected_at_utc"]
+
+
+def export_to_raw_harmonized(records: list[Record], run_id: str | None = None) -> pd.DataFrame:
+    """Builds the raw_harmonized/reddit output: exactly the column set of
+    docs/raw_schema_v05.md §3-§7 (RAW_SCHEMA_V05_COLUMNS), written as
+    Parquet to data/raw_harmonized/reddit/{run_id}.parquet.
+
+    Mirrors youtube_extract.py's export_to_raw_harmonized() — same dtype
+    coercions and Parquet-write logic, Reddit-specific output path.
+
+    `run_id` names the output file. When omitted, the function attempts to
+    derive it from a single non-None collection_run_id shared by all records.
+    Reddit records typically have collection_run_id=None (the Selenium
+    pipeline doesn't carry it), so callers must pass run_id explicitly —
+    typically a synthetic backfill id like 'backfill_reddit_v1'."""
+    if not records:
+        raise ValueError("export_to_raw_harmonized: no records given — nothing to export.")
+
+    if run_id is None:
+        non_null_runs = {r.collection_run_id for r in records if r.collection_run_id}
+        if len(non_null_runs) == 1:
+            run_id = non_null_runs.pop()
+        elif len(non_null_runs) > 1:
+            raise ValueError(
+                f"export_to_raw_harmonized: records span {len(non_null_runs)} distinct "
+                "collection_run_id values; call this once per run or pass run_id explicitly."
+            )
+        else:
+            raise ValueError(
+                "export_to_raw_harmonized: records have no collection_run_id set and "
+                "run_id was not provided. Pass run_id='backfill_reddit_v1' or similar."
+            )
+
+    rows = [record_to_raw_harmonized_row(r) for r in records]
+    df = pd.DataFrame(rows, columns=RAW_SCHEMA_V05_COLUMNS)
+
+    for col in _V05_BOOL_COLUMNS:
+        df[col] = df[col].astype("boolean")
+    for col in _V05_INT_COLUMNS:
+        df[col] = df[col].astype("Int64")
+    for col in _V05_FLOAT_COLUMNS:
+        df[col] = df[col].astype("float64")
+    for col in _V05_DATETIME_COLUMNS:
+        df[col] = pd.to_datetime(df[col], utc=True)
+
+    output_path = RAW_HARMONIZED_DIR / f"{run_id}.parquet"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(output_path, index=False)
+    print(f"raw_harmonized: wrote {len(df)} row(s) to {output_path}")
+
+    return df
 
 
 # ---------------------------------------------------------------------------
