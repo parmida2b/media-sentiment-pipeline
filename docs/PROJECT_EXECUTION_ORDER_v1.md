@@ -12,8 +12,8 @@
 **اسناد:**
 
 - `Chapter_1_Project_Definition_and_Research_Design_v5.md`
-- `Chapter_2_Statistical_Population_and_Sampling_Design_v5.md`
-- `Chapter_3_Platform_Selection_and_Source_Justification_v3.md`
+- `Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md` (جایگزین نسخه قبلی v5، که به `docs/archive/` منتقل شد)
+- `Chapter_3_Platform_Selection_and_Source_Justification_merged_readable.md` (جایگزین نسخه قبلی v3، که به `docs/archive/` منتقل شد)
 
 **تصمیم‌ها:** پرسش پژوهش، جامعه قابل‌دسترسی، Sampling frame، واحد تحلیل، پلتفرم‌ها، زبان‌ها، مرز استنباط و ساختار کلی آمار.
 

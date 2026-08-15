@@ -1,3 +1,7 @@
+> ⚠️ **بایگانی شد (۲۰۲۶-۰۸-۱۵):** این نسخه (v5) با نسخه گسترده‌تر و به‌روزتر
+> [`Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md`](../Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md)
+> جایگزین شده. برای ارائه/مرجع نهایی از همون فایل استفاده کن.
+
 # فصل دوم — جامعه آماری و طرح نمونه‌گیری
 
 **پلتفرم‌ها:** X، Reddit و YouTube  

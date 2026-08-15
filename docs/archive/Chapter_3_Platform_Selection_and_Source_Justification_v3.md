@@ -1,3 +1,7 @@
+> ⚠️ **بایگانی شد (۲۰۲۶-۰۸-۱۵):** این نسخه (v3) با نسخه گسترده‌تر و به‌روزتر
+> [`Chapter_3_Platform_Selection_and_Source_Justification_merged_readable.md`](../Chapter_3_Platform_Selection_and_Source_Justification_merged_readable.md)
+> جایگزین شده. برای ارائه/مرجع نهایی از همون فایل استفاده کن.
+
 # فصل سوم — انتخاب پلتفرم و توجیه منبع
 
 **پلتفرم‌ها:** X، Reddit و YouTube  

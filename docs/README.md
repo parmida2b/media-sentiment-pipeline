@@ -28,8 +28,8 @@
 | سند | موضوع |
 |---|---|
 | [`Chapter_1_Project_Definition_and_Research_Design_v5.md`](Chapter_1_Project_Definition_and_Research_Design_v5.md) | پرسش پژوهش، بازه، دامنه استنباط |
-| [`Chapter_2_Statistical_Population_and_Sampling_Design_v5.md`](Chapter_2_Statistical_Population_and_Sampling_Design_v5.md) | جامعه آماری و Sampling |
-| [`Chapter_3_Platform_Selection_and_Source_Justification_v3.md`](Chapter_3_Platform_Selection_and_Source_Justification_v3.md) | چرا این سه پلتفرم |
+| [`Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md`](Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md) | جامعه آماری و Sampling (نسخه قبلی v5 بایگانی شد: [`archive/Chapter_2_..._v5.md`](archive/Chapter_2_Statistical_Population_and_Sampling_Design_v5.md)) |
+| [`Chapter_3_Platform_Selection_and_Source_Justification_merged_readable.md`](Chapter_3_Platform_Selection_and_Source_Justification_merged_readable.md) | چرا این سه پلتفرم (نسخه قبلی v3 بایگانی شد: [`archive/Chapter_3_..._v3.md`](archive/Chapter_3_Platform_Selection_and_Source_Justification_v3.md)) |
 | [`raw_schema_v05.md`](raw_schema_v05.md) | قرارداد داده خام هدف (⚠️ کد هنوز v03 رو پیاده می‌کنه — پایین رو ببین) |
 | [`source_registry_v4.md`](source_registry_v4.md) | فهرست منابع مجاز/برنامه‌ریزی‌شده |
 | [`query_registry_v5.md`](query_registry_v5.md) | قرارداد Query |

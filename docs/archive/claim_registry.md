@@ -5,7 +5,7 @@
 
 ## اصل بنیادین (به هر ادعای زیر اعمال می‌شود)
 
-> نمونه‌ی این پروژه غیراحتمالی (Non-probability) است — `docs/Chapter_2_Statistical_Population_and_Sampling_Design_v5.md` و `docs/pre_analysis_decision_table_v1.md`. **هیچ ادعایی در این سند نماینده‌ی «مردم ایران»، «مردم آمریکا» یا هر جمعیت کلی دیگری نیست** — فقط توصیف نمونه‌ی مشاهده‌شده (Observed Sample) روی X/Reddit/YouTube در بازه‌ی ثبت‌شده است. علاوه بر این، تا وقتی annotation کامل نشده (بالا)، هر عدد زیر **مقدماتی/Exploratory** است، نه نهایی.
+> نمونه‌ی این پروژه غیراحتمالی (Non-probability) است — `docs/Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md` و `docs/pre_analysis_decision_table_v1.md`. **هیچ ادعایی در این سند نماینده‌ی «مردم ایران»، «مردم آمریکا» یا هر جمعیت کلی دیگری نیست** — فقط توصیف نمونه‌ی مشاهده‌شده (Observed Sample) روی X/Reddit/YouTube در بازه‌ی ثبت‌شده است. علاوه بر این، تا وقتی annotation کامل نشده (بالا)، هر عدد زیر **مقدماتی/Exploratory** است، نه نهایی.
 
 ---
 
