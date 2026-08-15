@@ -2,9 +2,7 @@
 descriptive_stats.py — docs/checklist.md فاز نهم (§21): آمار توصیفی
 
 Reads the one file Pipeline B is allowed to depend on
-(docs/pipeline_b_input_contract.md -> data/processed/annotated_dataset.parquet,
-or the synthetic stand-in data/processed/annotated_dataset.sample.parquet from
-scripts/make_synthetic_annotated_dataset.py while Pipeline A is still running)
+(docs/pipeline_b_input_contract.md -> data/processed/annotated_dataset.parquet)
 and computes §21's descriptive statistics for the whole dataset, each
 platform, and each project week — every count/rate/share §21 lists, minus
 raw_n/harmonized_n (those live upstream of the one file Pipeline B can touch;
@@ -55,7 +53,6 @@ from pathlib import Path
 import pandas as pd
 
 from src.temporal_analysis.common import (
-    DEFAULT_INPUT_PATH,
     DEFAULT_OUTPUT_DIR,
     LABEL_AXES,
     NON_OK_ANNOTATION_STATUSES,
@@ -243,7 +240,11 @@ def build_tables(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
+    parser.add_argument(
+        "--input", type=Path, required=True,
+        help="path to data/processed/annotated_dataset.parquet (real) - required, no default; "
+             "see docs/decision_log.md 2026-08-14 on why there is no synthetic fallback",
+    )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args()
 

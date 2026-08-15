@@ -49,7 +49,6 @@ import pandas as pd
 sys.stdout.reconfigure(encoding="utf-8")  # Persian notes below
 
 from src.temporal_analysis.common import (  # noqa: E402
-    DEFAULT_INPUT_PATH,
     DEFAULT_OUTPUT_DIR,
     PLATFORMS,
     load_annotated_dataset,
@@ -235,7 +234,11 @@ def _write_reference_summary(output_dir: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
+    parser.add_argument(
+        "--input", type=Path, required=True,
+        help="path to data/processed/annotated_dataset.parquet (real) - required, no default; "
+             "see docs/decision_log.md 2026-08-14 on why there is no synthetic fallback",
+    )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args()
     run(args.input, args.output_dir)

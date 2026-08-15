@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+# Makes "from config.schema import ..." / "from src.temporal_analysis.common
+# import ..." resolve from repo root without a tests/__init__.py or manual
+# sys.path hacking in every test file. pytest core feature since 7.0 (no
+# plugin needed) - pytest.ini can't express this key, hence pyproject.toml.
+pythonpath = ["."]
+testpaths = ["tests"]

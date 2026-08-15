@@ -5,11 +5,11 @@
 ## آمار کلی
 
 - تعداد Exact-ID duplicate (حذف‌شده در apply_eligibility.py's stage_dedup، قبل از این مرحله): 0
-- تعداد رکورد کل (kept: opinion_main+opinion_limited+opinion_untimed+context_only): 233,006
-- متن یکسان با ID متفاوت (case 2): 5,087 رکورد (2.18%)
-- Unique text rate: 97.82%
-- Near-duplicate (case 3): 4,712 رکورد در 1,631 Cluster (بزرگ‌ترین Cluster: 41 رکورد)
-- رکوردهای زیر آستانه‌ی طول متن (MIN_TEXT_LEN_FOR_DUP_CHECK=10، بررسی Duplicate روی آن‌ها انجام نشد چون تطابق تصادفی متن کوتاه معنادار نیست): 5,721
+- تعداد رکورد کل (kept: opinion_main+opinion_limited+opinion_untimed+context_only): 287,868
+- متن یکسان با ID متفاوت (case 2): 20,580 رکورد (7.15%)
+- Unique text rate: 92.85%
+- Near-duplicate (case 3): 19,967 رکورد در 8,939 Cluster (بزرگ‌ترین Cluster: 41 رکورد)
+- رکوردهای زیر آستانه‌ی طول متن (MIN_TEXT_LEN_FOR_DUP_CHECK=10، بررسی Duplicate روی آن‌ها انجام نشد چون تطابق تصادفی متن کوتاه معنادار نیست): 7,930
 
 ## تفکیک هفته/پلتفرم (Near-duplicate)
 
@@ -57,27 +57,27 @@
 | x | W19 | 456 | 10 | 22 |
 | x | W20 | 1269 | 23 | 53 |
 | x | W21 | 1162 | 16 | 33 |
-| youtube | W01 | 1342 | 5 | 17 |
-| youtube | W02 | 297 | 2 | 4 |
-| youtube | W03 | 99 | 1 | 2 |
-| youtube | W04 | 99 | 0 | 0 |
-| youtube | W05 | 290 | 4 | 10 |
-| youtube | W06 | 201 | 2 | 4 |
-| youtube | W07 | 43 | 0 | 0 |
-| youtube | W08 | 269 | 1 | 2 |
-| youtube | W09 | 192 | 2 | 5 |
-| youtube | W10 | 150 | 0 | 0 |
-| youtube | W11 | 393 | 7 | 26 |
-| youtube | W12 | 198 | 1 | 3 |
-| youtube | W13 | 324 | 3 | 6 |
-| youtube | W14 | 832 | 19 | 54 |
-| youtube | W15 | 564 | 8 | 20 |
-| youtube | W16 | 167 | 0 | 0 |
-| youtube | W17 | 875 | 16 | 39 |
-| youtube | W18 | 724 | 14 | 30 |
-| youtube | W19 | 2374 | 20 | 58 |
-| youtube | W20 | 12952 | 141 | 332 |
-| youtube | W21 | 44182 | 587 | 1518 |
+| youtube | W01 | 6575 | 260 | 534 |
+| youtube | W02 | 3774 | 78 | 170 |
+| youtube | W03 | 2531 | 23 | 46 |
+| youtube | W04 | 3287 | 18 | 42 |
+| youtube | W05 | 3251 | 29 | 60 |
+| youtube | W06 | 2492 | 14 | 41 |
+| youtube | W07 | 1346 | 9 | 23 |
+| youtube | W08 | 1103 | 35 | 70 |
+| youtube | W09 | 634 | 8 | 42 |
+| youtube | W10 | 373 | 1 | 2 |
+| youtube | W11 | 603 | 7 | 26 |
+| youtube | W12 | 659 | 20 | 45 |
+| youtube | W13 | 1072 | 16 | 34 |
+| youtube | W14 | 1455 | 55 | 136 |
+| youtube | W15 | 2075 | 189 | 389 |
+| youtube | W16 | 1129 | 49 | 98 |
+| youtube | W17 | 2567 | 33 | 73 |
+| youtube | W18 | 1596 | 24 | 50 |
+| youtube | W19 | 4929 | 763 | 1590 |
+| youtube | W20 | 18848 | 1680 | 3503 |
+| youtube | W21 | 61130 | 4830 | 10411 |
 
 ## روش
 

@@ -19,8 +19,18 @@ pip install -r requirements.txt
 cp .env.example .env   # کلیدهای API خودت رو بذار
 ```
 
+## اجرای کامل Pipeline
+راهنمای مرحله‌به‌مرحله (دستور دقیق هر قدم، از داده خام تا خروجی نهایی) در
+[`docs/how_to_run_pipeline_fa.md`](docs/how_to_run_pipeline_fa.md) هست —
+شامل Pipeline A (جمع‌آوری/آماده‌سازی)، Full Annotation، Pipeline B (تحلیل)،
+و کوتاه‌ترین مسیر برای وقتی فقط annotation جدید اضافه شده.
+اگه فقط دنبال خروجی‌های آماده (مثلاً برای Power BI) هستی و نیازی به اجرای
+دوباره‌ی کد نداری، به‌جاش سراغ [`docs/archive/handoff_notes_fa.md`](docs/archive/handoff_notes_fa.md) برو.
+
+نقشه کامل مستندات پروژه (کدوم سند برای چی): [`docs/README.md`](docs/README.md)
+
 ## قبل از هر کاری
-راهنمای کار با گیت رو بخون: [`GIT_WORKFLOW.md`](./GIT_WORKFLOW.md)
+راهنمای کار با گیت (بایگانی‌شده، مخصوص فاز توسعه): [`docs/archive/GIT_WORKFLOW.md`](./docs/archive/GIT_WORKFLOW.md)
 مخصوصاً بخش استراتژی برنچ و جلوگیری از conflict.
 
 ## فرمت داده مشترک
@@ -35,7 +45,7 @@ cp .env.example .env   # کلیدهای API خودت رو بذار
 جدا از موضوع‌های قبلی ذخیره می‌شه.
 
 ## ساختار پروژه
-جزئیات کامل توی `GIT_WORKFLOW.md` هست.
+جزئیات کامل توی `docs/archive/GIT_WORKFLOW.md` هست.
 
 ## جریان مالی
 

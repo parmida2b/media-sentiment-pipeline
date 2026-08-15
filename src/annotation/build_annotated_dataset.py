@@ -80,7 +80,7 @@ CONTRACT_COLUMNS = [
 ]
 
 ELIGIBILITY_SOURCE_COLUMNS = [
-    "platform_content_id", "platform", "parent_id", "source_parent_id", "dataset_target",
+    "platform_content_id", "record_uid", "platform", "parent_id", "source_parent_id", "dataset_target",
     "provenance_quality", "created_at_utc", "project_week", "in_window", "is_partial_week",
     "text_raw", "source_id", "source_container", "query_id", "query_version",
     "language_detected", "language_confidence", "country_or_region", "geo_confidence",
@@ -105,7 +105,21 @@ def load_eligible() -> pd.DataFrame:
                 df[m] = None
         frames.append(df[ELIGIBILITY_SOURCE_COLUMNS])
     combined = pd.concat(frames, ignore_index=True)
-    combined = combined.rename(columns={"platform_content_id": "content_id", "source_parent_id": "post_id"})
+    combined = combined.rename(columns={"source_parent_id": "post_id"})
+    # content_id: platform_content_id when the record has a real one, else a
+    # record_uid-based fallback ("uid::<record_uid>") -- same pattern
+    # apply_eligibility.py's stage_dedup and duplicate_analysis.py's
+    # _row_key() already use for legacy v1 rows with no native content_id
+    # (2026-08-14, docs/decision_log.md). Before that fix, no such row ever
+    # reached this population (quarantined upstream), so bare
+    # platform_content_id was a safe unique key here; now ~54,862 legacy
+    # rows share platform_content_id=None, which .duplicated() below would
+    # otherwise flag as one giant collision.
+    has_id = combined["platform_content_id"].notna() & (combined["platform_content_id"] != "")
+    combined["content_id"] = combined["platform_content_id"].where(
+        has_id, "uid::" + combined["record_uid"].astype(str)
+    )
+    combined = combined.drop(columns=["platform_content_id", "record_uid"])
     dupes = combined["content_id"].duplicated().sum()
     if dupes:
         raise SystemExit(

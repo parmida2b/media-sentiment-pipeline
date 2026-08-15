@@ -2,8 +2,9 @@
 event_study.py — docs/checklist.md §25/فاز سیزدهم: Event Analysis (Parmida)
 
 Reads the one file Pipeline B may depend on (docs/pipeline_b_input_contract.md
-via src.temporal_analysis.common.load_annotated_dataset — same synthetic
-fallback while Pipeline A's real annotated_dataset.parquet isn't ready yet).
+via src.temporal_analysis.common.load_annotated_dataset). --input is
+required (no default) — see docs/decision_log.md 2026-08-14 on why a
+synthetic-fixture default was removed.
 
 For each `primary_confirmatory` event in event_registry.py (pre-registered,
 see that file's docstring — NOT chosen after looking at the data):
@@ -59,7 +60,7 @@ from src.event_analysis.event_registry import (  # noqa: E402
     EVENTS, PRIMARY_CONFIRMATORY_EVENTS, RegisteredEvent, placebo_event_for,
 )
 from src.temporal_analysis.common import (  # noqa: E402
-    DEFAULT_INPUT_PATH, PLATFORMS, load_annotated_dataset,
+    PLATFORMS, load_annotated_dataset,
 )
 
 DEFAULT_OUTPUT_DIR = ROOT / "outputs" / "tables" / "event_analysis"
@@ -240,7 +241,11 @@ def build_all(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
+    parser.add_argument(
+        "--input", type=Path, required=True,
+        help="path to data/processed/annotated_dataset.parquet (real) - required, no default; "
+             "see docs/decision_log.md 2026-08-14 on why there is no synthetic fallback",
+    )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args()
 

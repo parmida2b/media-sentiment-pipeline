@@ -62,7 +62,6 @@ from src.annotation.schema import (
     STANCE_LABELS,
 )
 from src.temporal_analysis.common import (
-    DEFAULT_INPUT_PATH,
     DEFAULT_OUTPUT_DIR,
     LOW_SAMPLE_THRESHOLD,
     PARTIAL_WEEK,
@@ -132,7 +131,11 @@ def build_all_trends(df: pd.DataFrame) -> dict[str, pd.DataFrame]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
+    parser.add_argument(
+        "--input", type=Path, required=True,
+        help="path to data/processed/annotated_dataset.parquet (real) - required, no default; "
+             "see docs/decision_log.md 2026-08-14 on why there is no synthetic fallback",
+    )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args()
 

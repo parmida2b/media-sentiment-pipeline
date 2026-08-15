@@ -76,11 +76,8 @@ data/raw_original/financial/
 
 data_backup/
 
-.claude/settings.local.json
-
 .DS_Store
 .vscode/
 .idea/
 
-checklist_execution_prompts.md
 outputs_guide_fa.md

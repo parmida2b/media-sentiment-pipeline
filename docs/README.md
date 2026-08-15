@@ -28,8 +28,8 @@
 | سند | موضوع |
 |---|---|
 | [`Chapter_1_Project_Definition_and_Research_Design_v5.md`](Chapter_1_Project_Definition_and_Research_Design_v5.md) | پرسش پژوهش، بازه، دامنه استنباط |
-| [`Chapter_2_Statistical_Population_and_Sampling_Design_v5.md`](Chapter_2_Statistical_Population_and_Sampling_Design_v5.md) | جامعه آماری و Sampling |
-| [`Chapter_3_Platform_Selection_and_Source_Justification_v3.md`](Chapter_3_Platform_Selection_and_Source_Justification_v3.md) | چرا این سه پلتفرم |
+| [`Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md`](Chapter_2_Statistical_Population_and_Sampling_Design_merged_readable.md) | جامعه آماری و Sampling (نسخه قبلی v5 بایگانی شد: [`archive/Chapter_2_..._v5.md`](archive/Chapter_2_Statistical_Population_and_Sampling_Design_v5.md)) |
+| [`Chapter_3_Platform_Selection_and_Source_Justification_merged_readable.md`](Chapter_3_Platform_Selection_and_Source_Justification_merged_readable.md) | چرا این سه پلتفرم (نسخه قبلی v3 بایگانی شد: [`archive/Chapter_3_..._v3.md`](archive/Chapter_3_Platform_Selection_and_Source_Justification_v3.md)) |
 | [`raw_schema_v05.md`](raw_schema_v05.md) | قرارداد داده خام هدف (⚠️ کد هنوز v03 رو پیاده می‌کنه — پایین رو ببین) |
 | [`source_registry_v4.md`](source_registry_v4.md) | فهرست منابع مجاز/برنامه‌ریزی‌شده |
 | [`query_registry_v5.md`](query_registry_v5.md) | قرارداد Query |
@@ -59,10 +59,10 @@
 | [`manual_labeling_guide_fa.md`](manual_labeling_guide_fa.md) | راهنمای annotator برای لیبل دستی (Gold Sample) | معتبر |
 | [`financial/README_FINANCIAL_WORKFLOW_FA.md`](financial/README_FINANCIAL_WORKFLOW_FA.md) | ترتیب اجرای بخش مالی، ورودی‌ها و خروجی‌ها | معتبر |
 
-## ۳. راهنمای عملیاتی/Git (بدون تاریخ انقضا)
+## ۳. راهنمای عملیاتی/Git (بایگانی‌شده، مخصوص فاز توسعه)
 
-[`setup.md`](setup.md) · [`git_github_guide_ali_hossein.md`](git_github_guide_ali_hossein.md) ·
-[`../GIT_WORKFLOW.md`](../GIT_WORKFLOW.md)
+[`archive/setup.md`](archive/setup.md) · [`archive/git_github_guide_ali_hossein.md`](archive/git_github_guide_ali_hossein.md) ·
+[`archive/GIT_WORKFLOW.md`](archive/GIT_WORKFLOW.md)
 
 ## ۴. هنوز خالی‌ان (TODO)
 
@@ -75,11 +75,12 @@
 
 [`archive/`](archive/) — اسنادی که دیگه هیچ کدی بهشون رفرنس نمی‌ده و کاملاً
 جایگزین شدن. هر فایل داخلش یه بنر داره که می‌گه چرا و کِی بایگانی شده.
+از جمله (۲۰۲۶-۰۸-۱۵ به اینجا منتقل شدن، قبلاً بیرون از `docs/` بودن):
 
-## ۶. سایر (بیرون از `docs/`)
-
-- [`../roadmap_pipeline.md`](../roadmap_pipeline.md) — نقشه‌راه اولیه/آرمانی
+- [`archive/roadmap_pipeline.md`](archive/roadmap_pipeline.md) — نقشه‌راه اولیه/آرمانی
   پروژه (نه وضعیت فعلی کد). **نیمه‌منسوخ**: تلگرام/توییتر رو پلتفرم فعال
   نشون می‌ده (تلگرام طبق `decision_log.md` ۲۰۲۶-۰۸-۰۴ حذف شد) و از
   `pipeline_runner.py`ای حرف می‌زنه که هیچ‌وقت ساخته نشد. بخش ۴ (مسیر تبدیل
   به ایجنت مکالمه‌ای، فاز ۲) هنوز به‌عنوان مرجع طراحی معتبره.
+- [`archive/GIT_WORKFLOW.md`](archive/GIT_WORKFLOW.md) — راهنمای داخلی کار
+  تیمی با گیت، مخصوص فاز توسعه؛ برای ارائه نهایی کاربردی نداره.

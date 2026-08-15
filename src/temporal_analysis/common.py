@@ -15,13 +15,27 @@ Wilson score interval below is the textbook closed-form, not a library call.
 from __future__ import annotations
 
 import math
+import sys
 from pathlib import Path
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 
-DEFAULT_INPUT_PATH = ROOT / "data" / "processed" / "annotated_dataset.sample.parquet"
+# There used to be a DEFAULT_INPUT_PATH here pointing at the synthetic
+# fixture (data/processed/annotated_dataset.sample.parquet), so every script
+# in this package stayed runnable before real annotation coverage existed
+# (see build_social_weekly_outcomes.py's module docstring for the original
+# reasoning). Removed 2026-08-14: it meant forgetting --input silently
+# computed every statistic on 800 fake rows instead of erroring — caught
+# happening in practice during a pipeline review (docs/decision_log.md
+# 2026-08-14). Every caller of load_annotated_dataset() below must now pass
+# an explicit path (each script's --input is `required=True`, no default).
+# The synthetic fixture itself is regenerable with
+# scripts/make_synthetic_annotated_dataset.py if a fixture is ever needed
+# again for local testing — pass its path via --input explicitly, and
+# load_annotated_dataset() will still warn loudly (is_synthetic column
+# check) rather than silently accept it.
 DEFAULT_OUTPUT_DIR = ROOT / "outputs" / "tables"
 
 PLATFORMS = ["x", "reddit", "youtube"]
@@ -62,13 +76,48 @@ NULLABLE_COLUMNS = [
 NON_OK_ANNOTATION_STATUSES = ["low_confidence", "json_parse_failure", "api_failure"]
 
 
-def load_annotated_dataset(path: Path = DEFAULT_INPUT_PATH) -> pd.DataFrame:
+def _warn_if_synthetic(path: Path, df: pd.DataFrame) -> None:
+    """Print an impossible-to-miss warning to stderr when the dataset just
+    read is a synthetic fixture, not real annotation output. There is no
+    default synthetic path to compare against anymore (--input is required
+    everywhere now, see DEFAULT_OUTPUT_DIR's neighboring comment) — this is
+    pure defense-in-depth for the case where someone deliberately points
+    --input at a regenerated fixture (scripts/make_synthetic_annotated_dataset.py)
+    and forgets what they pointed at. Detected via the fixture's own
+    is_synthetic column, plus a cheap filename heuristic as a second signal.
+    No unicode box-drawing/emoji here on purpose — plain ASCII survives
+    Windows' default cp1252 console (see docs/decision_log.md 2026-08-14 on
+    UnicodeEncodeError crashes elsewhere in this project from exactly that)."""
+    resolved = Path(path).resolve()
+    name_lower = resolved.name.lower()
+    looks_synthetic_by_name = "sample" in name_lower or "synthetic" in name_lower
+    is_synthetic_by_column = "is_synthetic" in df.columns and bool(df["is_synthetic"].any())
+    if not (looks_synthetic_by_name or is_synthetic_by_column):
+        return
+    banner = "!" * 78
+    lines = [banner, f"WARNING: loading a SYNTHETIC (fake) dataset: {resolved}"]
+    if is_synthetic_by_column:
+        lines.append(f"  {int(df['is_synthetic'].sum())}/{len(df)} rows have is_synthetic=True.")
+    lines.append(
+        "  This is NOT real annotation output. Every number this script "
+        "produces is fake."
+    )
+    lines.append(
+        "  Pass --input data/processed/annotated_dataset.parquet for real results."
+    )
+    lines.append(banner)
+    print("\n".join(lines), file=sys.stderr)
+
+
+def load_annotated_dataset(path: Path) -> pd.DataFrame:
     """Read the one file Pipeline B is allowed to depend on
     (docs/pipeline_b_input_contract.md) and do the minimal structural sanity
     check that every contract column is present — fails loudly instead of
     letting a silently-missing column turn into a silently-wrong stat
-    somewhere downstream."""
+    somewhere downstream. Also warns loudly (see _warn_if_synthetic) instead
+    of silently computing everything on fake data."""
     df = pd.read_parquet(path)
+    _warn_if_synthetic(path, df)
 
     required_columns = {
         "content_id", "platform", "parent_id", "post_id", "dataset_target",

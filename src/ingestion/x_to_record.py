@@ -63,19 +63,14 @@ for this change):
     country_or_region/geo_confidence/geo_granularity/geo_limitations
     columns are already always empty (x_scraper.py's Tier-0 pass for X was
     never wired in) and are carried through empty, not fabricated.
-  - config/config.yaml's `x:` collector-settings block (collector_version,
-    query_version, runtime.output_root_env_var, etc.) is currently nested
-    one level too deep, under `youtube:` (config.yaml lines ~110-153)
-    instead of being its own top-level `x:` key - `platforms: [...]`
-    already lists "x" as a sibling of "youtube", but the settings block
-    wasn't hoisted to match, so config_loader.load_config().x resolves to
-    {} today. This means x_scraper.py's own `if not X_CONFIG: raise
-    ValueError(...)` check would currently fire too - a pre-existing
-    config.yaml authoring bug, unrelated to this task and not something to
-    silently fix here (config.yaml is shared, not owned by this change).
-    _x_runtime_config() below falls back to the nested location so this
-    script still resolves the real configured output root either way; see
-    that function's docstring.
+
+config/config.yaml's `x:` block used to be nested one level too deep, under
+`youtube:`, so config_loader.load_config().x resolved to {} and
+x_scraper.py's own `if not X_CONFIG: raise ValueError(...)` check would fire
+on any real run - see docs/decision_log.md 2026-08-13/2026-08-14. Fixed
+(hoisted to a real top-level `x:` key) on 2026-08-14. _x_runtime_config()
+below still falls back to the old nested `youtube.x` location for safety
+(cheap to keep, harmless now that the primary lookup succeeds).
 
 Judgment calls worth flagging (not fabrication, but inference from what
 x_raw.csv actually contains - see decision_log.md):
@@ -157,12 +152,10 @@ CONFIG = config_loader.load_config()
 # ---------------------------------------------------------------------------
 
 def _x_runtime_config() -> dict:
-    """CONFIG.x (config_loader's top-level "x:" key) is currently {} - see
-    module docstring's "Deliberately NOT done" section on config.yaml's
-    nesting bug. Falls back to the nested config.yaml location
-    (youtube.x.runtime, where the block currently actually lives) so this
-    still resolves real configured values instead of hardcoding X_scraper's
-    defaults; works unchanged if config.yaml's nesting is fixed later."""
+    """CONFIG.x (config_loader's top-level "x:" key) now resolves for real -
+    config.yaml's nesting bug (see module docstring) was fixed 2026-08-14.
+    Still falls back to the old nested location (youtube.x.runtime) in case
+    someone re-nests it by accident; cheap insurance, not load-bearing."""
     return CONFIG.x or CONFIG.youtube.get("x", {})
 
 
