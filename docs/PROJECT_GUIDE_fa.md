@@ -30,7 +30,7 @@ data/
   raw_harmonized/      # داده هم‌نام‌شده طبق Schema مشترک، به تفکیک پلتفرم (parquet) — بخشی tracked
   interim/               # خروجی Eligibility/Preprocessing (opinion_main/limited/untimed/...)
   annotated/               # نمونه Gold (۳۰۰ رکورد لیبل‌خورده دستی) — tracked
-  processed/                # annotated_dataset.parquet نهایی (پل Pipeline A→B) — عمداً از گیت خارج (حجیم)
+  processed/                # annotated_dataset.parquet نهایی (پل Pipeline A→B) — فعلاً از گیت خارج (احتمالاً سهوی، بخش ۱۲)
   audits/                    # گزارش‌های کیفیت داده (Duplicate، Relevance، Eligibility funnel)
 outputs/
   tables/           # همه‌ی خروجی‌های عددی Pipeline B (روند، Event Study، حساسیت، مالی، …)
@@ -236,3 +236,48 @@ Quota واقعی مصرف می‌کند)، `--with-annotation` (هزینه وا�
 
 اگه هرکدوم از این‌ها رو می‌خوای الان انجام بدم (مثلاً اصلاح README ریشه، پیدا/بازسازی `checklist.md`، یا
 اضافه‌کردن LICENSE)، بگو کدوم رو شروع کنم.
+
+---
+
+## ۱۲. مهم‌ترین مشکل — خروجی‌های اصلی الان روی GitHub نیستن
+
+قبل از پابلیش‌کردن حتماً این رو بخون؛ باعث می‌شه تجربه‌ی «فقط clone کن و ببین» (بخش ۳) عملاً کار نکنه.
+
+**علت دقیق:** `.gitignore` ریشه یک قاعده‌ی سراسری داره:
+
+```
+*.csv
+*.jsonl
+```
+
+این قاعده همه‌ی فایل‌های CSV/JSONL توی **کل ریپو** رو ایگنور می‌کنه، نه فقط داده خام زیر `data/`. برای
+`outputs/tables/financial/*.csv` و چند فایل مالی دیگه صریحاً یک Override نوشته شده (`!outputs/tables/financial/*.csv`)
+— ولی همین Override برای بقیه‌ی جدول‌های اصلی نوشته نشده. نتیجه: با این‌که خط `!outputs/tables/` وجود داره،
+فقط خودِ پوشه Un-ignore شده، نه فایل‌های داخلش. عملاً این فایل‌های تحویلی مهم روی گیت **نیستن**:
+
+- `outputs/tables/descriptive_stats_*.csv`
+- `outputs/tables/weekly_trend_*.csv`
+- `outputs/tables/composition_shift_*.csv`
+- `outputs/tables/group_comparison_results.csv`
+- `outputs/tables/sensitivity_analysis_results.csv`
+- هر چیزی زیر `outputs/tables/event_analysis/*.csv`
+- `data/processed/annotated_dataset.parquet` (این یکی دلیل جدا داره: قاعده‌ی `data/processed/*`)
+
+این‌ها همان جدول‌هایی هستن که هم `reports/technical_report_fa.md` روش ساخته شده، هم نوت‌بوک اصلی بهشون
+نیاز داره، هم چیزیه که یک خواننده‌ی بیرونی اول از همه دنبالش می‌گرده.
+
+**راه‌حل پیشنهادی (همون الگویی که برای پوشه `financial/` قبلاً استفاده شده):** به `.gitignore` این خط‌ها
+اضافه بشه:
+
+```
+!outputs/tables/*.csv
+!outputs/tables/event_analysis/
+!outputs/tables/event_analysis/*.csv
+!data/processed/annotated_dataset.parquet
+```
+
+بعدش باید `git add` بشن و در یک commit جدا (نه قاطی با تغییرات دیگه) commit بشن تا تاریخچه تمیز بمونه.
+
+من این تغییر رو در `.gitignore`/`git add`/`git commit` اعمال نکردم چون تغییر در فایل‌های Tracked-شده‌ی
+ریپو (و مخصوصاً commit) چیزیه که باید خودت تأیید کنی. اگه بگی «انجامش بده»، همین الان `.gitignore` رو
+اصلاح می‌کنم و فایل‌ها رو `git add` می‌کنم (بدون commit، مگر خودت بخوای).
