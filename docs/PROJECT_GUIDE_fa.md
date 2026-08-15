@@ -25,8 +25,8 @@ src/              # کد اصلی، به ترتیب جریان داده:
   intake/                      - Inventory/Coverage/Quality Grade هر پلتفرم
 notebooks/       # Notebookهای قابل‌اجرا (بخش ۵ و ۶)
 data/
-  raw_original/     # فایل خام همون‌طور که Collector تحویل داده (بزرگ، عمداً از گیت خارج)
-  raw/                # خروجی میانی Collectorها (jsonl) — عمداً از گیت خارج
+  raw_original/     # فایل خام همون‌طور که Collector تحویل داده (بزرگ، عمداً از گیت خارج — دانلود از Drive، بخش ۲.۱)
+  raw/                # خروجی میانی Collectorها (jsonl) — عمداً از گیت خارج — دانلود از Drive، بخش ۲.۱
   raw_harmonized/      # داده هم‌نام‌شده طبق Schema مشترک، به تفکیک پلتفرم (parquet) — بخشی tracked
   interim/               # خروجی Eligibility/Preprocessing (opinion_main/limited/untimed/...)
   annotated/               # نمونه Gold (۳۰۰ رکورد لیبل‌خورده دستی) — tracked
