@@ -5,7 +5,7 @@
 | مرحله | وضعیت | خروجی |
 |---|---|---|
 | ۰ نقشه‌ی پروژه | ✅ انجام شد | `01-architecture.md` |
-| ۱ Baseline | ⏳ در حال انجام | `02-baseline.md` |
+| ۱ Baseline | ✅ انجام شد (۲ کاندیدای باگ) | `02-baseline.md` |
 | ۲ ابزارهای خودکار | ⬜ | `03-static-analysis.md` |
 | ۳ یکپارچگی ماژول‌ها | ⬜ | `04-integration.md` |
 | ۴ بررسی عمیق | ⬜ | `05-deep-review.md` |
@@ -13,8 +13,12 @@
 | ۶ رفع | ⬜ (منتظر تأیید کاربر) | — |
 
 ## قدم بعدی
-مرحله‌ی ۱: ساخت venv در scratchpad، `pip install -r requirements.txt`، اجرای `pytest`،
-سپس `python src/pipeline/run_pipeline.py --list` و اجرای مراحل بدون Gate.
+مرحله‌ی ۲: نصب ruff، mypy/pyright، vulture، pip-audit، gitleaks در venv scratchpad و اجرا روی `src/` و `config/`؛
+خروجی در `03-static-analysis.md`. سپس مرحله‌ی ۳ (Opus 5.5 / high).
 
 ## یادداشت‌های کاری
 - `data/raw/` و `data/raw_original/` در ریپو خالی‌اند (gitignore) ← قدم `harmonize` احتمالاً بدون داده‌ی خام اجرا نمی‌شود؛ `data/raw_harmonized/*.parquet` اما در ریپو هست.
+- venv: `<scratchpad>/venv` (در سشن جدید دوباره ساخته شود؛ نصب ~۱۱ دقیقه). کپی کاری: `<scratchpad>/work`.
+- ⚠️ **push کار نمی‌کند** (۴۰۳: Claude GitHub App/دسترسی ریپو). commitها محلی‌اند؛ بعد از رفع دسترسی push شود.
+- کاندیدای باگ: C-01 (`group_comparison` crash بدون annotation)، C-02 (پیام گمراه‌کننده‌ی harmonize)، C-03 (آزمون idempotency).
+- همه‌ی ردیف‌های `annotated_dataset.parquet` در این baseline `pending_annotation` است؛ نتایج آماری قابل استناد نیستند.
