@@ -1,5 +1,7 @@
 # وضعیت پیشرفت (برای ادامه بعد از قطع سشن)
 
+**برنچ:** `claude/code-review-integrity-v2` — پایه: `main@8dc58dd`
+
 **برای ادامه:** این فایل را بخوان، سپس از «قدم بعدی» ادامه بده. برنامه‌ی کامل در `README.md` است.
 
 | مرحله | وضعیت | خروجی |
@@ -19,6 +21,6 @@
 ## یادداشت‌های کاری
 - `data/raw/` و `data/raw_original/` در ریپو خالی‌اند (gitignore) ← قدم `harmonize` احتمالاً بدون داده‌ی خام اجرا نمی‌شود؛ `data/raw_harmonized/*.parquet` اما در ریپو هست.
 - venv: `<scratchpad>/venv` (در سشن جدید دوباره ساخته شود؛ نصب ~۱۱ دقیقه). کپی کاری: `<scratchpad>/work`.
-- ⚠️ **push کار نمی‌کند** (۴۰۳: Claude GitHub App/دسترسی ریپو). commitها محلی‌اند؛ بعد از رفع دسترسی push شود.
+- برنچ کاری: `claude/code-review-integrity-v2` (از آخرین `main`؛ روی `main` هیچ کاری انجام نمی‌شود). push با `git push -u origin claude/code-review-integrity-v2`. برنچ قدیمی `...-kc1fy1` کنار گذاشته شد.
 - کاندیدای باگ: C-01 (`group_comparison` crash بدون annotation)، C-02 (پیام گمراه‌کننده‌ی harmonize)، C-03 (آزمون idempotency).
 - همه‌ی ردیف‌های `annotated_dataset.parquet` در این baseline `pending_annotation` است؛ نتایج آماری قابل استناد نیستند.
