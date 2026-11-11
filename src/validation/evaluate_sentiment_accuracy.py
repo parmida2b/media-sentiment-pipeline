@@ -179,6 +179,13 @@ def breakdown_accuracy(pairs_with_key: list[tuple[str, str, str]]) -> dict:
     }
 
 
+def _model_cost_usd(pred) -> float | None:
+    """Real model cost of a prediction; a cache hit reports the original call's cost."""
+    if pred.from_cache:
+        return pred.original_cost_usd
+    return pred.cost_usd
+
+
 def score_route(rows: list[dict], route_name: str) -> dict:
     sentiment_pairs, stance_pairs = [], []
     sentiment_by_lang, sentiment_by_len, sentiment_by_ctype, sentiment_by_sarcasm = [], [], [], []
@@ -195,8 +202,9 @@ def score_route(rows: list[dict], route_name: str) -> dict:
             continue
         n_calls += 1
         total_latency_ms += pred.latency_ms
-        if pred.cost_usd is not None:
-            total_cost_usd += pred.cost_usd
+        cost = _model_cost_usd(pred)
+        if cost is not None:
+            total_cost_usd += cost
             n_cost_known += 1
         if pred.call_error is not None:
             n_call_failures += 1
@@ -269,8 +277,9 @@ def warm_cache_route_summary(rows: list[dict], route_name: str) -> dict:
             continue
         n_calls += 1
         total_latency_ms += pred.latency_ms
-        if pred.cost_usd is not None:
-            total_cost_usd += pred.cost_usd
+        cost = _model_cost_usd(pred)
+        if cost is not None:
+            total_cost_usd += cost
             n_cost_known += 1
         if pred.call_error is not None:
             n_call_failures += 1

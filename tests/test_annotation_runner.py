@@ -198,3 +198,28 @@ def test_groq_client_error_is_returned_not_raised(monkeypatch):
     assert result.call_error is not None
     assert "bad key format" in result.call_error
 
+
+
+def _cached_pred(original_cost: float) -> llm_client.AnnotationResult:
+    pred = _fake_result(cost=0.0)
+    pred.from_cache = True
+    pred.original_cost_usd = original_cost
+    return pred
+
+
+@pytest.mark.parametrize("summary_fn", ["score_route", "warm_cache_route_summary"])
+def test_accuracy_cost_per_1000_uses_original_cost_on_cache_hit(summary_fn):
+    from src.annotation.model_routes import MODEL_ROUTES
+    from src.validation import evaluate_sentiment_accuracy as esa
+
+    route_name = MODEL_ROUTES[0].route_name
+    rows = [
+        {"_predictions": {route_name: _fake_result(cost=0.002)}, "_sentiment_gold": None,
+         "_stance_gold": None, "_target": None},
+        {"_predictions": {route_name: _cached_pred(0.002)}, "_sentiment_gold": None,
+         "_stance_gold": None, "_target": None},
+    ]
+
+    summary = getattr(esa, summary_fn)(rows, route_name)
+
+    assert summary["cost_per_1000_records_usd"] == pytest.approx(2.0)
