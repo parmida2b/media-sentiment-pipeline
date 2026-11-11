@@ -5,7 +5,9 @@ import math
 import pandas as pd
 
 from src.temporal_analysis import group_comparison
-from src.temporal_analysis.build_social_weekly_outcomes import build_social_weekly_outcomes
+from src.temporal_analysis.build_social_weekly_outcomes import (
+    build_social_weekly_outcomes,
+)
 from tests.test_temporal_analysis_common import _minimal_contract_df
 
 
