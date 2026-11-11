@@ -8,11 +8,11 @@
 
 | ID | کار | موج | یافته‌ها | وابستگی | نیاز به کاربر | مدل پیشنهادی | وضعیت |
 |---|---|---|---|---|---|---|---|
-| T01 | جمعیت annotation همه‌ی ردیف‌های eligible | 1 | C-08, C-13 | - | خیر | Opus / high | in_progress |
-| T02 | شمارش در سطح محتوا و Target صریح در Pipeline B | 1 | C-09 | T04 | خیر | Opus / high | todo |
+| T01 | جمعیت annotation همه‌ی ردیف‌های eligible | 1 | C-08, C-13 | - | خیر | Opus / high | merged (3bb3330) |
+| T02 | شمارش در سطح محتوا و Target صریح در Pipeline B | 1 | C-09 | T04 | خیر | Opus / high | in_progress |
 | T03 | CI درست برای اختلاف نسبت و تصحیح FDR | 1 | C-15, C-16 | T02 | خیر | Opus / high | todo |
-| T04 | «داده موجود نیست» به‌جای صفر ساختگی و محافظ داده‌ی خالی | 1 | C-17, C-01 | - | خیر | Sonnet / high | in_progress |
-| T05 | استحکام annotation: آخرین تلاش، سقف هزینه‌ی تجمعی، cache، خطاها | 1 | C-10, C-19, C-20, C-21 | T01 | خیر | Opus / medium | todo |
+| T04 | «داده موجود نیست» به‌جای صفر ساختگی و محافظ داده‌ی خالی | 1 | C-17, C-01 | - | خیر | Sonnet / high | merged (7cb42c9) |
+| T05 | استحکام annotation: آخرین تلاش، سقف هزینه‌ی تجمعی، cache، خطاها | 1 | C-10, C-19, C-20, C-21 | T01 | خیر | Opus / medium | in_progress |
 | T06 | بازه‌ی زمانی قابل تنظیم از یک منبع | 2 | C-12 | T02, T03 | خیر | Opus / high | todo |
 | T07 | حالت دمو و Makefile | 2 | - | T06, T08, T15 (تصمیم) | خیر | Sonnet / medium | todo |
 | T08 | CI، وابستگی‌ها و hygiene | 2 | C-02, C-05, C-06, C-07 | موج 1 | خیر | Sonnet / medium | todo |
