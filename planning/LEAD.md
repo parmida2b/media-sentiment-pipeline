@@ -66,5 +66,7 @@
 `<LEAD_SESSION_ID>` را با شناسه‌ی خودت پر کن (`get_session` بدون آرگومان).
 
 ## محیط
-نصب `requirements.txt` در این محیط حدود ۱۱ دقیقه طول کشید (شبکه کند). اگر محیط setup script دارد، venv آماده است؛ وگرنه worker خودش نصب کند.
+کاربر محیط جدا با setup script را نخواست؛ سشن‌ها روی محیط Default هستند و دوباره پیشنهادش نده.
+هر worker که کد اجرا می‌کند خودش نصب کند (اولین بار تا حدود ۱۱ دقیقه): `python3 -m venv ~/venv && ~/venv/bin/pip install -q -r requirements.txt pytest ruff`.
+کارهایی که فقط مستند می‌نویسند (T13، T18) نصب لازم ندارند.
 داده‌ی خام (`data/raw/`) در ریپو نیست؛ pipeline از قدم `eligibility` به بعد روی `data/raw_harmonized/*.parquet` اجرا می‌شود (`--skip harmonize`).
