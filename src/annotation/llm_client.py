@@ -54,6 +54,8 @@ class AnnotationCache:
     def __init__(self, path: Path = CACHE_PATH):
         self.path = path
         self._data: dict[str, dict] = {}
+        self._lock = threading.Lock()
+        self._save_lock = threading.Lock()
         if self.path.exists():
             self._data = json.loads(self.path.read_text(encoding="utf-8"))
 
@@ -69,20 +71,16 @@ class AnnotationCache:
         return self._data.get(cache_key)
 
     def set(self, cache_key: str, value: dict) -> None:
-        # dict.__setitem__ is atomic under the GIL, so concurrent set() calls
-        # from different threads (run_full_annotation.py's ThreadPoolExecutor,
-        # 2026-08-14) can't corrupt _data itself — the caller still owns
-        # deciding *when* to call save() (see save()'s own docstring).
-        self._data[cache_key] = value
+        with self._lock:
+            self._data[cache_key] = value
 
     def save(self) -> None:
-        """Not thread-safe by itself — two threads calling save()
-        simultaneously could interleave writes to the same file. Callers
-        that annotate from multiple threads (run_full_annotation.py) must
-        serialize their own save() calls (e.g. one dedicated thread/lock),
-        not call this directly from worker threads."""
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
+        """Write a snapshot to disk; safe to call while other threads set()."""
+        with self._lock:
+            snapshot = dict(self._data)
+        with self._save_lock:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            self.path.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 # --- usage / cost logging (§39 Observability) --------------------------------
@@ -184,9 +182,9 @@ def _call_groq(api_keys: dict[str, str], route: ModelRoute, prompt: str) -> RawC
 
     last_error = None
     for key in usable_keys:
-        client = Groq(api_key=key)
         t0 = time.monotonic()
         try:
+            client = Groq(api_key=key)
             response = client.chat.completions.create(
                 model=route.model_name,
                 messages=[{"role": "user", "content": prompt}],
@@ -321,6 +319,8 @@ class AnnotationResult:
     call_error: Optional[str]
     parse_error: Optional[str]
     validation_error: Optional[str]
+    # Cost of the call that filled the cache; cost_usd is 0.0 on a cache hit.
+    original_cost_usd: Optional[float] = None
 
     @property
     def ok(self) -> bool:
@@ -351,7 +351,9 @@ def annotate(
 
     cached = cache.get(cache_key)
     if cached is not None:
-        result = AnnotationResult(**{**cached, "from_cache": True})
+        result = AnnotationResult(**{
+            **cached, "from_cache": True, "cost_usd": 0.0, "original_cost_usd": cached.get("cost_usd"),
+        })
     else:
         call = None
         for attempt in range(MAX_RETRIES):
