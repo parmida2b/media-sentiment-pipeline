@@ -19,10 +19,12 @@ annotation exists, point --input at a fixture from
 scripts/make_synthetic_annotated_dataset.py instead; load_annotated_dataset()
 will warn loudly that it's synthetic rather than accept it silently.
 
-Output schema matches outputs/audits/financial/financial_social_input_template_v1.csv
-exactly:
+Output schema is outputs/audits/financial/financial_social_input_template_v1.csv
+plus a trailing status column:
     platform, project_week, outcome_id, target_id, outcome_value, n_records,
-    ci_low, ci_high, source_file, source_version
+    ci_low, ci_high, source_file, source_version, status
+(status: ok, data_gap for a week with no eligible rows, not_available when
+the source column is null in all eligible rows)
 
 Six outcome_id values, each a share in [0, 1] aggregated across every Target
 (target_id left blank — this is a whole-platform weekly signal, not a
@@ -88,6 +90,8 @@ def build_social_weekly_outcomes(df: pd.DataFrame, source_file: str) -> pd.DataF
     # (dataset_target == "opinion_untimed") never match any WEEKS entry, so
     # they're excluded by construction, same as weekly_trend.py.
     eligible = df[df["annotation_status"] == "ok"]
+    # A column that is null everywhere has no signal; reporting 0 would read as "none observed".
+    unavailable_columns = {column for column, _ in OUTCOME_DEFINITIONS.values() if eligible[column].isna().all()}
 
     rows: list[dict] = []
     for platform in PLATFORMS:
@@ -99,6 +103,13 @@ def build_social_weekly_outcomes(df: pd.DataFrame, source_file: str) -> pd.DataF
 
             for outcome_id, (column, hit_value) in OUTCOME_DEFINITIONS.items():
                 if is_data_gap:
+                    status = "data_gap"
+                elif column in unavailable_columns:
+                    status = "not_available"
+                else:
+                    status = "ok"
+
+                if status != "ok":
                     outcome_value = float("nan")
                     ci_low, ci_high = float("nan"), float("nan")
                 else:
@@ -117,6 +128,7 @@ def build_social_weekly_outcomes(df: pd.DataFrame, source_file: str) -> pd.DataF
                     "ci_high": ci_high,
                     "source_file": source_file,
                     "source_version": SOURCE_VERSION,
+                    "status": status,
                 })
     return pd.DataFrame(rows)
 
@@ -142,8 +154,13 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(args.output, index=False, encoding="utf-8-sig")
 
-    n_gap_rows = int(table["n_records"].eq(0).sum())
-    print(f"Wrote {len(table)} rows to {args.output} ({n_gap_rows} data-gap (platform, week, outcome) rows)")
+    status_counts = table["status"].value_counts()
+    n_gap_rows = int(status_counts.get("data_gap", 0))
+    n_unavailable_rows = int(status_counts.get("not_available", 0))
+    print(
+        f"Wrote {len(table)} rows to {args.output} "
+        f"({n_gap_rows} data-gap rows, {n_unavailable_rows} not-available rows)"
+    )
     print(f"source_file={source_file}")
 
 
