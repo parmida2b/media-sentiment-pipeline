@@ -48,6 +48,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 from src.annotation.schema import GOLD_SAMPLE_COLUMNS, TARGETS  # noqa: E402
+from src.common.ids import content_id  # noqa: E402
 
 # Two-dimensional quotas: docs/checklist.md §17 requires BOTH Platform and
 # Language as main strata ("طبقات اصلی: Platform و Language", "۱۰۰ رکورد برای
@@ -173,8 +174,8 @@ def _load_from_eligibility_outputs(paths: list[Path]) -> list[dict]:
                        same concept as clean.jsonl's post_id), falling back
                        to platform_content_id for records that ARE the parent
                        (e.g. a Reddit self-post with no separate parent).
-      content_id   <- platform_content_id (the platform's own id for this
-                       exact piece of content; schema.py's Record.content_id).
+      content_id   <- src.common.ids.content_id: platform_content_id, else
+                       "uid::<record_uid>" for legacy rows without one.
       platform     <- platform (required top-level field on every Record;
                        one of PLATFORMS — needed for the Platform stratum
                        docs/checklist.md §17 requires alongside Language).
@@ -189,12 +190,13 @@ def _load_from_eligibility_outputs(paths: list[Path]) -> list[dict]:
     if not frames:
         return []
     combined = pd.concat(frames, ignore_index=True, sort=False)
+    combined["_content_id"] = content_id(combined)
 
     records = []
     for row in combined.to_dict(orient="records"):
         records.append({
             "post_id": _val(row, "source_parent_id", "platform_content_id") or "",
-            "content_id": _val(row, "platform_content_id") or "",
+            "content_id": _val(row, "_content_id") or "",
             "platform": _val(row, "platform") or "",
             "text": _val(row, "text_raw") or "",
             "language": _val(row, "language_detected", "language_reported") or "",

@@ -107,6 +107,7 @@ sys.path.insert(0, str(ROOT / "src" / "ingestion"))
 
 from config.raw_schema_columns_v05 import RAW_SCHEMA_V05_COLUMNS  # noqa: E402
 
+from src.common.ids import content_id  # noqa: E402
 import project_calendar  # noqa: E402 - single source of truth for project_week/in_window (raw_schema_v05.md §10)
 
 RULE_VERSION = "eligibility_rules_v03"
@@ -260,10 +261,7 @@ def stage_raw_validation(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 def stage_dedup(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     df = df.copy()
-    has_platform_id = df["platform_content_id"].map(_present)
-    df["_dedup_key"] = df["platform"].astype(str) + "::" + (
-        df["platform_content_id"].where(has_platform_id, "uid::" + df["record_uid"].astype(str)).astype(str)
-    )
+    df["_dedup_key"] = df["platform"].astype(str) + "::" + content_id(df).astype(str)
     df["_collected_sort"] = pd.to_datetime(df["collected_at_utc"], errors="coerce", utc=True)
 
     df = df.sort_values(

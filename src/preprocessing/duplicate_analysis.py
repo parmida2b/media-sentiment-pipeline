@@ -45,6 +45,9 @@ from datasketch import MinHash, MinHashLSH
 sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT))
+from src.common.ids import content_id  # noqa: E402
+
 INTERIM_DIR = ROOT / "data" / "interim"
 AUDITS_DIR = ROOT / "data" / "audits"
 
@@ -61,18 +64,8 @@ LSH_THRESHOLD = 0.8
 
 
 def _row_key(df: pd.DataFrame) -> pd.Series:
-    """A unique per-row identifier for LSH/grouping purposes: the real
-    platform_content_id when present, otherwise a record_uid-based fallback
-    ("uid::<record_uid>") -- same platform_content_id-or-record_uid pattern
-    apply_eligibility.py's stage_dedup already uses for legacy rows that
-    have no native content_id (2026-08-14 fix, docs/decision_log.md).
-    Before that fix, no such row ever reached this script (it was
-    quarantined earlier); this script never had to handle a missing id and
-    used platform_content_id bare, which raised in cluster_near_duplicates()
-    (datasketch's LSH.insert rejects a duplicate key, and every content_id-
-    less row collided on the same None key) the first time it saw one."""
-    has_id = df["platform_content_id"].notna() & (df["platform_content_id"] != "")
-    return df["platform_content_id"].where(has_id, "uid::" + df["record_uid"].astype(str))
+    """Unique per-row key for LSH and grouping; LSH rejects repeated keys."""
+    return content_id(df)
 
 
 def _load_kept() -> pd.DataFrame:

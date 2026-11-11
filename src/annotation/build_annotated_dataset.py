@@ -56,6 +56,9 @@ import pandas as pd
 sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT))
+from src.common.ids import content_id  # noqa: E402
+
 ELIGIBLE_PARQUETS = [
     ROOT / "data" / "interim" / "opinion_main.parquet",
     ROOT / "data" / "interim" / "opinion_limited.parquet",
@@ -106,19 +109,7 @@ def load_eligible() -> pd.DataFrame:
         frames.append(df[ELIGIBILITY_SOURCE_COLUMNS])
     combined = pd.concat(frames, ignore_index=True)
     combined = combined.rename(columns={"source_parent_id": "post_id"})
-    # content_id: platform_content_id when the record has a real one, else a
-    # record_uid-based fallback ("uid::<record_uid>") -- same pattern
-    # apply_eligibility.py's stage_dedup and duplicate_analysis.py's
-    # _row_key() already use for legacy v1 rows with no native content_id
-    # (2026-08-14, docs/decision_log.md). Before that fix, no such row ever
-    # reached this population (quarantined upstream), so bare
-    # platform_content_id was a safe unique key here; now ~54,862 legacy
-    # rows share platform_content_id=None, which .duplicated() below would
-    # otherwise flag as one giant collision.
-    has_id = combined["platform_content_id"].notna() & (combined["platform_content_id"] != "")
-    combined["content_id"] = combined["platform_content_id"].where(
-        has_id, "uid::" + combined["record_uid"].astype(str)
-    )
+    combined["content_id"] = content_id(combined)
     combined = combined.drop(columns=["platform_content_id", "record_uid"])
     dupes = combined["content_id"].duplicated().sum()
     if dupes:

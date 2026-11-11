@@ -73,6 +73,7 @@ from src.annotation.decision_gate import require_decision_log_gate  # noqa: E402
 from src.annotation.llm_client import AnnotationCache, annotate  # noqa: E402
 from src.annotation.model_routes import get_locked_route  # noqa: E402
 from src.annotation.schema import PRIMARY_TARGET_IDS  # noqa: E402
+from src.common.ids import content_id  # noqa: E402
 
 ELIGIBLE_PARQUETS = [
     ROOT / "data" / "interim" / "opinion_main.parquet",
@@ -204,10 +205,14 @@ def load_eligible_records() -> pd.DataFrame:
             raise FileNotFoundError(
                 f"{path} not found — run src/preprocessing/apply_eligibility.py first."
             )
-        df = pd.read_parquet(path, columns=["platform_content_id", "text_raw", "platform", "dataset_target", "project_week"])
+        df = pd.read_parquet(
+            path, columns=["platform_content_id", "record_uid", "text_raw", "platform", "dataset_target", "project_week"]
+        )
         frames.append(df)
     combined = pd.concat(frames, ignore_index=True)
-    combined = combined.rename(columns={"platform_content_id": "content_id", "text_raw": "text"})
+    combined.insert(0, "content_id", content_id(combined))
+    combined = combined.drop(columns=["platform_content_id", "record_uid"]).rename(columns={"text_raw": "text"})
+    # content_id is only missing when a row has neither id, which eligibility quarantines.
     combined = combined.dropna(subset=["content_id", "text"])
     combined = combined[combined["text"].str.strip() != ""]
     combined = combined.drop_duplicates(subset=["content_id"])
