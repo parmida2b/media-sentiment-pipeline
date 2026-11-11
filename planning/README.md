@@ -16,7 +16,7 @@
 | T06 | بازه‌ی زمانی قابل تنظیم از یک منبع | 2 | C-12 | T02, T03 | خیر | Opus / high | todo |
 | T07 | حالت دمو و Makefile | 2 | - | T06, T08, T15 (تصمیم) | خیر | Sonnet / medium | todo |
 | T08 | CI، وابستگی‌ها و hygiene | 2 | C-02, C-05, C-06, C-07 | موج 1 | خیر | Sonnet / medium | todo |
-| T09 | نرمال‌سازی متن فارسی و PII | 2 | C-18 | - | خیر | Sonnet / high | todo |
+| T09 | نرمال‌سازی متن فارسی و PII | 2 | C-18 | - | خیر | Sonnet / high | in_progress |
 | T10 | اصلاح collector یوتیوب | 3 | C-22, C-23, C-24 | T06 | خیر | Opus / high | todo |
 | T11 | داده تا امروز: YouTube و مالی | 3 | - | T06, T10 | **بله** (کلیدها، شبکه) | Sonnet / medium | todo |
 | T12 | داده تا امروز: Reddit و X (اختیاری) | 3 | - | T06 | **بله** (کامپیوتر کاربر) | Sonnet / medium | todo |
