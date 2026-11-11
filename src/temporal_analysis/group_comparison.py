@@ -163,6 +163,11 @@ def _cap(a: pd.Series, seed: int = RANDOM_SEED) -> np.ndarray:
 def chi_square_test(df: pd.DataFrame, group_col: str, comparison_id: str, question: str) -> dict:
     sub = df[["stance_label", group_col]].dropna()
     ct = pd.crosstab(sub[group_col], sub["stance_label"])
+    if ct.shape[0] < 2 or ct.shape[1] < 2:
+        return not_computable_row(
+            comparison_id, question, "chi_square", "cramers_v", f"stance_label x {group_col}",
+            f"جدول {ct.shape[0]}×{ct.shape[1]} است؛ حداقل ۲ گروه و ۲ دسته‌ی Stance لازم است.",
+        )
     chi2, p, dof, _ = stats.chi2_contingency(ct)
     v = cramers_v(chi2, ct.values.sum(), *ct.shape)
     v_lo, v_hi = bootstrap_cramers_v(sub, group_col, "stance_label")
@@ -186,6 +191,13 @@ def fisher_exact_test(df: pd.DataFrame, platform_a: str, platform_b: str) -> dic
     ct = pd.crosstab(sub["platform"], sub["stance_label"]).reindex(
         index=[platform_a, platform_b], columns=["support", "oppose"], fill_value=0
     )
+    if (ct.sum(axis=1) == 0).any() or (ct.sum(axis=0) == 0).any():
+        return not_computable_row(
+            f"fisher_{platform_a}_vs_{platform_b}",
+            f"support/oppose نسبت متفاوت بین {platform_a} و {platform_b}؟ (جدول ۲×۲)",
+            "fisher_exact", "odds_ratio", f"platform: {platform_a} vs {platform_b} (stance: support vs oppose)",
+            f"جدول: {ct.values.tolist()}؛ یک سطر یا ستون کاملاً صفر است.",
+        )
     odds_ratio, p = stats.fisher_exact(ct.values)
     table2x2 = Table2x2(ct.values)
     ci_low, ci_high = table2x2.oddsratio_confint()
@@ -223,8 +235,27 @@ def engagement_not_applicable_row(platform_a: str, platform_b: str, reason: str)
     }
 
 
+def not_computable_row(comparison_id: str, question: str, test: str, effect_size_type: str, groups: str, reason: str) -> dict:
+    """A reported row for a test that cannot run on the data at hand."""
+    return {
+        "comparison_id": comparison_id, "question": question,
+        "test": test, "effect_size_type": effect_size_type, "groups": groups,
+        "n": 0, "n_group_a": None, "n_group_b": None,
+        "estimate": None, "ci_low": None, "ci_high": None,
+        "effect_size": None, "effect_size_ci_low": None, "effect_size_ci_high": None,
+        "p_value": None,
+        "assumptions": f"not_computable: {reason}",
+        "dependency_note": DEPENDENCY_NOTE,
+    }
+
+
 def mann_whitney_test(a_full: pd.Series, b_full: pd.Series, comparison_id: str, question: str, groups: str) -> dict:
     a, b = _cap(a_full), _cap(b_full)
+    if len(a) == 0 or len(b) == 0:
+        return not_computable_row(
+            comparison_id, question, "mann_whitney_u", "rank_biserial_r", groups,
+            f"یکی از گروه‌ها خالی است (n_a={len(a)}, n_b={len(b)}).",
+        )
     u, p = stats.mannwhitneyu(a, b, alternative="two-sided")
     r = rank_biserial_from_u(u, len(a), len(b))
     r_lo, r_hi = bootstrap_rank_biserial(a, b)
@@ -250,6 +281,13 @@ def welch_t_test(df: pd.DataFrame, platform_a: str, platform_b: str) -> dict:
     text_length = df["text_raw"].fillna("").str.len()
     a_full = text_length[df["platform"] == platform_a].dropna()
     b_full = text_length[df["platform"] == platform_b].dropna()
+    if len(a_full) < 2 or len(b_full) < 2:
+        return not_computable_row(
+            f"welch_text_length_{platform_a}_vs_{platform_b}",
+            f"میانگین طول متن متفاوت بین {platform_a} و {platform_b}؟",
+            "welch_t_test", "hedges_g", f"platform: {platform_a} vs {platform_b} (text_length)",
+            f"هر گروه حداقل ۲ رکورد لازم دارد (n_a={len(a_full)}, n_b={len(b_full)}).",
+        )
     t, p = stats.ttest_ind(a_full, b_full, equal_var=False)
     g, g_lo, g_hi = hedges_g(a_full.to_numpy(), b_full.to_numpy())
     return {
@@ -299,19 +337,18 @@ def run(input_path: Path, output_dir: Path) -> pd.DataFrame:
     ok_yt = ok[ok["platform"] == "youtube"]
     pos = ok_yt.loc[ok_yt["sentiment_label"] == "positive", "engagement_score"].dropna()
     neg = ok_yt.loc[ok_yt["sentiment_label"] == "negative", "engagement_score"].dropna()
-    if len(pos) > 0 and len(neg) > 0:
-        results.append(mann_whitney_test(
-            pos, neg, "mannwhitney_engagement_youtube_positive_vs_negative",
-            "Engagement بین کامنت‌های مثبت و منفی یوتیوب متفاوت است؟",
-            "youtube, sentiment_label: positive vs negative (engagement_score)",
-        ))
+    results.append(mann_whitney_test(
+        pos, neg, "mannwhitney_engagement_youtube_positive_vs_negative",
+        "Engagement بین کامنت‌های مثبت و منفی یوتیوب متفاوت است؟",
+        "youtube, sentiment_label: positive vs negative (engagement_score)",
+    ))
 
     out = pd.DataFrame(results, columns=RESULT_COLUMNS)
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / "group_comparison_results.csv"
     out.to_csv(out_path, index=False)
     print(f"Wrote {len(out)} row(s) -> {out_path}")
-    n_sig = int((out["p_value"] < 0.05).sum())
+    n_sig = int((pd.to_numeric(out["p_value"], errors="coerce") < 0.05).sum())
     print(f"({n_sig}/{len(out)} tests have p<0.05 -- every test is reported regardless, per checklist item 24)")
     return out
 

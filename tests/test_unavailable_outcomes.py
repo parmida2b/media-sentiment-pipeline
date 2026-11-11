@@ -4,6 +4,7 @@ import math
 
 import pandas as pd
 
+from src.temporal_analysis import group_comparison
 from src.temporal_analysis.build_social_weekly_outcomes import build_social_weekly_outcomes
 from tests.test_temporal_analysis_common import _minimal_contract_df
 
@@ -68,3 +69,52 @@ def test_week_without_eligible_rows_is_data_gap():
     assert math.isnan(gap["outcome_value"])
     assert gap["n_records"] == 0
     assert gap["status"] == "data_gap"
+
+
+def _run_group_comparison(tmp_path, df: pd.DataFrame) -> pd.DataFrame:
+    path = tmp_path / "annotated_dataset.parquet"
+    df.to_parquet(path)
+    return group_comparison.run(path, tmp_path / "out")
+
+
+def _not_annotated_dataset() -> pd.DataFrame:
+    df = _annotated_rows(6, annotation_status="not_annotated")
+    df["platform"] = ["x", "x", "reddit", "reddit", "youtube", "youtube"]
+    df["language_detected"] = "fa"
+    df["text_raw"] = "abc"
+    df["stance_label"] = None
+    df["sentiment_label"] = None
+    df["engagement_score"] = None
+    return df
+
+
+def test_group_comparison_without_ok_rows_reports_not_computable(tmp_path):
+    out = _run_group_comparison(tmp_path, _not_annotated_dataset())
+
+    by_test = out.groupby("test")
+    for test in ("chi_square", "fisher_exact"):
+        rows = by_test.get_group(test)
+        assert rows["assumptions"].str.startswith("not_computable").all()
+        assert rows["p_value"].isna().all()
+    assert len(by_test.get_group("chi_square")) == 2
+    assert len(by_test.get_group("fisher_exact")) == 3
+    assert out["p_value"].isna().all()
+
+
+def test_welch_with_single_row_group_is_not_computable(tmp_path):
+    df = _not_annotated_dataset().iloc[[0, 2, 3, 4, 5]].reset_index(drop=True)
+
+    out = _run_group_comparison(tmp_path, df)
+
+    welch = out[out["comparison_id"] == "welch_text_length_x_vs_reddit"].iloc[0]
+    assert welch["assumptions"].startswith("not_computable")
+    assert pd.isna(welch["p_value"])
+
+
+def test_mann_whitney_with_empty_group_is_not_computable():
+    row = group_comparison.mann_whitney_test(
+        pd.Series([1.0, 2.0, 3.0]), pd.Series([], dtype=float), "id", "q", "g"
+    )
+
+    assert row["assumptions"].startswith("not_computable")
+    assert row["p_value"] is None
