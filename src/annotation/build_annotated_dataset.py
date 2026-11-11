@@ -138,7 +138,7 @@ def load_annotations(pattern: str) -> pd.DataFrame:
     # Shard files are append-only across resumed runs, so a pair can repeat.
     # Keep the best attempt: ok beats failure, then the latest annotated_at_utc.
     raw["_ok_rank"] = (raw["annotation_status"] == "ok").astype(int)
-    raw = raw.sort_values(["_ok_rank", "annotated_at_utc"], kind="stable")
+    raw = raw.sort_values(["_ok_rank", "annotated_at_utc"], kind="stable", na_position="first")
     raw = raw.drop_duplicates(subset=["content_id", "target_id"], keep="last")
     raw = raw.drop(columns=["_ok_rank"])
 
