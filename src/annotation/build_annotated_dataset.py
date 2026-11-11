@@ -135,11 +135,11 @@ def load_annotations(pattern: str) -> pd.DataFrame:
     raw = pd.concat(frames, ignore_index=True)
     print(f"Read {len(raw):,} annotation row(s) from {len(files)} file(s): {[Path(f).name for f in files]}")
 
-    # Keep only the best (ok wins; latest wins among same status) attempt
-    # per (content_id, target_id) -- a shard file is append-only across
-    # resumed runs, so the same pair can appear more than once.
+    # Shard files are append-only across resumed runs, so a pair can repeat.
+    # Keep the best attempt: ok beats failure, then the latest annotated_at_utc.
     raw["_ok_rank"] = (raw["annotation_status"] == "ok").astype(int)
-    raw = raw.sort_values(["_ok_rank"]).drop_duplicates(subset=["content_id", "target_id"], keep="last")
+    raw = raw.sort_values(["_ok_rank", "annotated_at_utc"], kind="stable", na_position="first")
+    raw = raw.drop_duplicates(subset=["content_id", "target_id"], keep="last")
     raw = raw.drop(columns=["_ok_rank"])
 
     # run_full_annotation.py's shard rows also carry their own `platform`

@@ -59,7 +59,7 @@ Pipeline B (تحلیل، فقط از روی فایل بالا)        ▼
 | `--with-ingestion` | Collector زنده‌ی YouTube + تبدیل فایل‌های Handoff جدید X/Reddit | Quota واقعی API مصرف می‌کند |
 | `--with-profiling` | بازسازی Inventory/Coverage docs | فقط وقتی داده‌ی خام جدید آمده لازم است |
 | `--with-financial` | جمع‌آوری/بازسازی داده مالی | عمداً Freeze شده؛ فقط برای رفرش دستی |
-| `--with-annotation` | Full Annotation واقعی (`run_full_annotation.py`) | هزینه واقعی $، سقف $۱۰۰ مطابق `docs/decision_log.md` ۲۰۲۶-۰۸-۱۴، توسط خودِ اسکریپت annotation هم اجباری می‌شود |
+| `--with-annotation` | Full Annotation واقعی (`run_full_annotation.py`) | هزینه واقعی $، سقف تجمعی $۱۰۰ (روی همه‌ی فایل‌های shard و resumeها) مطابق `docs/decision_log.md` ۲۰۲۶-۰۸-۱۴، توسط خودِ اسکریپت annotation هم اجباری می‌شود |
 | `--with-notebooks` | اجرای مجدد Notebookهای دمو (۰۵/۰۶/۰۷) + Notebook هم‌ترازی مالی با `nbconvert` | کندتر و فایل `.ipynb` را in-place بازمی‌نویسد |
 
 Gold Sample (لیبل‌زنی دستی دو Annotator) عمداً در `run_pipeline.py` نیست — نیاز به انسان دارد، نه اسکریپت.

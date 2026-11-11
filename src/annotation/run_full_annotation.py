@@ -31,10 +31,11 @@ the cost/time). Default is 1 so the team can start now and expand later
 without touching code (see decision_log.md's reasoning).
 
 Resumable: output is one JSONL file per shard
-(outputs/full_annotation/shard_{id}of{n}.jsonl); on startup this script
-reads its own shard file (if it exists) and skips any (content_id,
-target_id) pair already present, so a killed/interrupted run picks up where
-it left off for free — no separate checkpoint format needed.
+(outputs/full_annotation/shard_{id}of{n}.jsonl). On startup every shard file
+is read: pairs already annotated ok are skipped whatever --num-shards was,
+and their real (non cache) cost counts toward the cost cap, so the cap is
+cumulative across resumes and shards on the same output folder. In-flight
+calls may overshoot it by up to --workers calls.
 
 Usage:
     # solo, 1 target, 20 concurrent workers, whole dataset as one shard
@@ -268,36 +269,141 @@ def assign_shard(content_id: str, num_shards: int) -> int:
     return zlib.crc32(content_id.encode("utf-8")) % num_shards
 
 
-def load_done_keys(output_path: Path) -> set[tuple[str, str]]:
-    """Reads this shard's own output file (if any) and returns the set of
-    (content_id, target_id) pairs already SUCCESSFULLY annotated — resume
-    support. Only annotation_status=="ok" counts as done (bug fixed
-    2026-08-14: this used to count every attempted pair regardless of
-    outcome, so a row that failed — e.g. api_failure from a key hitting its
-    daily quota — looked "already done" and was never retried on the next
-    run; found when 4,954 api_failure rows from an exhausted-quota run
-    would otherwise have been skipped forever instead of retried once quota
-    reset). A corrupt/partial last line (e.g. process killed mid-write) is
-    skipped, not fatal — that row is simply re-annotated. Note: a row can
-    appear multiple times in the file across resumed attempts (once
-    failed, once ok) — the file itself is not deduplicated, only this
-    in-memory set is; downstream consumers should keep the last/best
-    attempt per (content_id, target_id)."""
+def load_prior_state(output_dir: Path) -> tuple[set[tuple[str, str]], float]:
+    """Read every shard file in output_dir for resume and the cumulative cap.
+
+    Returns the (content_id, target_id) pairs already annotated ok, in any
+    shard layout, and the USD already spent on real (non cache) calls.
+    Corrupt lines, such as a partial last line from a killed run, are skipped.
+    """
     done: set[tuple[str, str]] = set()
-    if not output_path.exists():
-        return done
-    with output_path.open("r", encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
+    spent = 0.0
+    for path in sorted(output_dir.glob("shard_*.jsonl")):
+        with path.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                    if not row.get("from_cache"):
+                        spent += float(row.get("cost_usd") or 0.0)
+                    if row.get("annotation_status") == "ok":
+                        done.add((row["content_id"], row["target_id"]))
+                except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+                    continue
+    return done, spent
+
+
+def _status(result) -> str:
+    if result.ok:
+        return "ok"
+    if result.parse_error:
+        return "json_parse_failure"
+    if result.validation_error:
+        return "validation_failure"
+    return "api_failure"
+
+
+def run_tasks(
+    tasks: list[tuple[str, str, str, str]],
+    route,
+    api_keys: dict[str, str],
+    cache: AnnotationCache,
+    run_id: str,
+    output_path: Path,
+    cost_cap: float,
+    prior_cost_usd: float,
+    workers: int,
+) -> dict:
+    """Annotate tasks concurrently, appending one JSONL row per finished task.
+
+    The cap covers prior_cost_usd plus this session's spend. Once it is
+    crossed no new task starts; tasks already in flight still finish, so the
+    final total can overshoot the cap by up to `workers` calls.
+    """
+    stop_flag = threading.Event()
+    output_lock = threading.Lock()
+    state_lock = threading.Lock()
+    state = {"completed": 0, "cost_usd": 0.0, "failures": 0, "started_at": time.monotonic()}
+    if prior_cost_usd >= cost_cap:
+        stop_flag.set()
+
+    def worker(task: tuple[str, str, str, str]) -> None:
+        cid, text, platform, target_id = task
+        if stop_flag.is_set():
+            return
+        result = annotate(
+            text=text, target_id=target_id, route=route, api_keys=api_keys,
+            cache=cache, run_id=run_id, content_id=cid,
+        )
+        payload = result.payload or {}
+        row = {
+            "content_id": cid,
+            "platform": platform,
+            "target_id": target_id,
+            "sentiment": payload.get("sentiment"),
+            "stance": payload.get("stance"),
+            "emotion": payload.get("emotion"),
+            "content_type": payload.get("content_type"),
+            "confidence": result.confidence,
+            "reason_code": payload.get("reason_code"),
+            "annotation_status": _status(result),
+            "model_version": result.model_name,
+            "prompt_version": result.prompt_version,
+            "cost_usd": result.cost_usd,
+            "from_cache": result.from_cache,
+            "latency_ms": result.latency_ms,
+            "annotated_at_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        with output_lock:
+            with output_path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+        with state_lock:
+            state["completed"] += 1
+            state["cost_usd"] += result.cost_usd or 0.0
+            if not result.ok:
+                state["failures"] += 1
+            completed = state["completed"]
+            total_cost = prior_cost_usd + state["cost_usd"]
+            failures = state["failures"]
+
+        if total_cost >= cost_cap and not stop_flag.is_set():
+            stop_flag.set()
+            print(f"\n[STOP] Cost cap ${cost_cap} reached (${total_cost:.2f} spent across all shard "
+                  "files). No new tasks will start; in-flight tasks still finish.")
+
+        if completed % CACHE_SAVE_EVERY == 0:
+            cache.save()
+
+        if completed % PROGRESS_EVERY == 0:
+            elapsed = time.monotonic() - state["started_at"]
+            rate = completed / elapsed if elapsed > 0 else 0
+            remaining = len(tasks) - completed
+            eta_min = (remaining / rate / 60) if rate > 0 else float("nan")
+            print(f"  [{completed:,}/{len(tasks):,}] cost=${total_cost:.2f} "
+                  f"failures={failures} rate={rate:.1f}/s eta={eta_min:.0f}min")
+
+    errors = 0
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(worker, t): t for t in tasks}
+        for future in as_completed(futures):
             try:
-                row = json.loads(line)
-                if row.get("annotation_status") == "ok":
-                    done.add((row["content_id"], row["target_id"]))
-            except (json.JSONDecodeError, KeyError):
-                continue
-    return done
+                future.result()
+            except Exception as e:  # noqa: BLE001 (a crashed task must not end the run silently)
+                errors += 1
+                cid, _, _, target_id = futures[future]
+                print(f"[error] task ({cid}, {target_id}) raised {type(e).__name__}: {e}")
+
+    return {
+        "completed": state["completed"],
+        "cost_usd": state["cost_usd"],
+        "total_cost_usd": prior_cost_usd + state["cost_usd"],
+        "failures": state["failures"],
+        "errors": errors,
+        "cap_reached": stop_flag.is_set(),
+    }
 
 
 def main() -> None:
@@ -346,9 +452,10 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     output_path = OUTPUT_DIR / f"shard_{args.shard_id}of{args.num_shards}.jsonl"
-    done_keys = load_done_keys(output_path)
+    done_keys, prior_cost = load_prior_state(OUTPUT_DIR)
     if done_keys:
-        print(f"Resuming: {len(done_keys):,} (content_id, target_id) pair(s) already done in {output_path.name}.")
+        print(f"Resuming: {len(done_keys):,} (content_id, target_id) pair(s) already done across all shard files.")
+    print(f"Prior spend across all shard files: ${prior_cost:.2f} of ${args.confirm_cost_cap} cap.")
 
     tasks = [
         (row.content_id, row.text, row.platform, target_id)
@@ -360,91 +467,24 @@ def main() -> None:
         tasks = tasks[: args.limit]
     print(f"Tasks to run this session: {len(tasks):,}")
     if not tasks:
-        print("Nothing to do — shard already fully annotated.")
+        print("Nothing to do: shard already fully annotated.")
         return
 
     cache = AnnotationCache()
-    output_lock = threading.Lock()
-    cache_lock = threading.Lock()
-    stop_flag = threading.Event()
     run_id = f"full_annotation_shard{args.shard_id}of{args.num_shards}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
 
-    state = {"completed": 0, "cost_usd": 0.0, "failures": 0, "started_at": time.monotonic()}
-    state_lock = threading.Lock()
-
-    def worker(task: tuple[str, str, str, str]) -> None:
-        content_id, text, platform, target_id = task
-        if stop_flag.is_set():
-            return
-        result = annotate(
-            text=text, target_id=target_id, route=route, api_keys=api_keys,
-            cache=cache, run_id=run_id, content_id=content_id,
-        )
-        row = {
-            "content_id": content_id,
-            "platform": platform,
-            "target_id": target_id,
-            "sentiment": (result.payload or {}).get("sentiment"),
-            "stance": (result.payload or {}).get("stance"),
-            "emotion": (result.payload or {}).get("emotion"),
-            "content_type": (result.payload or {}).get("content_type"),
-            "confidence": result.confidence,
-            "reason_code": (result.payload or {}).get("reason_code"),
-            "annotation_status": (
-                "ok" if result.ok
-                else "json_parse_failure" if result.parse_error
-                else "validation_failure" if result.validation_error
-                else "api_failure"
-            ),
-            "model_version": result.model_name,
-            "prompt_version": result.prompt_version,
-            "cost_usd": result.cost_usd,
-            "latency_ms": result.latency_ms,
-            "annotated_at_utc": datetime.now(timezone.utc).isoformat(),
-        }
-        with output_lock:
-            with output_path.open("a", encoding="utf-8") as fh:
-                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
-
-        with state_lock:
-            state["completed"] += 1
-            state["cost_usd"] += result.cost_usd or 0.0
-            if not result.ok:
-                state["failures"] += 1
-            completed = state["completed"]
-            cost_so_far = state["cost_usd"]
-
-        if cost_so_far > args.confirm_cost_cap:
-            if not stop_flag.is_set():
-                print(f"\n[STOP] Cost cap ${args.confirm_cost_cap} reached (${cost_so_far:.2f} spent this "
-                      f"session) — no new tasks will start. In-flight tasks still finish.")
-            stop_flag.set()
-
-        if completed % CACHE_SAVE_EVERY == 0:
-            with cache_lock:
-                cache.save()
-
-        if completed % PROGRESS_EVERY == 0:
-            elapsed = time.monotonic() - state["started_at"]
-            rate = completed / elapsed if elapsed > 0 else 0
-            remaining = len(tasks) - completed
-            eta_min = (remaining / rate / 60) if rate > 0 else float("nan")
-            print(f"  [{completed:,}/{len(tasks):,}] cost=${cost_so_far:.2f} "
-                  f"failures={state['failures']} rate={rate:.1f}/s eta={eta_min:.0f}min")
-
     print(f"\nStarting {args.workers} worker(s)...\n")
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
-        futures = [executor.submit(worker, t) for t in tasks]
-        for _ in as_completed(futures):
-            if stop_flag.is_set():
-                # Don't cancel in-flight requests (already billed); just stop
-                # draining new ones from the queue — as_completed still needs
-                # every future resolved before this loop returns.
-                pass
-
-    cache.save()  # final flush — guaranteed to run even if the cap was hit mid-run
-    print(f"\nDone this session: {state['completed']:,} task(s), "
-          f"${state['cost_usd']:.2f} spent, {state['failures']} failure(s).")
+    try:
+        summary = run_tasks(
+            tasks, route=route, api_keys=api_keys, cache=cache, run_id=run_id,
+            output_path=output_path, cost_cap=args.confirm_cost_cap,
+            prior_cost_usd=prior_cost, workers=args.workers,
+        )
+    finally:
+        cache.save()
+    print(f"\nDone this session: {summary['completed']:,} task(s), "
+          f"${summary['cost_usd']:.2f} spent (${summary['total_cost_usd']:.2f} cumulative), "
+          f"{summary['failures']} failure(s), {summary['errors']} worker error(s).")
     print(f"Output: {output_path}")
     if args.num_shards > 1:
         print(f"Once every shard finishes, merge with: "

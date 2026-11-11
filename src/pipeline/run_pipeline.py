@@ -30,7 +30,7 @@ not just each individually runnable:
     [optional, --with-financial] finance_market_extract.py + build_financial_outputs.py
                                       (financial market data -- hits FRED/Yahoo)
     [optional, --with-annotation] run_full_annotation.py -- real LLM API
-                                      cost, hard-capped at $100 (must match
+                                      cost, cumulative cap of $100 (must match
                                       docs/decision_log.md's approved cap,
                                       enforced by the script itself, not by
                                       this orchestrator); --annotation-targets/
@@ -63,7 +63,7 @@ x/reddit handoff ingestion (handoff_csv_to_record.py) and full LLM annotation
 themselves -- ingestion needs an explicit file path (defaulted to whichever
 handoff file is currently on disk, override with --x-handoff-file/
 --reddit-handoff-file when a new one arrives) and annotation spends real
-money (hard-capped at $100, matching docs/decision_log.md's approved cap;
+money (cumulative cap of $100 across resumes and shards, matching docs/decision_log.md's approved cap;
 run_full_annotation.py itself refuses to run if that cap isn't also logged
 there, independent of anything this script does).
 
@@ -394,7 +394,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--with-annotation", action="store_true",
         help="Also run real LLM annotation (run_full_annotation.py) before the bridge step. Off by "
-             f"default: real API cost, hard-capped at ${APPROVED_ANNOTATION_COST_CAP_USD} "
+             f"default: real API cost, cumulative cap of ${APPROVED_ANNOTATION_COST_CAP_USD} "
              "(docs/decision_log.md 2026-08-14) -- the underlying script enforces this cap itself.",
     )
     parser.add_argument(
